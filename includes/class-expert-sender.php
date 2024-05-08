@@ -212,10 +212,7 @@ class Expert_Sender
             $this->get_plugin_name(),
             $this->get_version()
         );
-        $plugin_public_order = new Expert_Sender_Order_Request(
-            $this->get_plugin_name(),
-            $this->get_version()
-        );
+        $plugin_public_order = new Expert_Sender_Order_Request();
 
         $this->loader->add_action(
             'wp_enqueue_scripts',
@@ -340,6 +337,12 @@ class Expert_Sender
 					'Failed to send request with id:' . $request->id . "\n",
 					FILE_APPEND | LOCK_EX
 				);
+                $wpdb->update(
+					$table_name,
+					array('response' => wp_remote_retrieve_body($response)),
+					array('id' => $request->id),
+				);
+                
             } else {
                 $response_body = wp_remote_retrieve_body($response);
 				$wpdb->update(

@@ -1,7 +1,13 @@
-/**
- * All of the CSS for your admin-specific functionality should be
- * included in this file.
- */
-button .submit{
+button.submit{
     margin-top: 12px;
+    border: 1px solid black;
+    border-radius: 20px;
+    padding: 0.5em 1em;
+    background-color: gray;
+    color: white;
+    font-weight: 900;
+}
+
+button.submit:hover{
+    background-color: darkgray;
 }

@@ -20,7 +20,7 @@ class Expert_Sender_Order_Request
      */
     private $version;
 
-	const RESOURCE_PRODUCT = 'product';
+    const RESOURCE_PRODUCT = 'product';
     const RESOURCE_CUSTOMER = 'customer';
     const RESOURCE_ORDER = 'order';
 
@@ -31,11 +31,8 @@ class Expert_Sender_Order_Request
      * @param      string    $plugin_name       The name of the plugin.
      * @param      string    $version    The version of this plugin.
      */
-    public function __construct($plugin_name, $version)
+    public function __construct()
     {
-        $this->plugin_name = $plugin_name;
-        $this->version = $version;
-
         add_action('woocommerce_checkout_order_processed', [
             $this,
             'expert_sender_place_order',
@@ -60,10 +57,10 @@ class Expert_Sender_Order_Request
             $this,
             'expert_sender_order_canceled',
         ]);
-        add_action('woocommerce_order_status_refunded', [
-            $this,
-            'expert_sender_order_refuned',
-        ]);
+        // add_action('woocommerce_order_status_refunded', [
+        //     $this,
+        //     'expert_sender_order_refuned',
+        // ]);
         add_action('woocommerce_order_status_failed', [
             $this,
             'expert_sender_order_failed',
@@ -73,17 +70,25 @@ class Expert_Sender_Order_Request
             $this,
             'expert_sender_order_paid',
         ]);
+
+        add_action(
+            'woocommerce_refund_created',
+            [$this, 'expert_sender_order_refunded'],
+            10,
+            2
+        );
     }
 
     public function expert_sender_place_order($orderId)
     {
-        $status = 'Placed';
-		$this->expert_sender_order_save_request($orderId, $status);
+        $status = 'placed';
+        $slug = $this->expert_sender_get_api_order_status_slug($status);
+        $this->expert_sender_order_save_request($orderId, $slug);
     }
 
     public function expert_sender_order_paid($orderId)
     {
-        $status = 'Paid';
+        $status = 'paid';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
@@ -92,7 +97,7 @@ class Expert_Sender_Order_Request
 
     public function expert_sender_order_pending($orderId)
     {
-        $status = 'Pending';
+        $status = 'pending';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
@@ -101,7 +106,7 @@ class Expert_Sender_Order_Request
 
     public function expert_sender_order_processing($orderId)
     {
-        $status = 'Processing';
+        $status = 'processing';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
@@ -110,7 +115,7 @@ class Expert_Sender_Order_Request
 
     public function expert_sender_order_on_hold($orderId)
     {
-        $status = 'On-hold';
+        $status = 'on-hold';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
@@ -119,7 +124,7 @@ class Expert_Sender_Order_Request
 
     public function expert_sender_order_completed($orderId)
     {
-        $status = 'Completed';
+        $status = 'completed';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
@@ -128,37 +133,54 @@ class Expert_Sender_Order_Request
 
     public function expert_sender_order_canceled($orderId)
     {
-        $status = 'Canceled';
+        $status = 'cancelled';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
         }
     }
 
-    public function expert_sender_order_refunded($orderId)
+    public function expert_sender_order_refunded($refund, $args)
     {
-        $status = 'Refunded';
+        $this->log_order_details($args);
+
+        $status = 'refunded';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
+
         if ($slug) {
-            $this->expert_sender_order_save_request($orderId, $slug);
+            $this->expert_sender_order_save_request(
+                $args['order_id'],
+                $slug,
+                $args
+            );
         }
     }
 
     public function expert_sender_order_failed($orderId)
     {
-        $status = 'Failed';
+        $status = 'failed';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
         if ($slug) {
             $this->expert_sender_order_save_request($orderId, $slug);
         }
     }
 
-    public function expert_sender_order_save_request($orderId, $status)
-    {
+    public function expert_sender_order_save_request(
+        $orderId,
+        $status,
+        $args = null,
+        $sync_id = null
+    ) {
         $order = wc_get_order($orderId);
 
-        if ($order->get_customer_id());
-        $customer = new WC_Customer($order->get_customer_id());
+        if($order instanceof WC_Order){
+            $customer = new WC_Customer($order->get_user_id());
+        }
+        else{
+            $order_id = $order->get_parent_id();
+            $order = wc_get_order($order_id);
+            $customer = new WC_Customer($order->get_user_id());
+        }
 
         $orderData['id'] = strval($order->get_id() + 1000);
         $orderData['date'] = $order
@@ -172,7 +194,12 @@ class Expert_Sender_Order_Request
 
         $orderData['currency'] = $order->get_currency();
         $orderData['totalValue'] = $order->get_total();
-        $orderData['returnsValue'] = '0';
+        if($order instanceof WC_Order){
+            $orderData['returnsValue'] = strval($order->get_total_refunded());
+        }
+        else{
+            $orderData['returnsValue'] = strval($order->get_amount());
+        }
 
         $customerData['email'] = $customer->get_email();
         if (get_option('expert_sender_enable_script')) {
@@ -192,7 +219,14 @@ class Expert_Sender_Order_Request
             $product['name'] = $productItem->get_name();
             $product['price'] = strval($productItem->get_price());
             $product['quantity'] = strval($item->get_quantity());
-            $product['returned'] = strval(0); //TODO: Co to?
+
+            if ($args && isset($args['line_items']) && isset($args['line_items'][$item_id])) {
+                $product['returned'] = strval($args['line_items'][$item_id]["qty"]);
+            }
+            else{
+                $product['returned'] = strval(0);
+            }
+
             $product['url'] = $productItem->get_permalink();
             $product['imageUrl'] = $productItem->get_image();
 
@@ -200,9 +234,14 @@ class Expert_Sender_Order_Request
             $categoriesArray = [];
             if (!empty($category_ids)) {
                 foreach ($category_ids as $category_id) {
-					$this->log_order_details($category_id);
-					$this->log_order_details(get_term( $category_id, 'product_cat' )->name);
-                    $categoriesArray[] = get_term( $category_id, 'product_cat' )->name;
+                    $this->log_order_details($category_id);
+                    $this->log_order_details(
+                        get_term($category_id, 'product_cat')->name
+                    );
+                    $categoriesArray[] = get_term(
+                        $category_id,
+                        'product_cat'
+                    )->name;
                 }
             }
 
@@ -212,29 +251,27 @@ class Expert_Sender_Order_Request
 
             $attributes = $productItem->get_attributes();
 
-			global $wpdb;
-			$table_name = $wpdb->prefix . 'expert_sender_mappings';
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'expert_sender_mappings';
 
             if (!empty($attributes)) {
                 foreach ($attributes as $attribute) {
+                    $query = $wpdb->prepare(
+                        "SELECT * FROM $table_name WHERE resource_type = %s AND wp_field = %s LIMIT 1",
+                        $this::RESOURCE_PRODUCT,
+                        str_replace('pa_', '', $attribute->get_name())
+                    );
 
-					$query = 
-						$wpdb->prepare(
-							"SELECT * FROM $table_name WHERE resource_type = %s AND wp_field = %s LIMIT 1",
-							$this::RESOURCE_PRODUCT, 
-							str_replace('pa_', '', $attribute->get_name())
-					);
-					
-					$result = $wpdb->get_row($query, OBJECT);
+                    $result = $wpdb->get_row($query, OBJECT);
 
-					if($result){
-						$productAttributes[] = [
-							'name' => $result->ecdp_field,
-							'value' => $productItem->get_attribute(
-								$attribute->get_name()
-							),
-						];
-					}
+                    if ($result) {
+                        $productAttributes[] = [
+                            'name' => $result->ecdp_field,
+                            'value' => $productItem->get_attribute(
+                                $attribute->get_name()
+                            ),
+                        ];
+                    }
                 }
 
                 $product['productAttributes'] = $productAttributes;
@@ -245,26 +282,28 @@ class Expert_Sender_Order_Request
 
         $orderData['products'] = $products;
 
-		$orderAttributes = [];
-		
-		$orderMappings = $wpdb->get_results(
+        $orderAttributes = [];
+
+        $orderMappings = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM $table_name WHERE resource_type = %s",
                 $this::RESOURCE_ORDER
             )
         );
 
-		$orderFlattenData = $this->flatten($order->get_data());
-		
-		foreach($orderMappings as $orderMapping) {
-			$orderMapping->wp_field;
-			$orderMapping->ecdp_field;
-			$mapping['name'] = $orderMapping->ecdp_field;
-			$mapping['value'] = strval($orderFlattenData[$orderMapping->wp_field]);
-			$orderAttributes[] = $mapping;
-		}
+        $orderFlattenData = $this->flatten($order->get_data());
 
-		$orderData['orderAttributes'] = $orderAttributes;
+        foreach ($orderMappings as $orderMapping) {
+            $orderMapping->wp_field;
+            $orderMapping->ecdp_field;
+            $mapping['name'] = $orderMapping->ecdp_field;
+            $mapping['value'] = strval(
+                $orderFlattenData[$orderMapping->wp_field]
+            );
+            $orderAttributes[] = $mapping;
+        }
+
+        $orderData['orderAttributes'] = $orderAttributes;
 
         $body = json_encode([
             'mode' => 'AddOrReplace',
@@ -282,8 +321,9 @@ class Expert_Sender_Order_Request
             'is_sent' => false,
             'url_address' => $url,
             'json_body' => $body,
-			'resource_type' => 'order',
-			'resource_id' => $orderId
+            'resource_type' => 'order',
+            'resource_id' => $orderId,
+            'synchronization_id' => $sync_id
         ]);
     }
 
@@ -297,14 +337,14 @@ class Expert_Sender_Order_Request
                 $wpSlug
             )
         );
-        $apiStatus = $wpdb->get_row($apiStatus, OBJECT);
-        if ($apiStatus->ecdp_order_status) {
-            return $apiStatus->ecdp_order_status;
+
+        if (count($apiStatus)) {
+            return $apiStatus[0]->ecdp_order_status;
         }
         return null;
     }
 
-	public function flatten($array, $prefix = '')
+    public function flatten($array, $prefix = '')
     {
         $result = [];
         foreach ($array as $key => $value) {
@@ -318,7 +358,7 @@ class Expert_Sender_Order_Request
         return $result;
     }
 
-	private function log_order_details($order)
+    private function log_order_details($order)
     {
         $fullLog = json_encode($order);
         $log_message = $fullLog;

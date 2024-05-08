@@ -20,6 +20,8 @@ class Expert_Sender_Client_Request
      */
     private $version;
 
+    const RESOURCE_CUSTOMER = 'customer';
+
     /**
      * Initialize the class and set its properties.
      *
@@ -113,15 +115,16 @@ class Expert_Sender_Client_Request
                 'customer_settings'
             )
         );
+
         $consentValues = [];
 
-            foreach ($consents as $consent) {
-                $consentValues[$consent->api_consent_id] =
-                    isset($_POST['consent']) &&
-                    isset($_POST['consent'][$consent->api_consent_id])
-                        ? 1
-                        : 0;
-            }
+        foreach ($consents as $consent) {
+            $consentValues[$consent->api_consent_id] =
+                isset($_POST['consent']) &&
+                isset($_POST['consent'][$consent->api_consent_id])
+                    ? 1
+                    : 0;
+        }
 
         $customer = new WC_Customer($user_id);
 
@@ -132,14 +135,54 @@ class Expert_Sender_Client_Request
 
         $consentApiDataArray = [];
         foreach ($consentValues as $key => $consentValue) {
-            $consentApiData['id'] = $key;
+            $consentOptin = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM $table_name WHERE api_consent_id = %s",
+                    $key
+                )
+            );
+
             $consentApiData['value'] = $consentValue ? 'True' : 'False';
-            $cosnentApiDataArray[] = $consentApiData;
+
+            if (count($consentOptin) > 0) {
+                if ($consentOptin[0]->consent_type == 'double') {
+                    $consentApiData['value'] = $consentValue
+                        ? 'AwaitingConfirmation'
+                        : 'False';
+                }
+            }
+
+            $consentApiData['id'] = $key;
+            $consentApiDataArray[] = $consentApiData;
         }
         $customerApiData['consentsData'] = [];
-        $customerApiData['consentsData']['consents'] = $cosnentApiDataArray;
-        // $customerApiData['consentsData']['force'] = true;
-        // $customerApiData['consentsData']['confirmationMessageId'] = 0;
+        $customerApiData['consentsData']['consents'] = $consentApiDataArray;
+        $customerApiData['consentsData']['force'] = true;
+        $customerApiData['consentsData']['confirmationMessageId'] = get_option(
+            'expert_sender_double_optin_mess_id'
+        );
+
+        $customAttributes = [];
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'expert_sender_mappings';
+        $query = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE resource_type = %s",
+                $this::RESOURCE_CUSTOMER
+            )
+        );
+        $flattenData = $this->flatten($customer->get_data());
+        foreach ($query as $row) {
+            if (isset($flattenData[$row->wp_field])) {
+                $customAttributes[] = [
+                    'name' => $row->ecdp_field,
+                    'value' => $flattenData[$row->wp_field],
+                ];
+            }
+        }
+
+        $customerApiData['customAttributes'] = $customAttributes;
 
         $this->expert_sender_add_or_update_customer($customerApiData);
     }
@@ -148,13 +191,36 @@ class Expert_Sender_Client_Request
     {
         if ($load_address == 'billing') {
             $customer = new WC_Customer($user_id);
+
             $customerApiData['email'] = $customer->get_email();
             $customerApiData['crmId'] = strval($customer->get_id() + 1000);
             $customerApiData['firstName'] = $customer->get_first_name();
             $customerApiData['lastName'] = $customer->get_last_name();
-            if (get_option('expert_sender_enable_script')) {
+            if (get_option('expert_sender_enable_phone')) {
                 $customerApiData['phone'] = $customer->get_billing_phone();
             }
+
+            $customAttributes = [];
+
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'expert_sender_mappings';
+            $query = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM $table_name WHERE resource_type = %s",
+                    $this::RESOURCE_CUSTOMER
+                )
+            );
+            $flattenData = $this->flatten($customer->get_data());
+            foreach ($query as $row) {
+                if (isset($flattenData[$row->wp_field])) {
+                    $customAttributes[] = [
+                        'name' => $row->ecdp_field,
+                        'value' => $flattenData[$row->wp_field],
+                    ];
+                }
+            }
+
+            $customerApiData['customAttributes'] = $customAttributes;
             $this->expert_sender_add_or_update_customer($customerApiData);
         }
     }
@@ -181,5 +247,19 @@ class Expert_Sender_Client_Request
             'resource_type' => 'customer',
             'resource_id' => 1,
         ]);
+    }
+
+    public function flatten($array, $prefix = '')
+    {
+        $result = [];
+        foreach ($array as $key => $value) {
+            if (is_array($value)) {
+                $result =
+                    $result + $this->flatten($value, $prefix . $key . '.');
+            } else {
+                $result[$prefix . $key] = $value;
+            }
+        }
+        return $result;
     }
 }

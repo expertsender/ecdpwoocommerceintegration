@@ -66,6 +66,11 @@ class Expert_Sender_Admin
             'add_plugin_admin_order_status_mapping',
         ]);
 
+        add_action('admin_menu', [
+            $this,
+            'add_plugin_admin_synchronize_orders',
+        ]);
+
         add_action('admin_init', [
             $this,
             'expert_sender_handle_form_submission',
@@ -86,9 +91,13 @@ class Expert_Sender_Admin
             'expert_sender_order_status_mapping_handle_form_submission',
         ]);
 
-        add_action('admin_notices', [$this, 'expert_sender_data_saved_notice']);
+        add_action('admin_init', [
+            $this,
+            'expert_sender_order_synchronize_submission',
+        ]);
 
-        $this->expert_sender_get_customer_attributes_from_api();
+        add_action('admin_notices', [$this, 'expert_sender_data_saved_notice']);
+        $this->enqueue_styles();
     }
 
     /**
@@ -111,7 +120,7 @@ class Expert_Sender_Admin
          */
 
         wp_enqueue_style(
-            $this->plugin_name,
+            $this->plugin_name . "_admin",
             plugin_dir_url(__FILE__) . 'css/expert-sender-admin.css',
             [],
             $this->version,
@@ -194,6 +203,18 @@ class Expert_Sender_Admin
         );
     }
 
+    public function add_plugin_admin_synchronize_orders()
+    {
+        add_submenu_page(
+            'expert-sender-settings', // parent
+            'Synchronize orders',
+            'Synchronize orders', // Menu title
+            'manage_options', // Capability
+            'expert-sender-settings-synchronize-orders', // Menu slug
+            [$this, 'render_order_synchronize_page'] // Callback function to render the settings page
+        );
+    }
+
     public function render_settings_page()
     {
         if (!current_user_can('manage_options')) {
@@ -205,9 +226,12 @@ class Expert_Sender_Admin
         }
         $value = get_option('expert_sender_enable_script');
         $checked = $value ? 'checked' : '';
-        $phoneChecked = get_option('expert_sender_enable_script')
+        $phoneChecked = get_option('expert_sender_enable_phone')
             ? 'checked'
             : '';
+        $doubleOptinMessageId = get_option(
+            'expert_sender_double_optin_mess_id'
+        );
         ?>
 
     <div class="wrap">
@@ -302,6 +326,19 @@ class Expert_Sender_Admin
 					<p>Wysyłaj numer telefonu do Expert Sender</p>
 					</td>
                 </tr>
+
+                <tr valign="top">
+                    <th scope="row"><?php _e(
+                        'Double Opt-in Message Id',
+                        'expert-sender'
+                    ); ?></th>
+                    <td>
+					<input type="text" id="expert_sender_double_optin_mess_id" name="expert_sender_double_optin_mess_id" value="1" <?= $doubleOptinMessageId ?> />
+                    </td>
+					<td>
+					<p>Double Optin Message Id</p>
+					</td>
+                </tr>
             </table>
 			<script type="text/javascript">
    				jQuery(document).ready(function($) {
@@ -336,6 +373,10 @@ class Expert_Sender_Admin
             register_setting(
                 'expert_sender_settings_group',
                 'expert_sender_enable_phone'
+            );
+            register_setting(
+                'expert_sender_settings_group',
+                'expert_sender_double_optin_mess_id'
             );
             register_setting(
                 'expert_sender_settings_group',
@@ -377,6 +418,14 @@ class Expert_Sender_Admin
             update_option(
                 'expert_sender_website_id',
                 $expert_sender_website_id
+            );
+
+            $expert_sender_double_optin_mess_id = sanitize_text_field(
+                $_POST['expert_sender_double_optin_mess_id']
+            );
+            update_option(
+                'expert_sender_double_optin_mess_id',
+                $expert_sender_double_optin_mess_id
             );
         }
     }
@@ -813,6 +862,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $apiConsents = $this->expert_sender_get_consents_from_api();
         $consentLocations = $this->expert_sender_get_consents_locations();
+        $consentTypes = ['single', 'double'];
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
         ?>
@@ -851,6 +901,16 @@ document.addEventListener("DOMContentLoaded", function() {
 
          echo '</select>';
 
+         echo '<select name="consent[' . $consent->id . '][consent_type]">';
+
+         foreach ($consentTypes as $value) {
+             $selected = $consent->consent_type == $value ? 'selected' : '';
+
+             echo "<option value=\"$value\" $selected>$value</option>";
+         }
+
+         echo '</select>';
+
          echo '<input type="text" placeholder="Consent Text" required="true" name="consent[' .
              $consent->id .
              '][consent_text]" value="' .
@@ -859,7 +919,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
          echo '<button type="button">Remove</button></div>';
      } ?>
-	  
+	  </div>
 			<input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
 			<button class="submit" type="submit"> Save </button>
 		</form>
@@ -875,6 +935,14 @@ document.addEventListener("DOMContentLoaded", function() {
         <template id="consentLocationTemplate">
             <select name="">
                 <?php foreach ($consentLocations as $value) {
+                    echo "<option value=\"$value\">$value</option>";
+                } ?>
+            </select>
+		</template>
+
+        <template id="consentTypeTemplate">
+            <select name="">
+                <?php foreach ($consentTypes as $value) {
                     echo "<option value=\"$value\">$value</option>";
                 } ?>
             </select>
@@ -908,6 +976,9 @@ document.addEventListener("DOMContentLoaded", function() {
 		const consentLocation = template2.content.cloneNode(true);
         consentLocation.querySelectorAll("select")[0].name = "consent[" + id + "][consent_location]";
 
+        var template3 = document.querySelector("#consentTypeTemplate");
+		const consentType = template3.content.cloneNode(true);
+        consentType.querySelectorAll("select")[0].name = "consent[" + id + "][consent_type]";
 
         const removeBtn = document.createElement("button");
         removeBtn.textContent = "Remove";
@@ -925,7 +996,7 @@ document.addEventListener("DOMContentLoaded", function() {
         
         pairDiv.appendChild(apiConsent);
         pairDiv.appendChild(consentLocation);
-
+        pairDiv.appendChild(consentType);
         pairDiv.appendChild(consentTextInput);
         pairDiv.appendChild(removeBtn);
 
@@ -981,6 +1052,7 @@ document.addEventListener("DOMContentLoaded", function() {
                         'api_consent_id' => $mapping['api_consent_id'],
                         'consent_location' => $mapping['consent_location'],
                         'consent_text' => $mapping['consent_text'],
+                        'consent_type' => $mapping['consent_type'],
                     ]);
                 }
             }
@@ -1019,13 +1091,8 @@ document.addEventListener("DOMContentLoaded", function() {
 
     public function get_product_keys()
     {
-        // if (class_exists('WooCommerce')) {
-        //     $order = new WC_Product();
-        //     return $this->flatten($order->get_data());
-        // }
         $product_attribute_taxonomies = wc_get_attribute_taxonomies();
         if ($product_attribute_taxonomies) {
-
             $attribute_names = array_map(function ($taxonomy) {
                 return $taxonomy->attribute_label;
             }, $product_attribute_taxonomies);
@@ -1171,20 +1238,20 @@ document.addEventListener("DOMContentLoaded", function() {
     public function expert_sender_get_wp_order_statuses()
     {
         return [
-            'Placed',
-            'Paid',
-            'Pending',
-            'Processing',
-            'On-hold',
-            'Completed',
-            'Canceled',
-            'Refunded',
-            'Failed',
+            'placed',
+            'paid',
+            'pending',
+            'processing',
+            'on-hold',
+            'completed',
+            'cancelled',
+            'refunded',
+            'failed',
         ];
     }
     public function expert_sender_get_ecdp_order_statuses()
     {
-        return ['Placed', 'Paid', 'Completed', 'Canceled'];
+        return ['Placed', 'Paid', 'Completed', 'Cancelled'];
     }
 
     public function expert_sender_order_status_mapping_handle_form_submission()
@@ -1204,5 +1271,195 @@ document.addEventListener("DOMContentLoaded", function() {
                 }
             }
         }
+    }
+
+    public function render_order_synchronize_page()
+    {
+        if (!current_user_can('manage_options')) {
+            wp_die(
+                __(
+                    'You do not have sufficient permissions to access this page.'
+                )
+            );
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'expert_sender_requests';
+        $orderRequest = new Expert_Sender_Order_Request();
+
+        $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
+        $result = $wpdb->get_row($query);
+
+        $sync_id = 0;
+        if ($result->last_sync > 0) {
+            $sync_id = $result->last_sync;
+        }
+
+        $expertSenderRequests = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s",
+                'order',
+                $sync_id
+            )
+        );
+
+        $sent = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 1 AND response IS NULL",
+                'order',
+                $sync_id
+            )
+        );
+
+        $failed = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 1 AND response IS NOT NULL",
+                'order',
+                $sync_id
+            )
+        );
+
+        $toBeSend = $wpdb->get_results(
+            $wpdb->prepare(
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 0 AND response IS NULL",
+                'order',
+                $sync_id
+            )
+        );
+        ?>
+
+    <script>
+    function setMaxDate() {
+        var today = new Date();
+        var maxDate = new Date(today);
+        maxDate.setFullYear(today.getFullYear() - 2);
+
+        var datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+        datetimeInputs.forEach(function(input) {
+        input.setAttribute('min', maxDate.toISOString().slice(0,16));
+        });
+    }
+
+    window.onload = setMaxDate;
+    </script>
+
+    <div class="wrap">
+        <h1><?php echo esc_html(get_admin_page_title()); ?>
+		</h1>
+		<form id="expertSenderSynchronizeOrdesForm" method="post" action="">
+	        <input type="hidden" name="expert-sender-order-synchronize-form">
+			<h2>Synchronize order</h2>
+            <label for="datefrom">From:</label>
+            <input type="datetime-local" id="datefrom" name="datefrom"><br><br>
+            
+            <label for="dateto">To:</label>
+            <input type="datetime-local" id="dateto" name="dateto"><br><br>
+			<button class="submit" type="submit"> Synchronize </button>
+		</form>
+        <p>LAST SYNCHRONIZATION</p>
+        <div> Synchronizing <?= count($expertSenderRequests) ?> orders</div>
+        <div> Synchronized: <?= count($sent) ?></div>
+        <div> Not synchronized yet: <?= count($toBeSend) ?></div>
+        <div> Failed: <?= count($failed) ?></div>
+        <div class="log-container" id="logContainer">
+            <?php foreach ($failed as $fail) {
+                echo '<div class=log-message>' .
+                    $fail->resource_id .
+                    ':' .
+                    $fail->response .
+                    '</div>';
+            } ?> 
+        </div>
+
+	</div>
+    <style>
+    .log-container {
+        width: 400px;
+        height: 300px;
+        overflow-y: scroll;
+        border: 1px solid #ccc;
+        padding: 10px;
+        background-color: #f9f9f9;
+    }
+
+    .log-message {
+        margin-bottom: 5px;
+        font-family: Arial, sans-serif;
+    }
+    </style>
+    <?php
+    }
+
+    public function expert_sender_order_synchronize_submission()
+    {
+        if (isset($_POST['expert-sender-order-synchronize-form'])) {
+            $startDate = $_POST['datefrom'];
+            $endDate = $_POST['dateto'];
+            $orders = $this->expert_sender_get_orders_by_dates(
+                $startDate,
+                $endDate
+            );
+
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'expert_sender_requests';
+            $orderRequest = new Expert_Sender_Order_Request();
+
+            $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
+            $result = $wpdb->get_row($query);
+
+            $sync_id = 1;
+            if ($result->last_sync > 0) {
+                $sync_id = $result->last_sync + 1;
+            }
+
+            $orderIds = [];
+
+            foreach ($orders as $order) {
+                $sOrder = wc_get_order($order->id);
+                $processedId = 0;
+                if ($sOrder instanceof WC_Order) {
+                    $processedId = $sOrder->id;
+                } else {
+                    $order_id = $sOrder->get_parent_id();
+                    $processedId = wc_get_order($order_id)->get_id();
+                }
+
+                if (!in_array($processedId, $orderIds)) {
+                    $status = $orderRequest->expert_sender_get_api_order_status_slug(
+                        $sOrder->get_data()['status']
+                    );
+
+                    if ($status) {
+                        $orderRequest->expert_sender_order_save_request(
+                            $order->id,
+                            $status,
+                            null,
+                            $sync_id
+                        );
+                    }
+
+                    $orderIds[] = $processedId;
+                }
+            }
+        }
+    }
+
+    function expert_sender_get_orders_by_dates($startDate, $endDate)
+    {
+        global $wpdb;
+
+        $query = $wpdb->prepare(
+            "
+                    SELECT * 
+                    FROM {$wpdb->prefix}wc_orders 
+                    WHERE date_updated_gmt >= %s 
+                    AND date_updated_gmt <= %s
+                    ORDER BY id DESC
+                ",
+            $startDate,
+            $endDate
+        );
+
+        return $wpdb->get_results($query);
     }
 }
