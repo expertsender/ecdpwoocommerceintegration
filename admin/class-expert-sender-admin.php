@@ -97,7 +97,8 @@ class Expert_Sender_Admin
         ]);
 
         add_action('admin_notices', [$this, 'expert_sender_data_saved_notice']);
-        $this->enqueue_styles();
+        //$this->enqueue_scripts();
+        //$this->enqueue_styles();
     }
 
     /**
