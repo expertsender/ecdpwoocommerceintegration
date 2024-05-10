@@ -98,8 +98,8 @@ class Expert_Sender_Client_Request
     ) {
         $customerApiData = [];
         $customerApiData['email'] = $customerData['user_email'];
-        $customerApiData['crmId'] = strval($customerId + 1000);
-        $this->expert_sender_add_or_update_customer($customerApiData);
+        $customerApiData['crmId'] = strval($customerId);
+        $this->expert_sender_add_or_update_customer($customerApiData, true);
     }
 
     public function expert_sender_edit_customer($user_id)
@@ -129,7 +129,7 @@ class Expert_Sender_Client_Request
         $customer = new WC_Customer($user_id);
 
         $customerApiData['email'] = $customer->get_email();
-        $customerApiData['crmId'] = strval($customer->get_id() + 1000);
+        $customerApiData['crmId'] = strval($customer->get_id());
         $customerApiData['firstName'] = $customer->get_first_name();
         $customerApiData['lastName'] = $customer->get_last_name();
 
@@ -184,7 +184,7 @@ class Expert_Sender_Client_Request
 
         $customerApiData['customAttributes'] = $customAttributes;
 
-        $this->expert_sender_add_or_update_customer($customerApiData);
+        $this->expert_sender_add_or_update_customer($customerApiData, true);
     }
 
     function expert_sender_edit_billing_address($user_id, $load_address)
@@ -193,7 +193,7 @@ class Expert_Sender_Client_Request
             $customer = new WC_Customer($user_id);
 
             $customerApiData['email'] = $customer->get_email();
-            $customerApiData['crmId'] = strval($customer->get_id() + 1000);
+            $customerApiData['crmId'] = strval($customer->get_id());
             $customerApiData['firstName'] = $customer->get_first_name();
             $customerApiData['lastName'] = $customer->get_last_name();
             if (get_option('expert_sender_enable_phone')) {
@@ -211,6 +211,7 @@ class Expert_Sender_Client_Request
                 )
             );
             $flattenData = $this->flatten($customer->get_data());
+
             foreach ($query as $row) {
                 if (isset($flattenData[$row->wp_field])) {
                     $customAttributes[] = [
@@ -225,7 +226,46 @@ class Expert_Sender_Client_Request
         }
     }
 
-    public function expert_sender_add_or_update_customer($customerData)
+    function expert_sender_edit_shipping_address($user_id, $load_address)
+    {
+        if ($load_address == 'shipping') {
+            $customer = new WC_Customer($user_id);
+
+            $customerApiData['email'] = $customer->get_email();
+            $customerApiData['crmId'] = strval($customer->get_id());
+            $customerApiData['firstName'] = $customer->get_first_name();
+            $customerApiData['lastName'] = $customer->get_last_name();
+            if (get_option('expert_sender_enable_phone')) {
+                $customerApiData['phone'] = $customer->get_billing_phone();
+            }
+
+            $customAttributes = [];
+
+            global $wpdb;
+            $table_name = $wpdb->prefix . 'expert_sender_mappings';
+            $query = $wpdb->get_results(
+                $wpdb->prepare(
+                    "SELECT * FROM $table_name WHERE resource_type = %s",
+                    $this::RESOURCE_CUSTOMER
+                )
+            );
+            $flattenData = $this->flatten($customer->get_data());
+
+            foreach ($query as $row) {
+                if (isset($flattenData[$row->wp_field])) {
+                    $customAttributes[] = [
+                        'name' => $row->ecdp_field,
+                        'value' => $flattenData[$row->wp_field],
+                    ];
+                }
+            }
+
+            $customerApiData['customAttributes'] = $customAttributes;
+            $this->expert_sender_add_or_update_customer($customerApiData);
+        }
+    }
+
+    public function expert_sender_add_or_update_customer($customerData, $sync = false)
     {
         $url = 'https://api.ecdp.app/customers';
 
@@ -238,15 +278,46 @@ class Expert_Sender_Client_Request
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'expert_sender_requests';
+        if(!$sync){
+            $wpdb->insert($table_name, [
+                'created_at' => current_time('mysql'),
+                'is_sent' => false,
+                'url_address' => $url,
+                'json_body' => $body,
+                'resource_type' => 'customer',
+                'resource_id' => 1,
+            ]);
+        }else{
+            $headers = [
+                'Accept' => 'application/json',
+                'x-api-key' => get_option('expert_sender_key'),
+                'Content-Type' => 'application/json',
+            ];
 
-        $wpdb->insert($table_name, [
-            'created_at' => current_time('mysql'),
-            'is_sent' => false,
-            'url_address' => $url,
-            'json_body' => $body,
-            'resource_type' => 'customer',
-            'resource_id' => 1,
-        ]);
+            $response = wp_remote_post($url, [
+                'headers' => $headers,
+                'body' => $body,
+            ]);
+
+			$responseCode = wp_remote_retrieve_response_code($response);
+            $log_file = WP_CONTENT_DIR . '/cron_logs.log';
+            file_put_contents(
+                $log_file,
+                'Custom method executed at ' . date('Y-m-d H:i:s') . "\n",
+                FILE_APPEND | LOCK_EX
+            );
+            $response = wp_remote_retrieve_body($response);
+
+            $wpdb->insert($table_name, [
+                'created_at' => current_time('mysql'),
+                'is_sent' => true,
+                'url_address' => $url,
+                'json_body' => $body,
+                'resource_type' => 'customer',
+                'resource_id' => 1,
+                'response' => $response
+            ]);
+        }
     }
 
     public function flatten($array, $prefix = '')

@@ -97,8 +97,6 @@ class Expert_Sender_Admin
         ]);
 
         add_action('admin_notices', [$this, 'expert_sender_data_saved_notice']);
-        //$this->enqueue_scripts();
-        //$this->enqueue_styles();
     }
 
     /**
@@ -108,20 +106,8 @@ class Expert_Sender_Admin
      */
     public function enqueue_styles()
     {
-        /**
-         * This function is provided for demonstration purposes only.
-         *
-         * An instance of this class should be passed to the run() function
-         * defined in Expert_Sender_Loader as all of the hooks are defined
-         * in that particular class.
-         *
-         * The Expert_Sender_Loader will then create the relationship
-         * between the defined hooks and the functions defined in this
-         * class.
-         */
-
         wp_enqueue_style(
-            $this->plugin_name . "_admin",
+            $this->plugin_name . '_admin',
             plugin_dir_url(__FILE__) . 'css/expert-sender-admin.css',
             [],
             $this->version,
@@ -136,18 +122,6 @@ class Expert_Sender_Admin
      */
     public function enqueue_scripts()
     {
-        /**
-         * This function is provided for demonstration purposes only.
-         *
-         * An instance of this class should be passed to the run() function
-         * defined in Expert_Sender_Loader as all of the hooks are defined
-         * in that particular class.
-         *
-         * The Expert_Sender_Loader will then create the relationship
-         * between the defined hooks and the functions defined in this
-         * class.
-         */
-
         wp_enqueue_script(
             $this->plugin_name,
             plugin_dir_url(__FILE__) . 'js/expert-sender-admin.js',
@@ -506,8 +480,7 @@ class Expert_Sender_Admin
         ';
 
          foreach ($productKeys as $productKey => $value) {
-             $selected =
-                 $productMapping->wp_field == $productKey ? 'selected' : '';
+             $selected = $productMapping->wp_field == $value ? 'selected' : '';
 
              echo "<option value=\"$value\" $selected>$value</option>";
          }
@@ -528,7 +501,7 @@ class Expert_Sender_Admin
 
          echo '
 		</select>
-			<button type="button">Remove</button></div>';
+			<button class="removeButton" type="button">Remove</button></div>';
      } ?>
 				</div>
 			</div>
@@ -570,7 +543,7 @@ class Expert_Sender_Admin
 
          echo '
 		</select>
-			<button type="button">Remove</button></div>';
+			<button class="removeButton" type="button">Remove</button></div>';
      } ?>
 				</div>
 			</div>
@@ -610,7 +583,7 @@ class Expert_Sender_Admin
 
          echo '</select>';
 
-         echo '<button type="button">Remove</button></div>';
+         echo '<button class="removeButton" type="button">Remove</button></div>';
      } ?>
 				</div>
 			</div>
@@ -673,6 +646,19 @@ class Expert_Sender_Admin
 	</div>
 
 	<script>
+                                // Get all remove buttons
+                                var removeButtons = document.querySelectorAll('.removeButton');
+
+// Add click event listener to each remove button
+removeButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+        // Find the parent element with class 'inputPair' and remove it
+        var inputPair = this.parentElement;
+        inputPair.remove();
+    });
+});
+
+
 document.addEventListener("DOMContentLoaded", function() {
     const sections = document.querySelectorAll(".mappingSection");
 
@@ -857,9 +843,7 @@ document.addEventListener("DOMContentLoaded", function() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'expert_sender_consents';
 
-        $consents = $wpdb->get_results(
-            $wpdb->prepare("SELECT * FROM $table_name")
-        );
+        $consents = $wpdb->get_results("SELECT * FROM $table_name");
 
         $apiConsents = $this->expert_sender_get_consents_from_api();
         $consentLocations = $this->expert_sender_get_consents_locations();
@@ -918,7 +902,7 @@ document.addEventListener("DOMContentLoaded", function() {
              $consent->consent_text .
              '">';
 
-         echo '<button type="button">Remove</button></div>';
+         echo '<button class="removeButton" type="button">Remove</button></div>';
      } ?>
 	  </div>
 			<input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
@@ -951,6 +935,18 @@ document.addEventListener("DOMContentLoaded", function() {
 	</div>
 
 	<script>
+                        // Get all remove buttons
+                        var removeButtons = document.querySelectorAll('.removeButton');
+
+// Add click event listener to each remove button
+removeButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+        // Find the parent element with class 'inputPair' and remove it
+        var inputPair = this.parentElement;
+        inputPair.remove();
+    });
+});
+
 document.addEventListener("DOMContentLoaded", function() {
     const sections = document.querySelectorAll(".consentSection");
 
@@ -1036,7 +1032,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     public function expert_sender_get_consents_locations()
     {
-        return ['customer_settings', 'checkout'];
+        return ['customer_settings'];
     }
 
     public function expert_sender_consents_handle_form_submission()
@@ -1115,9 +1111,7 @@ document.addEventListener("DOMContentLoaded", function() {
         global $wpdb;
         $table_name = $wpdb->prefix . 'expert_sender_order_status_mappings';
 
-        $orderStatusMappings = $wpdb->get_results(
-            $wpdb->prepare("SELECT * FROM $table_name")
-        );
+        $orderStatusMappings = $wpdb->get_results("SELECT * FROM $table_name");
         $wpStatuses = $this->expert_sender_get_wp_order_statuses();
         $ecdpStatuses = $this->expert_sender_get_ecdp_order_statuses();
 
@@ -1164,7 +1158,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
          echo '
 		</select>
-			<button type="button">Remove</button></div>';
+			<button class="removeButton" type="button">Remove</button></div>';
      } ?>
 				</div>
 			</div>
@@ -1190,6 +1184,18 @@ document.addEventListener("DOMContentLoaded", function() {
 	</div>
 
 	<script>
+                // Get all remove buttons
+                var removeButtons = document.querySelectorAll('.removeButton');
+
+// Add click event listener to each remove button
+removeButtons.forEach(function(button) {
+    button.addEventListener('click', function() {
+        // Find the parent element with class 'inputPair' and remove it
+        var inputPair = this.parentElement;
+        inputPair.remove();
+    });
+});
+
 document.addEventListener("DOMContentLoaded", function() {
     const sections = document.querySelectorAll(".mappingSection");
 
@@ -1298,7 +1304,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $expertSenderRequests = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s",
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %d",
                 'order',
                 $sync_id
             )
@@ -1306,7 +1312,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $sent = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 1 AND response IS NULL",
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %d AND is_sent = 1 AND response IS NULL",
                 'order',
                 $sync_id
             )
@@ -1314,7 +1320,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $failed = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 1 AND response IS NOT NULL",
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %d AND is_sent = 1 AND response IS NOT NULL",
                 'order',
                 $sync_id
             )
@@ -1322,7 +1328,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
         $toBeSend = $wpdb->get_results(
             $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %s AND is_sent = 0 AND response IS NULL",
+                "SELECT * FROM $table_name WHERE resource_type = %s AND synchronization_id = %d AND is_sent = 0 AND response IS NULL",
                 'order',
                 $sync_id
             )
@@ -1419,7 +1425,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 $sOrder = wc_get_order($order->id);
                 $processedId = 0;
                 if ($sOrder instanceof WC_Order) {
-                    $processedId = $sOrder->id;
+                    $processedId = $sOrder->get_id();
                 } else {
                     $order_id = $sOrder->get_parent_id();
                     $processedId = wc_get_order($order_id)->get_id();

@@ -58,7 +58,8 @@ class Expert_Sender_Inject_Consent
             $data = $this->expert_sender_get_user_consents_from_api(
                 $customer->get_email()
             );
-            if ($data->consentsData && $data->consentsData->consents) {
+
+            if ($data != null && property_exists($data,"consentsData") && property_exists($data->consentsData,"consents")) {
                 foreach ($data->consentsData->consents as $con) {
                     $consentsData[$con->id] = $con->value;
                 }
@@ -102,6 +103,7 @@ class Expert_Sender_Inject_Consent
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
             echo "Something went wrong: $error_message";
+            return null;
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;

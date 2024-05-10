@@ -78,8 +78,6 @@ class Expert_Sender
         $this->load_dependencies();
         $this->set_locale();
         $this->expert_sender_define_admin_hooks();
-        //add_action('woocommerce_loaded', [$this, 'expert_sender_define_admin_hooks']);
-        //add_action('woocommerce_loaded', [$this, 'expert_sender_define_public_hooks']);
         $this->expert_sender_define_public_hooks();
     }
 
@@ -252,6 +250,13 @@ class Expert_Sender
             10,
             2
         );
+        $this->loader->add_action(
+            'woocommerce_customer_save_address',
+            $plugin_public_customer,
+            'expert_sender_edit_shipping_address',
+            10,
+            2
+        );
     }
 
     /**
@@ -330,16 +335,14 @@ class Expert_Sender
                 'body' => $request->json_body,
             ]);
 			$responseCode = wp_remote_retrieve_response_code($response);
-            if (is_wp_error($response) || $responseCode == 500 || $responseCode == 401)
+            $responseBody = wp_remote_retrieve_body($response);
+            $reponseData = json_decode($responseBody);
+
+            if (is_wp_error($response) || $responseCode == 500 || $responseCode == 401 || property_exists($reponseData, "errors"))
 			{
-				file_put_contents(
-					$log_file,
-					'Failed to send request with id:' . $request->id . "\n",
-					FILE_APPEND | LOCK_EX
-				);
                 $wpdb->update(
 					$table_name,
-					array('response' => wp_remote_retrieve_body($response)),
+					array('is_sent' => 1, 'response' => implode("\n", $reponseData->errors)),
 					array('id' => $request->id),
 				);
                 

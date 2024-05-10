@@ -143,7 +143,7 @@ class Expert_Sender_Order_Request
     public function expert_sender_order_refunded($refund, $args)
     {
         $this->log_order_details($args);
-
+        $this->log_order_details($refund);
         $status = 'refunded';
         $slug = $this->expert_sender_get_api_order_status_slug($status);
 
@@ -182,7 +182,7 @@ class Expert_Sender_Order_Request
             $customer = new WC_Customer($order->get_user_id());
         }
 
-        $orderData['id'] = strval($order->get_id() + 1000);
+        $orderData['id'] = strval($order->get_id());
         $orderData['date'] = $order
             ->get_data()
             ['date_modified']->date('Y-m-d\TH:i:s.u\Z');
@@ -255,6 +255,7 @@ class Expert_Sender_Order_Request
             $table_name = $wpdb->prefix . 'expert_sender_mappings';
 
             if (!empty($attributes)) {
+                $this->log_order_details($attributes);
                 foreach ($attributes as $attribute) {
                     $query = $wpdb->prepare(
                         "SELECT * FROM $table_name WHERE resource_type = %s AND wp_field = %s LIMIT 1",
