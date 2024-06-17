@@ -136,6 +136,28 @@ class Expert_Sender
         require_once plugin_dir_path(dirname(__FILE__)) .
             'includes/class-expert-sender-order-request.php';
 
+        /**
+         * Interfaces
+         */
+        $this->require( 'includes/interfaces/class-expert-sender-log-handler-interface.php' );
+        $this->require( 'includes/interfaces/class-expert-sender-logger-interface.php' );
+
+        /**
+         * Abstracts
+         */
+        $this->require( 'includes/abstracts/abstract-expert-sender-log-handler.php' );
+
+        /**
+         * Classes
+         */
+        $this->require( 'includes/class-expert-sender-api.php' );
+        $this->require( 'includes/class-expert-sender-log-levels.php' );
+        $this->require( 'includes/class-expert-sender-logger.php' );
+        $this->require( 'includes/log-handlers/class-expert-sender-log-handler-file.php' );
+        $this->require( 'includes/utilities/class-expert-sender-logging-util.php' );
+
+        $this->require( 'includes/expert-sender-core-functions.php' );
+
         $this->loader = new Expert_Sender_Loader();
     }
 
@@ -211,6 +233,7 @@ class Expert_Sender
             $this->get_version()
         );
         $plugin_public_order = new Expert_Sender_Order_Request();
+        $plugin_api = new Expert_Sender_Api();
 
         $this->loader->add_action(
             'wp_enqueue_scripts',
@@ -256,6 +279,21 @@ class Expert_Sender
             'expert_sender_edit_shipping_address',
             10,
             2
+        );
+        $this->loader->add_action(
+            'woocommerce_register_form',
+            $plugin_public_consent,
+            'expert_sender_add_consents_in_register_form',
+            10,
+            1
+        );
+
+        $this->loader->add_action(
+            'http_api_debug',
+            $plugin_api,
+            'log_request',
+            10,
+            5
         );
     }
 
@@ -305,12 +343,8 @@ class Expert_Sender
 
     public function expert_sender_cron_job_send_request()
     {
-        $log_file = WP_CONTENT_DIR . '/cron_logs.log';
-        file_put_contents(
-            $log_file,
-            'Custom method executed at ' . date('Y-m-d H:i:s') . "\n",
-            FILE_APPEND | LOCK_EX
-        );
+        $logger = expert_sender_get_logger();
+        $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'expert_sender_requests';
@@ -334,31 +368,36 @@ class Expert_Sender
                 'headers' => $headers,
                 'body' => $request->json_body,
             ]);
-			$responseCode = wp_remote_retrieve_response_code($response);
+            $responseCode = wp_remote_retrieve_response_code($response);
             $responseBody = wp_remote_retrieve_body($response);
             $reponseData = json_decode($responseBody);
 
-            if (is_wp_error($response) || $responseCode == 500 || $responseCode == 401 || property_exists($reponseData, "errors"))
-			{
+            if (is_wp_error($response) || $responseCode == 500 || $responseCode == 401 || property_exists($reponseData, "errors")) {
                 $wpdb->update(
-					$table_name,
-					array('is_sent' => 1, 'response' => implode("\n", $reponseData->errors)),
-					array('id' => $request->id),
-				);
-                
+                    $table_name,
+                    array('is_sent' => 1, 'response' => implode("\n", $reponseData->errors)),
+                    array('id' => $request->id),
+                );
             } else {
                 $response_body = wp_remote_retrieve_body($response);
-				$wpdb->update(
-					$table_name,
-					array('is_sent' => 1),
-					array('id' => $request->id),
-				);
-				file_put_contents(
-					$log_file,
-					'Succedded to send request with id:' . $request->id . "\n" . $response_body . "\n",
-					FILE_APPEND | LOCK_EX
-				);
+                $wpdb->update(
+                    $table_name,
+                    array('is_sent' => 1),
+                    array('id' => $request->id),
+                );
+                $logger->debug(
+                    "Succeded to send request with id {$request->id} \n{$response_body}\n",
+                    array( 'source' => 'cron' )
+                );
             }
         }
+    }
+
+    /**
+     * @param string $filepath
+     * @return void
+     */
+    private function require( $filepath ) {
+        require_once plugin_dir_path( dirname( __FILE__ ) ) . $filepath;
     }
 }

@@ -268,6 +268,7 @@ class Expert_Sender_Client_Request
     public function expert_sender_add_or_update_customer($customerData, $sync = false)
     {
         $url = 'https://api.ecdp.app/customers';
+        $logger = expert_sender_get_logger();
 
         $body = json_encode([
             'mode' => 'AddOrUpdate',
@@ -278,7 +279,7 @@ class Expert_Sender_Client_Request
         global $wpdb;
 
         $table_name = $wpdb->prefix . 'expert_sender_requests';
-        if(!$sync){
+        if ( !$sync ) {
             $wpdb->insert($table_name, [
                 'created_at' => current_time('mysql'),
                 'is_sent' => false,
@@ -287,7 +288,7 @@ class Expert_Sender_Client_Request
                 'resource_type' => 'customer',
                 'resource_id' => 1,
             ]);
-        }else{
+        } else {
             $headers = [
                 'Accept' => 'application/json',
                 'x-api-key' => get_option('expert_sender_key'),
@@ -300,12 +301,8 @@ class Expert_Sender_Client_Request
             ]);
 
 			$responseCode = wp_remote_retrieve_response_code($response);
-            $log_file = WP_CONTENT_DIR . '/cron_logs.log';
-            file_put_contents(
-                $log_file,
-                'Custom method executed at ' . date('Y-m-d H:i:s') . "\n",
-                FILE_APPEND | LOCK_EX
-            );
+            $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
+
             $response = wp_remote_retrieve_body($response);
 
             $wpdb->insert($table_name, [

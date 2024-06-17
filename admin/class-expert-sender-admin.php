@@ -28,6 +28,8 @@ class Expert_Sender_Admin
     const RESOURCE_CUSTOMER = 'customer';
     const RESOURCE_ORDER = 'order';
 
+    const OPTION_ENABLE_LOGS = 'expert-sender-enable-logs';
+
     /**
      * The ID of this plugin.
      *
@@ -204,9 +206,7 @@ class Expert_Sender_Admin
         $phoneChecked = get_option('expert_sender_enable_phone')
             ? 'checked'
             : '';
-        $doubleOptinMessageId = get_option(
-            'expert_sender_double_optin_mess_id'
-        );
+        $enableLogs = get_option( self::OPTION_ENABLE_LOGS ) ? 'checked' : '';
         ?>
 
     <div class="wrap">
@@ -303,15 +303,14 @@ class Expert_Sender_Admin
                 </tr>
 
                 <tr valign="top">
-                    <th scope="row"><?php _e(
-                        'Double Opt-in Message Id',
-                        'expert-sender'
-                    ); ?></th>
+                        <th scope="row">
+                            <?= __('Enable logs'); ?>
+                        </th>
                     <td>
-					<input type="text" id="expert_sender_double_optin_mess_id" name="expert_sender_double_optin_mess_id" value="1" <?= $doubleOptinMessageId ?> />
+                            <input type="checkbox" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/>
                     </td>
 					<td>
-					<p>Double Optin Message Id</p>
+                            <p><?= __('Enable logging by ExpertSender plugin.'); ?>
 					</td>
                 </tr>
             </table>
@@ -399,8 +398,8 @@ class Expert_Sender_Admin
                 $_POST['expert_sender_double_optin_mess_id']
             );
             update_option(
-                'expert_sender_double_optin_mess_id',
-                $expert_sender_double_optin_mess_id
+                self::OPTION_ENABLE_LOGS,
+                $_POST[ self::OPTION_ENABLE_LOGS ]
             );
         }
     }
