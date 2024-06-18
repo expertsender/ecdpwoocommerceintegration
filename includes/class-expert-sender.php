@@ -280,13 +280,6 @@ class Expert_Sender
             10,
             2
         );
-        $this->loader->add_action(
-            'woocommerce_register_form',
-            $plugin_public_consent,
-            'expert_sender_add_consents_in_register_form',
-            10,
-            1
-        );
 
         $this->loader->add_action(
             'http_api_debug',
