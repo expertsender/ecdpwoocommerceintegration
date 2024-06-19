@@ -25,7 +25,6 @@ class Expert_Sender_Logging_Util {
     public static function get_log_directory() {
         /** @var \WP_Filesystem_Base $wp_filesystem */
         global $wp_filesystem;
-        WP_Filesystem();
 
         $dir = apply_filters(
             'expert_sender_log_directory',

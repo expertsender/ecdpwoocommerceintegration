@@ -150,6 +150,7 @@ class Expert_Sender
         /**
          * Classes
          */
+        $this->require( 'includes/class-expert-sender-ajax.php' );
         $this->require( 'includes/class-expert-sender-api.php' );
         $this->require( 'includes/class-expert-sender-log-levels.php' );
         $this->require( 'includes/class-expert-sender-logger.php' );
@@ -234,6 +235,7 @@ class Expert_Sender
         );
         $plugin_public_order = new Expert_Sender_Order_Request();
         $plugin_api = new Expert_Sender_Api();
+        new Expert_Sender_Ajax();
 
         $this->loader->add_action(
             'wp_enqueue_scripts',
@@ -279,6 +281,14 @@ class Expert_Sender
             'expert_sender_edit_shipping_address',
             10,
             2
+        );
+
+        $this->loader->add_action(
+            'woocommerce_register_form',
+            $plugin_public_consent,
+            'expert_sender_add_consents_in_register_form',
+            10,
+            1
         );
 
         $this->loader->add_action(
