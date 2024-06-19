@@ -365,8 +365,7 @@ class Expert_Sender_Order_Request
         $log_message = $fullLog;
         $log_message .= "\n";
 
-        // Log to file
-        $log_file = WP_CONTENT_DIR . '/custom_order_logs.log';
-        file_put_contents($log_file, $log_message, FILE_APPEND | LOCK_EX);
+        $logger = expert_sender_get_logger();
+        $logger->debug( $log_message, array( 'source' => 'custom_order' ) );
     }
 }
