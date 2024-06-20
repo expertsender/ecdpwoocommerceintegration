@@ -188,7 +188,13 @@ class Expert_Sender_Order_Request
             ['date_modified']->date('Y-m-d\TH:i:s.u\Z');
         $orderData['timeZone'] = 'GMT';
 
-        $orderData['websiteId'] = get_option('expert_sender_website_id');
+        $website_id = get_option('expert_sender_website_id', null);
+
+        if ( empty( $website_id ) ) {
+            $website_id = null;
+        }
+
+        $orderData['websiteId'] = $website_id;
 
         $orderData['status'] = $status;
 
@@ -207,6 +213,8 @@ class Expert_Sender_Order_Request
         }
         $customerData['crmId'] = $customer->get_billing_phone();
         $orderData['customer'] = $customerData;
+        $consents_data = Expert_Sender_Client_Request::get_consents_from_request( Expert_Sender_Admin::FORM_CHECKOUT_KEY );
+        $orderData['customer']['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
 
         $items = $order->get_items();
         $products = [];
@@ -228,7 +236,13 @@ class Expert_Sender_Order_Request
             }
 
             $product['url'] = $productItem->get_permalink();
-            $product['imageUrl'] = $productItem->get_image();
+            $image_url = wp_get_attachment_image_src( get_post_thumbnail_id( $product_id ), 'single-post-thumbnail' );
+
+            if ( false === $image_url ) {
+                $image_url = wc_placeholder_img_src();
+            }
+        
+            $product['imageUrl'] = $image_url;
 
             $category_ids = $productItem->get_category_ids();
             $categoriesArray = [];

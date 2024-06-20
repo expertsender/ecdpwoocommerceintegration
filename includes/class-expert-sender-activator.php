@@ -52,7 +52,6 @@ class Expert_Sender_Activator {
 			api_consent_id mediumint(9) NOT NULL,
 			consent_location varchar(50) NOT NULL,
 			consent_text TEXT,
-			consent_type varchar(10) NOT NULL,
 			PRIMARY KEY  (id)
 		);";
 		

@@ -1,32 +1,40 @@
 (function( $ ) {
 	'use strict';
 
-	/**
-	 * All of the code for your public-facing JavaScript source
-	 * should reside in this file.
-	 *
-	 * Note: It has been assumed you will write jQuery code here, so the
-	 * $ function reference has been prepared for usage within the scope
-	 * of this function.
-	 *
-	 * This enables you to define handlers, for when the DOM is ready:
-	 *
-	 * $(function() {
-	 *
-	 * });
-	 *
-	 * When the window is loaded:
-	 *
-	 * $( window ).load(function() {
-	 *
-	 * });
-	 *
-	 * ...and/or other possibilities.
-	 *
-	 * Ideally, it is not considered best practise to attach more than a
-	 * single DOM-ready or window-load handler for a particular page.
-	 * Although scripts in the WordPress core, Plugins and Themes may be
-	 * practising this, we should strive to set a better example in our own work.
-	 */
+	const ECDP_DATA_TAG = 'data-ecdp-field';
+	const NEWSLETTER_FORM_SUBMIT_KEY = 'newsletter-submit';
+	const EMAIL_INPUT_KEY = 'email';
+
+	$(function() {
+		prepareNewsletterConsentForm();
+	});
+	
+
+	function prepareNewsletterConsentForm() {
+		$(`[${ECDP_DATA_TAG}='${NEWSLETTER_FORM_SUBMIT_KEY}']`).each(function () {
+			$(this).on('click', submitConsents);
+		})
+		
+	}
+
+	function submitConsents() {
+		let email = null;
+		$(`[${ECDP_DATA_TAG}='${EMAIL_INPUT_KEY}']`).each(function () {
+			if ($(this).val()) {
+				email = $(this).val();
+			}
+		});
+
+		if (null !== email) {
+			let data = {
+				'action': 'expert_sender_update_newsletter_consents',
+				email
+			};
+
+			$.post(settings.ajaxurl, data);
+		}
+		
+		return true;
+	}
 
 })( jQuery );

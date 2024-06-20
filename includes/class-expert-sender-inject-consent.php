@@ -2,6 +2,8 @@
 
 class Expert_Sender_Inject_Consent
 {
+    public const CONSENT_INPUT_KEY = 'expert-sender-consents';
+
     /**
      * The ID of this plugin.
      *
@@ -33,15 +35,49 @@ class Expert_Sender_Inject_Consent
         $this->version = $version;
         add_filter(
             'woocommerce_edit_account_form_fields',
-            [$this, 'expert_sender_add_consents'],
+            array( $this, 'expert_sender_add_consents_in_customer_settings_form' ),
             9,
             1
         );
+
+        add_action(
+            'woocommerce_review_order_before_submit',
+            array( $this, 'expert_sender_add_consents_in_checkout_form' ),
+            20
+        );
+
     }
 
-    public function expert_sender_add_consents()
+    /**
+     * @return void
+     */
+    public function expert_sender_add_consents_in_register_form() {
+        $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_REGISTRATION_KEY );
+    }
+
+    /**
+     * @return void
+     */
+    public function expert_sender_add_consents_in_customer_settings_form() {
+        $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY );
+    }
+
+    /**
+     * @param array $checkout_fields
+     * @return array
+     */
+    public function expert_sender_add_consents_in_checkout_form( $checkout_fields ) {
+        return $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_CHECKOUT_KEY, $checkout_fields );
+    }
+
+    /**
+     * @param string $form_location
+     * @param mixed $returned_data
+     * @return mixed|void
+     */
+    public function expert_sender_add_consents( $form_location, $return_data = null )
     {
-        $customer = new WC_Customer(get_current_user_id());
+        $customer = new WC_Customer( get_current_user_id() );
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'expert_sender_consents';
@@ -49,39 +85,61 @@ class Expert_Sender_Inject_Consent
         $consents = $wpdb->get_results(
             $wpdb->prepare(
                 "SELECT * FROM $table_name WHERE consent_location = %s",
-                'customer_settings'
+                $form_location
             )
         );
-        $consentsData = [];
+        $consentsData = array();
 
-        if (count($consents)) {
-            $data = $this->expert_sender_get_user_consents_from_api(
-                $customer->get_email()
-            );
+        if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+            if ( count( $consents ) ) {
+                $data = $this->expert_sender_get_user_consents_from_api( $customer->get_email() );
 
-            if ($data != null && property_exists($data,"consentsData") && property_exists($data->consentsData,"consents")) {
-                foreach ($data->consentsData->consents as $con) {
-                    $consentsData[$con->id] = $con->value;
+                if ( $data != null && property_exists( $data, "consentsData" )
+                    && property_exists( $data->consentsData, "consents" ) 
+                ) {
+                    foreach ( $data->consentsData->consents as $con ) {
+                        $consentsData[ $con->id ] = $con->value;
+                    }
                 }
             }
         }
 
-        foreach ($consents as $consent) {
-            $checked =
-                isset($consentsData[$consent->api_consent_id]) &&
-                $consentsData[$consent->api_consent_id] != 'False'
-                    ? 1
-                    : 0;
+        if ( ! empty ($consents ) ) {
+            if (
+                Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY !== $form_location &&
+                $text_before = get_option( $form_location . '_text_before' )
+            ) {
+                echo '<div class="expert-sender-text-before-consents">' . esc_html( $text_before ) . '</div>';
+            };
 
-            $field_args = [
-                'type' => 'checkbox',
-                'name' => 'consent[' . $consent->api_consent_id . ']',
-                'label' => $consent->consent_text,
-                'class' => ['my-custom-class'],
-                'default' => $checked,
-            ];
-            $key = 'consent[' . $consent->api_consent_id . ']';
-            woocommerce_form_field($key, $field_args);
+            if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+                echo '<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide expert-sender">';
+                echo '<label class="expert-sender">' . __( 'Consents', 'expert-sender' ) . '</label>';
+            }
+
+            foreach ( $consents as $consent ) {
+                $checked = isset( $consentsData[ $consent->api_consent_id ] ) &&
+                    $consentsData[ $consent->api_consent_id ] != 'False' ? 1 : 0;
+
+                $field_args = [
+                    'type' => 'checkbox',
+                    'name' => self::CONSENT_INPUT_KEY . "[{$consent->api_consent_id}]",
+                    'label' => $consent->consent_text,
+                    'class' => [ 'my-custom-class' ],
+                    'default' => $checked,
+                ];
+                $key = self::CONSENT_INPUT_KEY . "[{$consent->api_consent_id}]";
+
+                woocommerce_form_field( $key, $field_args );
+            }
+
+            if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+                echo '</p>';
+            }
+        }
+
+        if ( null !== $return_data ) {
+            return $return_data;
         }
     }
 

@@ -11,3 +11,22 @@ button.submit{
 button.submit:hover{
     background-color: darkgray;
 }
+
+.input-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin-bottom: 15px;
+}
+
+.input-wrap label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.expert-sender-divider
+{
+    max-width: 400px;
+    border-bottom: 1px solid #333;
+    margin: 25px 0;
+}

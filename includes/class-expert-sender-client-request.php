@@ -36,6 +36,127 @@ class Expert_Sender_Client_Request
     }
 
     /**
+     * @param string $consent_form
+     * @return array
+     */
+    public static function get_consents_from_request( $consent_form ) {
+        global $wpdb;
+
+        $empty_request_forms = array(
+            Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY, 
+            Expert_Sender_Admin::FORM_NEWSLETTER_KEY
+        );
+
+        if ( ! in_array( $consent_form, $empty_request_forms ) &&
+            ! isset( $_POST[Expert_Sender_Inject_Consent::CONSENT_INPUT_KEY] )
+        ) {
+            return array();
+        }
+
+        $request_consents = $_POST[Expert_Sender_Inject_Consent::CONSENT_INPUT_KEY] ?? array();
+
+        $consents_table_name = $wpdb->prefix . 'expert_sender_consents';
+        $query = "SELECT * FROM $consents_table_name WHERE consent_location = %s";
+
+        if ( ! in_array( $consent_form, $empty_request_forms ) ) {
+            $consent_ids = implode( ',', array_keys( $request_consents ) );
+            $query .= "AND api_consent_id IN ({$consent_ids})";
+        }
+
+        $consents = $wpdb->get_results(
+            $wpdb->prepare( $query, $consent_form)
+        );
+
+        $consents_data = array();
+
+        foreach ( $consents as $consent ) {
+            $value = $request_consents[$consent->api_consent_id] ?? '0';
+
+            if ( $value === '1' || Expert_Sender_Admin::FORM_NEWSLETTER_KEY === $consent_form ) {
+                $value = 'True';
+            } else if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY !== $consent_form ) {
+                continue;
+            } else {
+                $value = 'False';
+            }
+
+            $consents_data[] = array(
+                'id' => $consent->api_consent_id,
+                'value' => $value
+            );
+        }
+
+        $confirmation_message_id = null;
+
+        if ( Expert_Sender_Admin::OPTION_VALUE_DOUBLE_OPT_IN === Expert_Sender_Admin::get_opt_in_option_by_form( $consent_form ) ) {
+            $confirmation_message_id = Expert_Sender_Admin::get_confirmation_message_id_option_by_form( $consent_form );
+        }
+
+        return empty( $consents_data ) ? array() : array(
+            'consents' => $consents_data,
+            'force' => true,
+            'confirmationMessageId' => $confirmation_message_id
+        );
+    }
+
+    /**
+     * @param array $customerData
+     * @param bool $sync
+     * @return void
+     */
+    public static function expert_sender_add_or_update_customer( $customerData, $sync = false )
+    {
+        $url = 'https://api.ecdp.app/customers';
+        $logger = expert_sender_get_logger();
+
+        $body = json_encode([
+            'mode' => 'AddOrUpdate',
+            'matchBy' => 'Email',
+            'data' => [$customerData],
+        ]);
+
+        global $wpdb;
+
+        $table_name = $wpdb->prefix . 'expert_sender_requests';
+        if ( !$sync ) {
+            $wpdb->insert($table_name, [
+                'created_at' => current_time('mysql'),
+                'is_sent' => false,
+                'url_address' => $url,
+                'json_body' => $body,
+                'resource_type' => 'customer',
+                'resource_id' => 1,
+            ]);
+        } else {
+            $headers = [
+                'Accept' => 'application/json',
+                'x-api-key' => get_option('expert_sender_key'),
+                'Content-Type' => 'application/json',
+            ];
+
+            $response = wp_remote_post($url, [
+                'headers' => $headers,
+                'body' => $body,
+            ]);
+
+			$responseCode = wp_remote_retrieve_response_code($response);
+            $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
+
+            $response = wp_remote_retrieve_body($response);
+
+            $wpdb->insert($table_name, [
+                'created_at' => current_time('mysql'),
+                'is_sent' => true,
+                'url_address' => $url,
+                'json_body' => $body,
+                'resource_type' => 'customer',
+                'resource_id' => 1,
+                'response' => $response
+            ]);
+        }
+    }
+
+    /**
      * Register the stylesheets for the public-facing side of the site.
      *
      * @since    1.0.0
@@ -99,7 +220,9 @@ class Expert_Sender_Client_Request
         $customerApiData = [];
         $customerApiData['email'] = $customerData['user_email'];
         $customerApiData['crmId'] = strval($customerId);
-        $this->expert_sender_add_or_update_customer($customerApiData, true);
+        $consents_data = self::get_consents_from_request( Expert_Sender_Admin::FORM_REGISTRATION_KEY );
+        $customerApiData['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
+        self::expert_sender_add_or_update_customer($customerApiData, true);
     }
 
     public function expert_sender_edit_customer($user_id)
@@ -132,35 +255,8 @@ class Expert_Sender_Client_Request
         $customerApiData['crmId'] = strval($customer->get_id());
         $customerApiData['firstName'] = $customer->get_first_name();
         $customerApiData['lastName'] = $customer->get_last_name();
-
-        $consentApiDataArray = [];
-        foreach ($consentValues as $key => $consentValue) {
-            $consentOptin = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT * FROM $table_name WHERE api_consent_id = %s",
-                    $key
-                )
-            );
-
-            $consentApiData['value'] = $consentValue ? 'True' : 'False';
-
-            if (count($consentOptin) > 0) {
-                if ($consentOptin[0]->consent_type == 'double') {
-                    $consentApiData['value'] = $consentValue
-                        ? 'AwaitingConfirmation'
-                        : 'False';
-                }
-            }
-
-            $consentApiData['id'] = $key;
-            $consentApiDataArray[] = $consentApiData;
-        }
-        $customerApiData['consentsData'] = [];
-        $customerApiData['consentsData']['consents'] = $consentApiDataArray;
-        $customerApiData['consentsData']['force'] = true;
-        $customerApiData['consentsData']['confirmationMessageId'] = get_option(
-            'expert_sender_double_optin_mess_id'
-        );
+        $consents_data = self::get_consents_from_request( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY );
+        $customerApiData['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
 
         $customAttributes = [];
 
@@ -184,7 +280,7 @@ class Expert_Sender_Client_Request
 
         $customerApiData['customAttributes'] = $customAttributes;
 
-        $this->expert_sender_add_or_update_customer($customerApiData, true);
+        self::expert_sender_add_or_update_customer($customerApiData, true);
     }
 
     function expert_sender_edit_billing_address($user_id, $load_address)
@@ -222,7 +318,7 @@ class Expert_Sender_Client_Request
             }
 
             $customerApiData['customAttributes'] = $customAttributes;
-            $this->expert_sender_add_or_update_customer($customerApiData);
+            self::expert_sender_add_or_update_customer($customerApiData);
         }
     }
 
@@ -261,59 +357,7 @@ class Expert_Sender_Client_Request
             }
 
             $customerApiData['customAttributes'] = $customAttributes;
-            $this->expert_sender_add_or_update_customer($customerApiData);
-        }
-    }
-
-    public function expert_sender_add_or_update_customer($customerData, $sync = false)
-    {
-        $url = 'https://api.ecdp.app/customers';
-        $logger = expert_sender_get_logger();
-
-        $body = json_encode([
-            'mode' => 'AddOrUpdate',
-            'matchBy' => 'Email',
-            'data' => [$customerData],
-        ]);
-
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'expert_sender_requests';
-        if ( !$sync ) {
-            $wpdb->insert($table_name, [
-                'created_at' => current_time('mysql'),
-                'is_sent' => false,
-                'url_address' => $url,
-                'json_body' => $body,
-                'resource_type' => 'customer',
-                'resource_id' => 1,
-            ]);
-        } else {
-            $headers = [
-                'Accept' => 'application/json',
-                'x-api-key' => get_option('expert_sender_key'),
-                'Content-Type' => 'application/json',
-            ];
-
-            $response = wp_remote_post($url, [
-                'headers' => $headers,
-                'body' => $body,
-            ]);
-
-			$responseCode = wp_remote_retrieve_response_code($response);
-            $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
-
-            $response = wp_remote_retrieve_body($response);
-
-            $wpdb->insert($table_name, [
-                'created_at' => current_time('mysql'),
-                'is_sent' => true,
-                'url_address' => $url,
-                'json_body' => $body,
-                'resource_type' => 'customer',
-                'resource_id' => 1,
-                'response' => $response
-            ]);
+            self::expert_sender_add_or_update_customer($customerApiData);
         }
     }
 

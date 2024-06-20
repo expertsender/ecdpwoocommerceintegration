@@ -28,7 +28,29 @@ class Expert_Sender_Admin
     const RESOURCE_CUSTOMER = 'customer';
     const RESOURCE_ORDER = 'order';
 
-    const OPTION_ENABLE_LOGS = 'expert-sender-enable-logs';
+    const FORM_REGISTRATION_KEY = 'registration';
+    const FORM_CUSTOMER_SETTINGS_KEY = 'customer_settings';
+    const FORM_CHECKOUT_KEY = 'checkout';
+    const FORM_NEWSLETTER_KEY = 'newsletter';
+
+    const FORM_CONSENT_FORMS = 'expert-sender-consent-forms-form';
+    const OPTION_VALUE_SINGLE_OPT_IN = 'single-opt-in';
+    const OPTION_VALUE_DOUBLE_OPT_IN = 'double-opt-in';
+
+    const OPTION_FORM_REGISTRATION_TEXT_BEFORE = 'expert_sender_registration_text_before';
+    const OPTION_FORM_REGISTRATION_TYPE = 'expert_sender_registration_form_type';
+    const OPTION_FORM_REGISTRATION_MESSAGE_ID = 'expert_sender_registration_form_message_id';
+    const OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE = 'expert_sender_customer_settings_text_before';
+    const OPTION_FORM_CUSTOMER_SETTINGS_TYPE = 'expert_sender_customer_settings_form_type';
+    const OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID = 'expert_sender_customer_settings_form_message_id';
+    const OPTION_FORM_CHECKOUT_TEXT_BEFORE = 'expert_sender_checkout_text_before';
+    const OPTION_FORM_CHECKOUT_TYPE = 'expert_sender_checkout_form_type';
+    const OPTION_FORM_CHECKOUT_MESSAGE_ID = 'expert_sender_checkout_form_message_id';
+    const OPTION_FORM_NEWSLETTER_TEXT_BEFORE = 'expert_sender_newsletter_text_before';
+    const OPTION_FORM_NEWSLETTER_TYPE = 'expert_sender_newsletter_form_type';
+    const OPTION_FORM_NEWSLETTER_MESSAGE_ID = 'expert_sender_newsletter_form_message_id';
+
+    const OPTION_ENABLE_LOGS = 'expert_sender_enable_logs';
 
     /**
      * The ID of this plugin.
@@ -63,6 +85,7 @@ class Expert_Sender_Admin
         add_action('admin_menu', [$this, 'add_plugin_admin_menu']);
         add_action('admin_menu', [$this, 'add_plugin_admin_mappings']);
         add_action('admin_menu', [$this, 'add_plugin_admin_consents']);
+        add_action( 'admin_menu', array( $this, 'add_plugin_admin_consent_forms' ) );
         add_action('admin_menu', [
             $this,
             'add_plugin_admin_order_status_mapping',
@@ -87,6 +110,11 @@ class Expert_Sender_Admin
             $this,
             'expert_sender_consents_handle_form_submission',
         ]);
+
+        add_action( 'admin_init', array(
+            $this,
+            'handle_consent_forms_submit'
+        ));
 
         add_action('admin_init', [
             $this,
@@ -115,6 +143,68 @@ class Expert_Sender_Admin
             $this->version,
             'all'
         );
+    }
+
+    /**
+     * @param string $form
+     * @return string|null
+     */
+    public static function get_opt_in_option_by_form( $form ) {
+        $option = null;
+
+        switch ( $form ) {
+            case self::FORM_CHECKOUT_KEY:
+                $option = self::OPTION_FORM_CHECKOUT_TYPE;
+                break;
+            case self::FORM_CUSTOMER_SETTINGS_KEY:
+                $option = self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE;
+                break;
+            case self::FORM_NEWSLETTER_KEY:
+                $option = self::OPTION_FORM_NEWSLETTER_TYPE;
+                break;
+            case self::FORM_REGISTRATION_KEY:
+                $option = self::OPTION_FORM_REGISTRATION_TYPE;
+                break;
+            default:
+                break;
+        }
+
+        if ( null !== $option ) {
+            return get_option( $option );
+        }
+
+        return null;
+    }
+
+    /**
+     * @param string $form
+     * @return int|null
+     */
+    public static function get_confirmation_message_id_option_by_form( $form ) {
+        $option = null;
+
+        switch ( $form ) {
+            case self::FORM_CHECKOUT_KEY:
+                $option = self::OPTION_FORM_CHECKOUT_MESSAGE_ID;
+                break;
+            case self::FORM_CUSTOMER_SETTINGS_KEY:
+                $option = self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID;
+                break;
+            case self::FORM_NEWSLETTER_KEY:
+                $option = self::OPTION_FORM_NEWSLETTER_MESSAGE_ID;
+                break;
+            case self::FORM_REGISTRATION_KEY:
+                $option = self::OPTION_FORM_REGISTRATION_MESSAGE_ID;
+                break;
+            default:
+                break;
+        }
+
+        if ( null !== $option ) {
+            return (int) get_option( $option );
+        }
+
+        return null;
     }
 
     /**
@@ -168,6 +258,21 @@ class Expert_Sender_Admin
         );
     }
 
+    /**
+     * @return void
+     */
+    public function add_plugin_admin_consent_forms()
+    {
+        add_submenu_page(
+            'expert-sender-settings', // parent
+            'Expert Sender Consent Forms',
+            'Consent Forms', // Menu title
+            'manage_options', // Capability
+            'expert-sender-settings-consent-forms', // Menu slug
+            array( $this, 'render_consent_forms_page' ) // Callback function to render the settings page
+        );
+    }
+
     public function add_plugin_admin_order_status_mapping()
     {
         add_submenu_page(
@@ -207,129 +312,129 @@ class Expert_Sender_Admin
             ? 'checked'
             : '';
         $enableLogs = get_option( self::OPTION_ENABLE_LOGS ) ? 'checked' : '';
-        ?>
+?>
 
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-        <form id="expertSenderForm" method="post" action="options.php">
-		<input type="hidden" name="expert-sender-main-form">
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form id="expertSenderForm" method="post" action="options.php">
+                <input type="hidden" name="expert-sender-main-form">
 
-		<?php settings_fields('expert_sender_settings_group'); ?>
-            <?php do_settings_sections('expert-sender-settings'); ?>
-            <table class="form-table">
-                <tr valign="top">
-                    <th scope="row"><?php _e(
-                        'API Key',
-                        'expert-sender'
-                    ); ?></th>
-                    <td>
-                        <input type="password" name="expert_sender_key" value="<?php echo esc_attr(
-                            get_option('expert_sender_key')
-                        ); ?>" />
-                    </td>
-					<td>
-					<p>Skąd pobrać klucz API? </p>
-						<ol>
-							<li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-							<li>Wybierz odpowiednią jednostkę</li>
-							<li>Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w ustawieniach wtyczki.</li>
-						</ol>
-                    </td>
-                </tr>
+                <?php settings_fields('expert_sender_settings_group'); ?>
+                <?php do_settings_sections('expert-sender-settings'); ?>
+                <table class="form-table">
+                    <tr valign="top">
+                        <th scope="row"><?php _e(
+                                            'API Key',
+                                            'expert-sender'
+                                        ); ?></th>
+                        <td>
+                            <input type="password" name="expert_sender_key" value="<?php echo esc_attr(
+                                                                                        get_option('expert_sender_key')
+                                                                                    ); ?>" />
+                        </td>
+                        <td>
+                            <p>Skąd pobrać klucz API? </p>
+                            <ol>
+                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
+                                <li>Wybierz odpowiednią jednostkę</li>
+                                <li>Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w ustawieniach wtyczki.</li>
+                            </ol>
+                        </td>
+                    </tr>
 
-				<tr valign="top">
-                    <th scope="row"><?php _e(
-                        'Enable Script',
-                        'expert-sender'
-                    ); ?></th>
-                    <td>
-					<input type="checkbox" id="expert_sender_enable_script" name="expert_sender_enable_script" value="1" <?= $checked ?> />
-                    </td>
-					<td>
-					<p>Włącz skrypt śledzący ruch</p>
-					</td>
-                </tr>
+                    <tr valign="top">
+                        <th scope="row"><?php _e(
+                                            'Enable Script',
+                                            'expert-sender'
+                                        ); ?></th>
+                        <td>
+                            <input type="checkbox" id="expert_sender_enable_script" name="expert_sender_enable_script" value="1" <?= $checked ?> />
+                        </td>
+                        <td>
+                            <p>Włącz skrypt śledzący ruch</p>
+                        </td>
+                    </tr>
 
-				<tr valign="top">
-                    <th scope="row"><?php _e('Script', 'expert-sender'); ?></th>
-                    <td>
-                        <textarea name="expert_sender_script" id="expert_sender_script" rows="8" cols="50"><?php echo esc_textarea(
-                            base64_decode(get_option('expert_sender_script'))
-                        ); ?></textarea>
-                    </td>
-					<td>
-					<p>Skąd pobrać skrypt? </p>
-						<ol>
-							<li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-							<li>Wybierz odpowiednią jednostkę</li>
-							<li>Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy odpowiedniej stronie internetowej kliknij ikonkę "Tracking code".</li>
-							<li>Skopiuj i wklej w ustawieniach wtyczki.</li>
-						</ol>
-                    </td>
-                </tr>
+                    <tr valign="top">
+                        <th scope="row"><?php _e('Script', 'expert-sender'); ?></th>
+                        <td>
+                            <textarea name="expert_sender_script" id="expert_sender_script" rows="8" cols="50"><?php echo esc_textarea(
+                                                                                                                    base64_decode(get_option('expert_sender_script'))
+                                                                                                                ); ?></textarea>
+                        </td>
+                        <td>
+                            <p>Skąd pobrać skrypt? </p>
+                            <ol>
+                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
+                                <li>Wybierz odpowiednią jednostkę</li>
+                                <li>Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy odpowiedniej stronie internetowej kliknij ikonkę "Tracking code".</li>
+                                <li>Skopiuj i wklej w ustawieniach wtyczki.</li>
+                            </ol>
+                        </td>
+                    </tr>
 
-				<tr valign="top">
-                    <th scope="row"><?php _e(
-                        'Website Id',
-                        'expert-sender'
-                    ); ?></th>
-                    <td>
-                        <input type="text" name="expert_sender_website_id" value="<?php echo esc_attr(
-                            get_option('expert_sender_website_id')
-                        ); ?>" />
-                    </td>
-					<td>
-					<p>Skąd pobrać numer ID strony internetowej? </p>
-						<ol>
-							<li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-							<li>Wybierz odpowiednią jednostkę</li>
-							<li>Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź odpowiednią stronę internetową.</li>
-							<li>Skopiuj ID i wklej w ustawieniach wtyczki.</li>
-						</ol>
-                    </td>
-                </tr>
+                    <tr valign="top">
+                        <th scope="row"><?php _e(
+                                            'Website Id',
+                                            'expert-sender'
+                                        ); ?></th>
+                        <td>
+                            <input type="text" name="expert_sender_website_id" value="<?php echo esc_attr(
+                                                                                            get_option('expert_sender_website_id')
+                                                                                        ); ?>" />
+                        </td>
+                        <td>
+                            <p>Skąd pobrać numer ID strony internetowej? </p>
+                            <ol>
+                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
+                                <li>Wybierz odpowiednią jednostkę</li>
+                                <li>Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź odpowiednią stronę internetową.</li>
+                                <li>Skopiuj ID i wklej w ustawieniach wtyczki.</li>
+                            </ol>
+                        </td>
+                    </tr>
 
-                <tr valign="top">
-                    <th scope="row"><?php _e(
-                        'Enable sending phone number to Expert Sender',
-                        'expert-sender'
-                    ); ?></th>
-                    <td>
-					<input type="checkbox" id="expert_sender_enable_phone" name="expert_sender_enable_phone" value="1" <?= $phoneChecked ?> />
-                    </td>
-					<td>
-					<p>Wysyłaj numer telefonu do Expert Sender</p>
-					</td>
-                </tr>
+                    <tr valign="top">
+                        <th scope="row"><?php _e(
+                                            'Enable sending phone number to Expert Sender',
+                                            'expert-sender'
+                                        ); ?></th>
+                        <td>
+                            <input type="checkbox" id="expert_sender_enable_phone" name="expert_sender_enable_phone" value="1" <?= $phoneChecked ?> />
+                        </td>
+                        <td>
+                            <p>Wysyłaj numer telefonu do Expert Sender</p>
+                        </td>
+                    </tr>
 
-                <tr valign="top">
+                    <tr valign="top">
                         <th scope="row">
                             <?= __('Enable logs'); ?>
                         </th>
-                    <td>
+                        <td>
                             <input type="checkbox" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/>
-                    </td>
-					<td>
+                        </td>
+                        <td>
                             <p><?= __('Enable logging by ExpertSender plugin.'); ?>
-					</td>
-                </tr>
-            </table>
-			<script type="text/javascript">
-   				jQuery(document).ready(function($) {
-				$("#expertSenderForm").submit(function(event) {
-					event.preventDefault();
-					
-					var inputValue = $("#expert_sender_script").val();
-					var encodedValue = btoa(inputValue);
-					$("#expert_sender_script").val(encodedValue);
+                        </td>
+                    </tr>
+                </table>
+                <script type="text/javascript">
+                    jQuery(document).ready(function($) {
+                        $("#expertSenderForm").submit(function(event) {
+                            event.preventDefault();
 
-					event.target.submit();
-			});
-		});
-			</script>
-			<button> Save </button>
-        </form>
-    </div>
+                            var inputValue = $("#expert_sender_script").val();
+                            var encodedValue = btoa(inputValue);
+                            $("#expert_sender_script").val(encodedValue);
+
+                            event.target.submit();
+                        });
+                    });
+                </script>
+                <button> Save </button>
+            </form>
+        </div>
     <?php
     }
 
@@ -347,10 +452,6 @@ class Expert_Sender_Admin
             register_setting(
                 'expert_sender_settings_group',
                 'expert_sender_enable_phone'
-            );
-            register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_double_optin_mess_id'
             );
             register_setting(
                 'expert_sender_settings_group',
@@ -394,9 +495,6 @@ class Expert_Sender_Admin
                 $expert_sender_website_id
             );
 
-            $expert_sender_double_optin_mess_id = sanitize_text_field(
-                $_POST['expert_sender_double_optin_mess_id']
-            );
             update_option(
                 self::OPTION_ENABLE_LOGS,
                 $_POST[ self::OPTION_ENABLE_LOGS ]
@@ -407,11 +505,11 @@ class Expert_Sender_Admin
     // Display notice after data is saved
     public function expert_sender_data_saved_notice()
     {
-        ?>
-		<div class="notice notice-success is-dismissible">
-			<p>Data saved successfully.</p>
-		</div>
-		<?php
+    ?>
+        <div class="notice notice-success is-dismissible">
+            <p>Data saved successfully.</p>
+        </div>
+    <?php
     }
 
     public function render_mappings_page()
@@ -458,256 +556,256 @@ class Expert_Sender_Admin
         $orderOptions = $this->expert_sender_get_order_attributes_from_api();
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
-        ?>
+    ?>
 
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?>
-		</h1>
-		<form id="expertSenderMappingsForm" method="post" action="">
-	<input type="hidden" name="expert-sender-mapping-form">
-			<div id="productMapping" class="mappingSection">
-				<h2>Product Mapping</h2>
-				<button type="button" class="addPairBtn">Add Pair</button>
-	
-				<div class="inputPairsContainer" data-slug="product">
-					<?php foreach ($productMappings as $productMapping) {
-         echo '<div class="inputPair">';
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?>
+            </h1>
+            <form id="expertSenderMappingsForm" method="post" action="">
+                <input type="hidden" name="expert-sender-mapping-form">
+                <div id="productMapping" class="mappingSection">
+                    <h2>Product Mapping</h2>
+                    <button type="button" class="addPairBtn">Add Pair</button>
 
-         echo '<select name="product[' .
-             $productMapping->id .
-             '][wp_field]">
+                    <div class="inputPairsContainer" data-slug="product">
+                        <?php foreach ($productMappings as $productMapping) {
+                            echo '<div class="inputPair">';
+
+                            echo '<select name="product[' .
+                                $productMapping->id .
+                                '][wp_field]">
         ';
 
-         foreach ($productKeys as $productKey => $value) {
-             $selected = $productMapping->wp_field == $value ? 'selected' : '';
+                            foreach ($productKeys as $productKey => $value) {
+                                $selected = $productMapping->wp_field == $value ? 'selected' : '';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                                echo "<option value=\"$value\" $selected>$value</option>";
+                            }
 
-         echo '</select>';
-         echo '<select name="product[' .
-             $productMapping->id .
-             '][ecdp_field]">
+                            echo '</select>';
+                            echo '<select name="product[' .
+                                $productMapping->id .
+                                '][ecdp_field]">
     ';
 
-         foreach ($productOptions as $value) {
-             $value = $value->name;
-             $selected =
-                 $productMapping->ecdp_field == $value ? 'selected' : '';
+                            foreach ($productOptions as $value) {
+                                $value = $value->name;
+                                $selected =
+                                    $productMapping->ecdp_field == $value ? 'selected' : '';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                                echo "<option value=\"$value\" $selected>$value</option>";
+                            }
 
-         echo '
+                            echo '
 		</select>
 			<button class="removeButton" type="button">Remove</button></div>';
-     } ?>
-				</div>
-			</div>
-	
-			<div id="customerMapping" class="mappingSection">
-				<h2>Customer Mapping</h2>
-				<button type="button" class="addPairBtn">Add Pair</button>
-	
-				<div class="inputPairsContainer" data-slug="customer">
-					<?php foreach ($customerMappings as $customerMapping) {
-         echo '<div class="inputPair">';
+                        } ?>
+                    </div>
+                </div>
 
-         echo '<select name="customer[' .
-             $customerMapping->id .
-             '][wp_field]">
+                <div id="customerMapping" class="mappingSection">
+                    <h2>Customer Mapping</h2>
+                    <button type="button" class="addPairBtn">Add Pair</button>
+
+                    <div class="inputPairsContainer" data-slug="customer">
+                        <?php foreach ($customerMappings as $customerMapping) {
+                            echo '<div class="inputPair">';
+
+                            echo '<select name="customer[' .
+                                $customerMapping->id .
+                                '][wp_field]">
         ';
 
-         foreach ($customerKeys as $customerKey => $value) {
-             $selected =
-                 $customerMapping->wp_field == $customerKey ? 'selected' : '';
+                            foreach ($customerKeys as $customerKey => $value) {
+                                $selected =
+                                    $customerMapping->wp_field == $customerKey ? 'selected' : '';
 
-             echo "<option value=\"$customerKey\" $selected>$customerKey</option>";
-         }
+                                echo "<option value=\"$customerKey\" $selected>$customerKey</option>";
+                            }
 
-         echo '</select>';
+                            echo '</select>';
 
-         echo '<select name="customer[' .
-             $customerMapping->id .
-             '][ecdp_field]">
+                            echo '<select name="customer[' .
+                                $customerMapping->id .
+                                '][ecdp_field]">
     ';
 
-         foreach ($customerOptions as $value) {
-             $value = $value->name;
-             $selected =
-                 $customerMapping->ecdp_field == $value ? 'selected' : '';
+                            foreach ($customerOptions as $value) {
+                                $value = $value->name;
+                                $selected =
+                                    $customerMapping->ecdp_field == $value ? 'selected' : '';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                                echo "<option value=\"$value\" $selected>$value</option>";
+                            }
 
-         echo '
+                            echo '
 		</select>
 			<button class="removeButton" type="button">Remove</button></div>';
-     } ?>
-				</div>
-			</div>
-	
-			<div id="orderMapping" class="mappingSection">
-				<h2>Order Mapping</h2>
-				<button type="button" class="addPairBtn">Add Pair</button>
-	
-				<div class="inputPairsContainer" data-slug="order">
-					<?php foreach ($orderMappings as $orderMapping) {
-         echo '<div class="inputPair">';
+                        } ?>
+                    </div>
+                </div>
 
-         echo '<select name="order[' .
-             $orderMapping->id .
-             '][wp_field]">
+                <div id="orderMapping" class="mappingSection">
+                    <h2>Order Mapping</h2>
+                    <button type="button" class="addPairBtn">Add Pair</button>
+
+                    <div class="inputPairsContainer" data-slug="order">
+                        <?php foreach ($orderMappings as $orderMapping) {
+                            echo '<div class="inputPair">';
+
+                            echo '<select name="order[' .
+                                $orderMapping->id .
+                                '][wp_field]">
 			';
 
-         foreach ($orderKeys as $orderKey => $orderValue) {
-             $selected = $orderMapping->wp_field == $orderKey ? 'selected' : '';
+                            foreach ($orderKeys as $orderKey => $orderValue) {
+                                $selected = $orderMapping->wp_field == $orderKey ? 'selected' : '';
 
-             echo "<option value=\"$orderKey\" $selected>$orderKey</option>";
-         }
+                                echo "<option value=\"$orderKey\" $selected>$orderKey</option>";
+                            }
 
-         echo '</select>';
+                            echo '</select>';
 
-         echo '<select name="order[' .
-             $orderMapping->id .
-             '][ecdp_field]">
+                            echo '<select name="order[' .
+                                $orderMapping->id .
+                                '][ecdp_field]">
 			';
 
-         foreach ($orderOptions as $value) {
-             $value = $value->name;
-             $selected = $orderMapping->ecdp_field == $value ? 'selected' : '';
+                            foreach ($orderOptions as $value) {
+                                $value = $value->name;
+                                $selected = $orderMapping->ecdp_field == $value ? 'selected' : '';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                                echo "<option value=\"$value\" $selected>$value</option>";
+                            }
 
-         echo '</select>';
+                            echo '</select>';
 
-         echo '<button class="removeButton" type="button">Remove</button></div>';
-     } ?>
-				</div>
-			</div>
-			<input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-			<button class="submit" type="submit"> Save </button>
-		</form>
+                            echo '<button class="removeButton" type="button">Remove</button></div>';
+                        } ?>
+                    </div>
+                </div>
+                <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
+                <button class="submit" type="submit"> Save </button>
+            </form>
 
-		<template id="productselect">
-		<select name="">
-    <?php foreach ($productOptions as $value) {
-        $value = $value->name;
-        echo "<option value=\"$value\">$value</option>";
-    } ?>
-</select>
-				</template>
+            <template id="productselect">
+                <select name="">
+                    <?php foreach ($productOptions as $value) {
+                        $value = $value->name;
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
 
-				<template id="orderselect">
-		<select name="">
-    <?php foreach ($orderOptions as $value) {
-        $value = $value->name;
-        echo "<option value=\"$value\">$value</option>";
-    } ?>
-</select>
-				</template>
+            <template id="orderselect">
+                <select name="">
+                    <?php foreach ($orderOptions as $value) {
+                        $value = $value->name;
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
 
-				<template id="customerselect">
-		<select name="">
-    <?php foreach ($customerOptions as $value) {
-        $value = $value->name;
-        echo "<option value=\"$value\">$value</option>";
-    } ?>
-</select>
-				</template>
+            <template id="customerselect">
+                <select name="">
+                    <?php foreach ($customerOptions as $value) {
+                        $value = $value->name;
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
 
-                </template>
+            </template>
 
-<template id="orderkeys">
-<select name="">
-<?php foreach ($orderKeys as $key => $value) {
-    echo "<option value=\"$key\">$key</option>";
-} ?>
-</select>
-</template>
+            <template id="orderkeys">
+                <select name="">
+                    <?php foreach ($orderKeys as $key => $value) {
+                        echo "<option value=\"$key\">$key</option>";
+                    } ?>
+                </select>
+            </template>
 
-<template id="productkeys">
-<select name="">
-<?php foreach ($productKeys as $key => $value) {
-    echo "<option value=\"$value\">$value</option>";
-} ?>
-</select>
-</template>
+            <template id="productkeys">
+                <select name="">
+                    <?php foreach ($productKeys as $key => $value) {
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
 
-<template id="customerkeys">
-<select name="">
-<?php foreach ($customerKeys as $key => $value) {
-    echo "<option value=\"$key\">$key</option>";
-} ?>
-</select>
-</template>
-	</div>
+            <template id="customerkeys">
+                <select name="">
+                    <?php foreach ($customerKeys as $key => $value) {
+                        echo "<option value=\"$key\">$key</option>";
+                    } ?>
+                </select>
+            </template>
+        </div>
 
-	<script>
-                                // Get all remove buttons
-                                var removeButtons = document.querySelectorAll('.removeButton');
+        <script>
+            // Get all remove buttons
+            var removeButtons = document.querySelectorAll('.removeButton');
 
-// Add click event listener to each remove button
-removeButtons.forEach(function(button) {
-    button.addEventListener('click', function() {
-        // Find the parent element with class 'inputPair' and remove it
-        var inputPair = this.parentElement;
-        inputPair.remove();
-    });
-});
+            // Add click event listener to each remove button
+            removeButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Find the parent element with class 'inputPair' and remove it
+                    var inputPair = this.parentElement;
+                    inputPair.remove();
+                });
+            });
 
 
-document.addEventListener("DOMContentLoaded", function() {
-    const sections = document.querySelectorAll(".mappingSection");
+            document.addEventListener("DOMContentLoaded", function() {
+                const sections = document.querySelectorAll(".mappingSection");
 
-    sections.forEach(function(section) {
-        const inputPairsContainer = section.querySelector(".inputPairsContainer");
-        const addPairBtn = section.querySelector(".addPairBtn");
+                sections.forEach(function(section) {
+                    const inputPairsContainer = section.querySelector(".inputPairsContainer");
+                    const addPairBtn = section.querySelector(".addPairBtn");
 
-        addPairBtn.addEventListener("click", function() {
-            createInputPair(inputPairsContainer);
-        });
-    });
+                    addPairBtn.addEventListener("click", function() {
+                        createInputPair(inputPairsContainer);
+                    });
+                });
 
-    function createInputPair(container) {
-        const pairDiv = document.createElement("div");
-        pairDiv.classList.add("inputPair");
+                function createInputPair(container) {
+                    const pairDiv = document.createElement("div");
+                    pairDiv.classList.add("inputPair");
 
-		var id = document.getElementById("idCounter").value;
-		var slug = container.getAttribute("data-slug");
+                    var id = document.getElementById("idCounter").value;
+                    var slug = container.getAttribute("data-slug");
 
-        // const wpInput = document.createElement("input");
-        // wpInput.type = "text";
-        // wpInput.name = slug + "[" + id + "][wp_field]";
-		// wpInput.placeholder = "Woocommerce Field";
-		// wpInput.required = true;
+                    // const wpInput = document.createElement("input");
+                    // wpInput.type = "text";
+                    // wpInput.name = slug + "[" + id + "][wp_field]";
+                    // wpInput.placeholder = "Woocommerce Field";
+                    // wpInput.required = true;
 
-        var template = document.querySelector("#" + slug + "keys");
-		const wpSelect = template.content.cloneNode(true);
-  		let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_field]";
+                    var template = document.querySelector("#" + slug + "keys");
+                    const wpSelect = template.content.cloneNode(true);
+                    let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_field]";
 
-		console.log("#" + slug + "select");
-		var template2 = document.querySelector("#" + slug + "select");
-		const ecdpSelect = template2.content.cloneNode(true);
-  		let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_field]";
+                    console.log("#" + slug + "select");
+                    var template2 = document.querySelector("#" + slug + "select");
+                    const ecdpSelect = template2.content.cloneNode(true);
+                    let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_field]";
 
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
-		removeBtn.type = "button"
-        removeBtn.addEventListener("click", function() {
-            pairDiv.remove();
-        });
+                    const removeBtn = document.createElement("button");
+                    removeBtn.textContent = "Remove";
+                    removeBtn.type = "button"
+                    removeBtn.addEventListener("click", function() {
+                        pairDiv.remove();
+                    });
 
-        pairDiv.appendChild(wpSelect);
-        pairDiv.appendChild(ecdpSelect);
-        pairDiv.appendChild(removeBtn);
+                    pairDiv.appendChild(wpSelect);
+                    pairDiv.appendChild(ecdpSelect);
+                    pairDiv.appendChild(removeBtn);
 
-        container.appendChild(pairDiv);
-		document.getElementById("idCounter").value = parseInt(id) + 1;
-    }
-});
-</script>
+                    container.appendChild(pairDiv);
+                    document.getElementById("idCounter").value = parseInt(id) + 1;
+                }
+            });
+        </script>
     <?php
     }
 
@@ -849,158 +947,143 @@ document.addEventListener("DOMContentLoaded", function() {
         $consentTypes = ['single', 'double'];
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
-        ?>
+    ?>
 
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?>
-		</h1>
-		<form id="expertSenderConsentsForm" method="post" action="">
-	<input type="hidden" name="expert-sender-consents-form">
-			<div id="consentSection" class="consentSection">
-				<h2>Consent Mapping</h2>
-				<button type="button" class="addPairBtn">Add Pair</button>
-	
-				<div class="elementContainer">
-                    
-					<?php foreach ($consents as $consent) {
-         echo '<div class="inputPair">';
-         echo '<select name="consent[' . $consent->id . '][api_consent_id]">';
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?>
+            </h1>
+            <form id="expertSenderConsentsForm" method="post" action="">
+                <input type="hidden" name="expert-sender-consents-form">
+                <div id="consentSection" class="consentSection">
+                    <h2>Consent Mapping</h2>
+                    <button type="button" class="addPairBtn">Add Pair</button>
 
-         foreach ($apiConsents as $value) {
-             $selected =
-                 $consent->api_consent_id == $value->id ? 'selected' : '';
+                    <div class="elementContainer">
 
-             echo "<option value=\"$value->id\" $selected>$value->name</option>";
-         }
+                        <?php foreach ($consents as $consent) {
+                            echo '<div class="inputPair">';
+                            echo '<select name="consent[' . $consent->id . '][api_consent_id]">';
 
-         echo '</select>';
+                            foreach ($apiConsents as $value) {
+                                $selected =
+                                    $consent->api_consent_id == $value->id ? 'selected' : '';
 
-         echo '<select name="consent[' . $consent->id . '][consent_location]">';
+                                echo "<option value=\"$value->id\" $selected>$value->name</option>";
+                            }
 
-         foreach ($consentLocations as $value) {
-             $selected = $consent->consent_location == $value ? 'selected' : '';
+                            echo '</select>';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                            echo '<select name="consent[' . $consent->id . '][consent_location]">';
 
-         echo '</select>';
+                            foreach ($consentLocations as $value) {
+                                $selected = $consent->consent_location == $value ? 'selected' : '';
 
-         echo '<select name="consent[' . $consent->id . '][consent_type]">';
+                                echo "<option value=\"$value\" $selected>$value</option>";
+                            }
 
-         foreach ($consentTypes as $value) {
-             $selected = $consent->consent_type == $value ? 'selected' : '';
+                            echo '</select>';
 
-             echo "<option value=\"$value\" $selected>$value</option>";
-         }
+                            echo '<input type="text" placeholder="Consent Text" required="true" name="consent[' .
+                                $consent->id .
+                                '][consent_text]" value="' .
+                                $consent->consent_text .
+                                '">';
 
-         echo '</select>';
+                            echo '<button class="removeButton" type="button">Remove</button></div>';
+                        } ?>
+                    </div>
+                    <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
+                    <button class="submit" type="submit"> Save </button>
+            </form>
 
-         echo '<input type="text" placeholder="Consent Text" required="true" name="consent[' .
-             $consent->id .
-             '][consent_text]" value="' .
-             $consent->consent_text .
-             '">';
+            <template id="apiConsentsTemplate">
+                <select name="">
+                    <?php foreach ($apiConsents as $value) {
+                        echo "<option value=\"$value->id\">$value->name</option>";
+                    } ?>
+                </select>
+            </template>
 
-         echo '<button class="removeButton" type="button">Remove</button></div>';
-     } ?>
-	  </div>
-			<input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-			<button class="submit" type="submit"> Save </button>
-		</form>
+            <template id="consentLocationTemplate">
+                <select name="">
+                    <?php foreach ($consentLocations as $value) {
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
 
-		<template id="apiConsentsTemplate">
-            <select name="">
-                <?php foreach ($apiConsents as $value) {
-                    echo "<option value=\"$value->id\">$value->name</option>";
-                } ?>
-            </select>
-		</template>
+            <template id="consentTypeTemplate">
+                <select name="">
+                    <?php foreach ($consentTypes as $value) {
+                        echo "<option value=\"$value\">$value</option>";
+                    } ?>
+                </select>
+            </template>
+        </div>
 
-        <template id="consentLocationTemplate">
-            <select name="">
-                <?php foreach ($consentLocations as $value) {
-                    echo "<option value=\"$value\">$value</option>";
-                } ?>
-            </select>
-		</template>
+        <script>
+            // Get all remove buttons
+            var removeButtons = document.querySelectorAll('.removeButton');
 
-        <template id="consentTypeTemplate">
-            <select name="">
-                <?php foreach ($consentTypes as $value) {
-                    echo "<option value=\"$value\">$value</option>";
-                } ?>
-            </select>
-		</template>
-	</div>
+            // Add click event listener to each remove button
+            removeButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Find the parent element with class 'inputPair' and remove it
+                    var inputPair = this.parentElement;
+                    inputPair.remove();
+                });
+            });
 
-	<script>
-                        // Get all remove buttons
-                        var removeButtons = document.querySelectorAll('.removeButton');
+            document.addEventListener("DOMContentLoaded", function() {
+                const sections = document.querySelectorAll(".consentSection");
 
-// Add click event listener to each remove button
-removeButtons.forEach(function(button) {
-    button.addEventListener('click', function() {
-        // Find the parent element with class 'inputPair' and remove it
-        var inputPair = this.parentElement;
-        inputPair.remove();
-    });
-});
+                sections.forEach(function(section) {
+                    const elementContainer = section.querySelector(".elementContainer");
+                    const addPairBtn = section.querySelector(".addPairBtn");
 
-document.addEventListener("DOMContentLoaded", function() {
-    const sections = document.querySelectorAll(".consentSection");
+                    addPairBtn.addEventListener("click", function() {
+                        createInputPair(elementContainer);
+                    });
+                });
 
-    sections.forEach(function(section) {
-        const elementContainer = section.querySelector(".elementContainer");
-        const addPairBtn = section.querySelector(".addPairBtn");
+                function createInputPair(container) {
+                    const pairDiv = document.createElement("div");
+                    pairDiv.classList.add("inputPair");
 
-        addPairBtn.addEventListener("click", function() {
-            createInputPair(elementContainer);
-        });
-    });
+                    var id = document.getElementById("idCounter").value;
 
-    function createInputPair(container) {
-        const pairDiv = document.createElement("div");
-        pairDiv.classList.add("inputPair");
+                    var template = document.querySelector("#apiConsentsTemplate");
+                    const apiConsent = template.content.cloneNode(true);
+                    apiConsent.querySelectorAll("select")[0].name = "consent[" + id + "][api_consent_id]";
 
-		var id = document.getElementById("idCounter").value;
+                    var template2 = document.querySelector("#consentLocationTemplate");
+                    const consentLocation = template2.content.cloneNode(true);
+                    consentLocation.querySelectorAll("select")[0].name = "consent[" + id + "][consent_location]";
 
-		var template = document.querySelector("#apiConsentsTemplate");
-		const apiConsent = template.content.cloneNode(true);
-  		apiConsent.querySelectorAll("select")[0].name = "consent[" + id + "][api_consent_id]";
+                    const removeBtn = document.createElement("button");
+                    removeBtn.textContent = "Remove";
+                    removeBtn.type = "button"
+                    removeBtn.addEventListener("click", function() {
+                        pairDiv.remove();
+                    });
 
-        var template2 = document.querySelector("#consentLocationTemplate");
-		const consentLocation = template2.content.cloneNode(true);
-        consentLocation.querySelectorAll("select")[0].name = "consent[" + id + "][consent_location]";
+                    const consentTextInput = document.createElement("input");
+                    consentTextInput.type = "text";
+                    consentTextInput.name = "consent[" + id + "][consent_text]";
+                    consentTextInput.placeholder = "Consent Text";
+                    consentTextInput.required = true;
 
-        var template3 = document.querySelector("#consentTypeTemplate");
-		const consentType = template3.content.cloneNode(true);
-        consentType.querySelectorAll("select")[0].name = "consent[" + id + "][consent_type]";
 
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
-		removeBtn.type = "button"
-        removeBtn.addEventListener("click", function() {
-            pairDiv.remove();
-        });
+                    pairDiv.appendChild(apiConsent);
+                    pairDiv.appendChild(consentLocation);
+                    pairDiv.appendChild(consentTextInput);
+                    pairDiv.appendChild(removeBtn);
 
-        const consentTextInput = document.createElement("input");
-        consentTextInput.type = "text";
-        consentTextInput.name = "consent[" + id + "][consent_text]";
-		consentTextInput.placeholder = "Consent Text";
-		consentTextInput.required = true;
-
-        
-        pairDiv.appendChild(apiConsent);
-        pairDiv.appendChild(consentLocation);
-        pairDiv.appendChild(consentType);
-        pairDiv.appendChild(consentTextInput);
-        pairDiv.appendChild(removeBtn);
-
-        container.appendChild(pairDiv);
-		document.getElementById("idCounter").value = parseInt(id) + 1;
-    }
-});
-</script>
+                    container.appendChild(pairDiv);
+                    document.getElementById("idCounter").value = parseInt(id) + 1;
+                }
+            });
+        </script>
     <?php
     }
 
@@ -1029,9 +1112,17 @@ document.addEventListener("DOMContentLoaded", function() {
         }
     }
 
+    /**
+     * @return array
+     */
     public function expert_sender_get_consents_locations()
     {
-        return ['customer_settings'];
+        return array(
+            self::FORM_CHECKOUT_KEY,
+            self::FORM_CUSTOMER_SETTINGS_KEY,
+            self::FORM_NEWSLETTER_KEY,
+            self::FORM_REGISTRATION_KEY
+        );
     }
 
     public function expert_sender_consents_handle_form_submission()
@@ -1048,7 +1139,6 @@ document.addEventListener("DOMContentLoaded", function() {
                         'api_consent_id' => $mapping['api_consent_id'],
                         'consent_location' => $mapping['consent_location'],
                         'consent_text' => $mapping['consent_text'],
-                        'consent_type' => $mapping['consent_type'],
                     ]);
                 }
             }
@@ -1098,6 +1188,120 @@ document.addEventListener("DOMContentLoaded", function() {
         return [];
     }
 
+    /**
+     * @return void
+     */
+    public function render_consent_forms_page()
+    {
+        $this->check_permissions();
+        $options = get_options( array(
+            self::OPTION_FORM_CHECKOUT_TEXT_BEFORE,
+            self::OPTION_FORM_CHECKOUT_TYPE,
+            self::OPTION_FORM_CHECKOUT_MESSAGE_ID,
+            self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE,
+            self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE,
+            self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID,
+            self::OPTION_FORM_NEWSLETTER_TEXT_BEFORE,
+            self::OPTION_FORM_NEWSLETTER_TYPE,
+            self::OPTION_FORM_NEWSLETTER_MESSAGE_ID,
+            self::OPTION_FORM_REGISTRATION_TEXT_BEFORE,
+            self::OPTION_FORM_REGISTRATION_TYPE,
+            self::OPTION_FORM_REGISTRATION_MESSAGE_ID
+        ) );
+    ?>
+        <div class="wrap">
+            <h1><?php _e( get_admin_page_title() ); ?></h1>
+            <form id="<?= self::FORM_CONSENT_FORMS; ?>" method="post" action="">
+                <input type="hidden" name="<?= self::FORM_CONSENT_FORMS; ?>" />
+                <h3><?= __( 'Registration Form', 'expert-sender' ); ?></h3>
+                <div class="input-wrap">
+                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
+                    <input type="text" name="<?= self::OPTION_FORM_REGISTRATION_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_TEXT_BEFORE]; ?>" />
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
+                    <select name="<?= self::OPTION_FORM_REGISTRATION_TYPE ?>">
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                    </select>
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
+                    <input type="number" name="<?= self::OPTION_FORM_REGISTRATION_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_MESSAGE_ID]; ?>" placeholder="1" />
+                </div>
+                <div class="expert-sender-divider"></div>
+                <h3><?= __( 'Customer Settings Form', 'expert-sender' ); ?></h3>
+                <div class="input-wrap">
+                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
+                    <input type="text" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE]; ?>" />
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
+                    <select name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ?>">
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                    </select>
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
+                    <input type="number" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID]; ?>" placeholder="1" />
+                </div>
+                <div class="expert-sender-divider"></div>
+                <h3><?= __( 'Checkout Form', 'expert-sender' ); ?></h3>
+                <div class="input-wrap">
+                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
+                    <input type="text" name="<?= self::OPTION_FORM_CHECKOUT_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_TEXT_BEFORE]; ?>" />
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
+                    <select name="<?= self::OPTION_FORM_CHECKOUT_TYPE ?>">
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                    </select>
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
+                    <input type="number" name="<?= self::OPTION_FORM_CHECKOUT_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_MESSAGE_ID]; ?>" placeholder="1" />
+                </div>
+                <div class="expert-sender-divider"></div>
+                <h3><?= __( 'Newsletter Form', 'expert-sender' ); ?></h3>
+                <div class="input-wrap">
+                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
+                    <input type="text" name="<?= self::OPTION_FORM_NEWSLETTER_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_TEXT_BEFORE]; ?>" />
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
+                    <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>">
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                    </select>
+                </div>
+                <div class="input-wrap">
+                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
+                    <input type="number" name="<?= self::OPTION_FORM_NEWSLETTER_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_MESSAGE_ID]; ?>" placeholder="1" />
+                </div>
+                <button class="submit" type="submit"><?= __( 'Save', 'expert-sender' ); ?></button>
+            </form>
+        </div>
+    <?php
+    }
+
+    /**
+     * @return void
+     */
+    public function handle_consent_forms_submit()
+    {
+        if ( isset( $_POST[self::FORM_CONSENT_FORMS] ) ) {
+            foreach ( $_POST as $option => $value ) {
+                if ( self::FORM_CONSENT_FORMS === $option ) {
+                    continue;
+                }
+
+                update_option( $option, $value );
+            }
+        }
+    }
+
     public function render_order_status_mapping_page()
     {
         if (!current_user_can('manage_options')) {
@@ -1115,129 +1319,129 @@ document.addEventListener("DOMContentLoaded", function() {
         $ecdpStatuses = $this->expert_sender_get_ecdp_order_statuses();
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
-        ?>
+    ?>
 
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?>
-		</h1>
-		<form id="expertSenderOrderStatusMappingsForm" method="post" action="">
-	<input type="hidden" name="expert-sender-order-status-mapping-form">
-			<div id="orderStatusMapping" class="mappingSection">
-				<h2>Order Status Mapping</h2>
-				<button type="button" class="addPairBtn">Add Pair</button>
-	
-				<div class="inputPairsContainer" data-slug="product">
-					<?php foreach ($orderStatusMappings as $orderMapping) {
-         echo '<div class="inputPair">';
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?>
+            </h1>
+            <form id="expertSenderOrderStatusMappingsForm" method="post" action="">
+                <input type="hidden" name="expert-sender-order-status-mapping-form">
+                <div id="orderStatusMapping" class="mappingSection">
+                    <h2>Order Status Mapping</h2>
+                    <button type="button" class="addPairBtn">Add Pair</button>
 
-         echo '<select name="orderMapping[' .
-             $orderMapping->id .
-             '][wp_order_status]">
+                    <div class="inputPairsContainer" data-slug="product">
+                        <?php foreach ($orderStatusMappings as $orderMapping) {
+                            echo '<div class="inputPair">';
+
+                            echo '<select name="orderMapping[' .
+                                $orderMapping->id .
+                                '][wp_order_status]">
         ';
 
-         foreach ($wpStatuses as $status) {
-             $selected =
-                 $orderMapping->wp_order_status == $status ? 'selected' : '';
+                            foreach ($wpStatuses as $status) {
+                                $selected =
+                                    $orderMapping->wp_order_status == $status ? 'selected' : '';
 
-             echo "<option value=\"$status\" $selected>$status</option>";
-         }
+                                echo "<option value=\"$status\" $selected>$status</option>";
+                            }
 
-         echo '</select>';
-         echo '<select name="orderMapping[' .
-             $orderMapping->id .
-             '][ecdp_order_status]">
+                            echo '</select>';
+                            echo '<select name="orderMapping[' .
+                                $orderMapping->id .
+                                '][ecdp_order_status]">
     ';
 
-         foreach ($ecdpStatuses as $status) {
-             $selected =
-                 $orderMapping->ecdp_order_status == $status ? 'selected' : '';
+                            foreach ($ecdpStatuses as $status) {
+                                $selected =
+                                    $orderMapping->ecdp_order_status == $status ? 'selected' : '';
 
-             echo "<option value=\"$status\" $selected>$status</option>";
-         }
+                                echo "<option value=\"$status\" $selected>$status</option>";
+                            }
 
-         echo '
+                            echo '
 		</select>
 			<button class="removeButton" type="button">Remove</button></div>';
-     } ?>
-				</div>
-			</div>
-			<input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-			<button class="submit" type="submit"> Save </button>
-		</form>
+                        } ?>
+                    </div>
+                </div>
+                <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
+                <button class="submit" type="submit"> Save </button>
+            </form>
 
-		<template id="wpstatus">
-            <select name="">
-                <?php foreach ($wpStatuses as $status) {
-                    echo "<option value=\"$status\">$status</option>";
-                } ?>
-            </select>
-        </template>
+            <template id="wpstatus">
+                <select name="">
+                    <?php foreach ($wpStatuses as $status) {
+                        echo "<option value=\"$status\">$status</option>";
+                    } ?>
+                </select>
+            </template>
 
-        <template id="ecdpstatus">
-            <select name="">
-                <?php foreach ($ecdpStatuses as $status) {
-                    echo "<option value=\"$status\">$status</option>";
-                } ?>
-            </select>
-        </template>
-	</div>
+            <template id="ecdpstatus">
+                <select name="">
+                    <?php foreach ($ecdpStatuses as $status) {
+                        echo "<option value=\"$status\">$status</option>";
+                    } ?>
+                </select>
+            </template>
+        </div>
 
-	<script>
-                // Get all remove buttons
-                var removeButtons = document.querySelectorAll('.removeButton');
+        <script>
+            // Get all remove buttons
+            var removeButtons = document.querySelectorAll('.removeButton');
 
-// Add click event listener to each remove button
-removeButtons.forEach(function(button) {
-    button.addEventListener('click', function() {
-        // Find the parent element with class 'inputPair' and remove it
-        var inputPair = this.parentElement;
-        inputPair.remove();
-    });
-});
+            // Add click event listener to each remove button
+            removeButtons.forEach(function(button) {
+                button.addEventListener('click', function() {
+                    // Find the parent element with class 'inputPair' and remove it
+                    var inputPair = this.parentElement;
+                    inputPair.remove();
+                });
+            });
 
-document.addEventListener("DOMContentLoaded", function() {
-    const sections = document.querySelectorAll(".mappingSection");
+            document.addEventListener("DOMContentLoaded", function() {
+                const sections = document.querySelectorAll(".mappingSection");
 
-    sections.forEach(function(section) {
-        const inputPairsContainer = section.querySelector(".inputPairsContainer");
-        const addPairBtn = section.querySelector(".addPairBtn");
+                sections.forEach(function(section) {
+                    const inputPairsContainer = section.querySelector(".inputPairsContainer");
+                    const addPairBtn = section.querySelector(".addPairBtn");
 
-        addPairBtn.addEventListener("click", function() {
-            createInputPair(inputPairsContainer);
-        });
-    });
+                    addPairBtn.addEventListener("click", function() {
+                        createInputPair(inputPairsContainer);
+                    });
+                });
 
-    function createInputPair(container) {
-        const pairDiv = document.createElement("div");
-        pairDiv.classList.add("inputPair");
+                function createInputPair(container) {
+                    const pairDiv = document.createElement("div");
+                    pairDiv.classList.add("inputPair");
 
-		var id = document.getElementById("idCounter").value;
-		var slug = 'orderMapping';
+                    var id = document.getElementById("idCounter").value;
+                    var slug = 'orderMapping';
 
-        var template = document.querySelector("#wpstatus");
-		const wpSelect = template.content.cloneNode(true);
-  		let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_order_status]";
+                    var template = document.querySelector("#wpstatus");
+                    const wpSelect = template.content.cloneNode(true);
+                    let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_order_status]";
 
-		var template2 = document.querySelector("#ecdpstatus");
-		const ecdpSelect = template2.content.cloneNode(true);
-  		let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_order_status]";
+                    var template2 = document.querySelector("#ecdpstatus");
+                    const ecdpSelect = template2.content.cloneNode(true);
+                    let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_order_status]";
 
-        const removeBtn = document.createElement("button");
-        removeBtn.textContent = "Remove";
-		removeBtn.type = "button"
-        removeBtn.addEventListener("click", function() {
-            pairDiv.remove();
-        });
+                    const removeBtn = document.createElement("button");
+                    removeBtn.textContent = "Remove";
+                    removeBtn.type = "button"
+                    removeBtn.addEventListener("click", function() {
+                        pairDiv.remove();
+                    });
 
-        pairDiv.appendChild(wpSelect);
-        pairDiv.appendChild(ecdpSelect);
-        pairDiv.appendChild(removeBtn);
+                    pairDiv.appendChild(wpSelect);
+                    pairDiv.appendChild(ecdpSelect);
+                    pairDiv.appendChild(removeBtn);
 
-        container.appendChild(pairDiv);
-		document.getElementById("idCounter").value = parseInt(id) + 1;
-    }
-});
-</script>
+                    container.appendChild(pairDiv);
+                    document.getElementById("idCounter").value = parseInt(id) + 1;
+                }
+            });
+        </script>
     <?php
     }
 
@@ -1332,68 +1536,68 @@ document.addEventListener("DOMContentLoaded", function() {
                 $sync_id
             )
         );
-        ?>
+    ?>
 
-    <script>
-    function setMaxDate() {
-        var today = new Date();
-        var maxDate = new Date(today);
-        maxDate.setFullYear(today.getFullYear() - 2);
+        <script>
+            function setMaxDate() {
+                var today = new Date();
+                var maxDate = new Date(today);
+                maxDate.setFullYear(today.getFullYear() - 2);
 
-        var datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
-        datetimeInputs.forEach(function(input) {
-        input.setAttribute('min', maxDate.toISOString().slice(0,16));
-        });
-    }
+                var datetimeInputs = document.querySelectorAll('input[type="datetime-local"]');
+                datetimeInputs.forEach(function(input) {
+                    input.setAttribute('min', maxDate.toISOString().slice(0, 16));
+                });
+            }
 
-    window.onload = setMaxDate;
-    </script>
+            window.onload = setMaxDate;
+        </script>
 
-    <div class="wrap">
-        <h1><?php echo esc_html(get_admin_page_title()); ?>
-		</h1>
-		<form id="expertSenderSynchronizeOrdesForm" method="post" action="">
-	        <input type="hidden" name="expert-sender-order-synchronize-form">
-			<h2>Synchronize order</h2>
-            <label for="datefrom">From:</label>
-            <input type="datetime-local" id="datefrom" name="datefrom"><br><br>
-            
-            <label for="dateto">To:</label>
-            <input type="datetime-local" id="dateto" name="dateto"><br><br>
-			<button class="submit" type="submit"> Synchronize </button>
-		</form>
-        <p>LAST SYNCHRONIZATION</p>
-        <div> Synchronizing <?= count($expertSenderRequests) ?> orders</div>
-        <div> Synchronized: <?= count($sent) ?></div>
-        <div> Not synchronized yet: <?= count($toBeSend) ?></div>
-        <div> Failed: <?= count($failed) ?></div>
-        <div class="log-container" id="logContainer">
-            <?php foreach ($failed as $fail) {
-                echo '<div class=log-message>' .
-                    $fail->resource_id .
-                    ':' .
-                    $fail->response .
-                    '</div>';
-            } ?> 
+        <div class="wrap">
+            <h1><?php echo esc_html(get_admin_page_title()); ?>
+            </h1>
+            <form id="expertSenderSynchronizeOrdesForm" method="post" action="">
+                <input type="hidden" name="expert-sender-order-synchronize-form">
+                <h2>Synchronize order</h2>
+                <label for="datefrom">From:</label>
+                <input type="datetime-local" id="datefrom" name="datefrom"><br><br>
+
+                <label for="dateto">To:</label>
+                <input type="datetime-local" id="dateto" name="dateto"><br><br>
+                <button class="submit" type="submit"> Synchronize </button>
+            </form>
+            <p>LAST SYNCHRONIZATION</p>
+            <div> Synchronizing <?= count($expertSenderRequests) ?> orders</div>
+            <div> Synchronized: <?= count($sent) ?></div>
+            <div> Not synchronized yet: <?= count($toBeSend) ?></div>
+            <div> Failed: <?= count($failed) ?></div>
+            <div class="log-container" id="logContainer">
+                <?php foreach ($failed as $fail) {
+                    echo '<div class=log-message>' .
+                        $fail->resource_id .
+                        ':' .
+                        $fail->response .
+                        '</div>';
+                } ?>
+            </div>
+
         </div>
+        <style>
+            .log-container {
+                width: 400px;
+                height: 300px;
+                overflow-y: scroll;
+                border: 1px solid #ccc;
+                padding: 10px;
+                background-color: #f9f9f9;
+            }
 
-	</div>
-    <style>
-    .log-container {
-        width: 400px;
-        height: 300px;
-        overflow-y: scroll;
-        border: 1px solid #ccc;
-        padding: 10px;
-        background-color: #f9f9f9;
-    }
-
-    .log-message {
-        margin-bottom: 5px;
-        font-family: Arial, sans-serif;
-    }
-    </style>
-    <?php
+            .log-message {
+                margin-bottom: 5px;
+                font-family: Arial, sans-serif;
+            }
+        </style>
+<?php
     }
 
     public function expert_sender_order_synchronize_submission()
@@ -1467,5 +1671,19 @@ document.addEventListener("DOMContentLoaded", function() {
         );
 
         return $wpdb->get_results($query);
+    }
+
+    /**
+     * @return void
+     */
+    public function check_permissions()
+    {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die(
+                __(
+                    'You do not have sufficient permissions to access this page.'
+                )
+            );
+        }
     }
 }
