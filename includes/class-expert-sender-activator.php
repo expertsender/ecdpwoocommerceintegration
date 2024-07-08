@@ -63,14 +63,15 @@ class Expert_Sender_Activator {
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			created_at datetime DEFAULT '0000-00-00 00:00:00' NOT NULL,
-        	is_sent tinyint(1) DEFAULT 0 NOT NULL,
+            is_sent tinyint(1) DEFAULT 0 NOT NULL,
 			url_address varchar(255) NOT NULL,
 			json_body TEXT NOT NULL,
 			resource_type varchar(20) NOT NULL,
 			resource_id int NOT NULL,
 			synchronization_id int,
 			response TEXT,
-			PRIMARY KEY  (id)
+			PRIMARY KEY (id),
+            UNIQUE INDEX es_requests_resource_type_resource_id_unique (resource_type, resource_id)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

@@ -1329,28 +1329,21 @@ class Expert_Sender_Admin
                 <div id="orderStatusMapping" class="mappingSection">
                     <h2>Order Status Mapping</h2>
                     <button type="button" class="addPairBtn">Add Pair</button>
-
+                    <?php 
+                    echo '<datalist id="expertsender_wp_order_list">';
+                    foreach ($wpStatuses as $status) {
+                        $status = esc_html($status);
+                        echo "<option value=\"$status\">$status</option>";
+                    }
+                    echo '</datalist>';
+                    ?>
                     <div class="inputPairsContainer" data-slug="product">
                         <?php foreach ($orderStatusMappings as $orderMapping) {
                             echo '<div class="inputPair">';
-
-                            echo '<select name="orderMapping[' .
-                                $orderMapping->id .
-                                '][wp_order_status]">
-        ';
-
-                            foreach ($wpStatuses as $status) {
-                                $selected =
-                                    $orderMapping->wp_order_status == $status ? 'selected' : '';
-
-                                echo "<option value=\"$status\" $selected>$status</option>";
-                            }
-
-                            echo '</select>';
-                            echo '<select name="orderMapping[' .
-                                $orderMapping->id .
-                                '][ecdp_order_status]">
-    ';
+                            echo '<input type="text" name="orderMapping[' . $orderMapping->id
+                                . '][wp_order_status]" list="expertsender_wp_order_list" value="'
+                                . $orderMapping->wp_order_status . '"/>';
+                            echo '<select name="orderMapping[' . $orderMapping->id . '][ecdp_order_status]">';
 
                             foreach ($ecdpStatuses as $status) {
                                 $selected =
@@ -1370,11 +1363,7 @@ class Expert_Sender_Admin
             </form>
 
             <template id="wpstatus">
-                <select name="">
-                    <?php foreach ($wpStatuses as $status) {
-                        echo "<option value=\"$status\">$status</option>";
-                    } ?>
-                </select>
+                <input type="text" list="expertsender_wp_order_list"/>
             </template>
 
             <template id="ecdpstatus">
@@ -1420,7 +1409,7 @@ class Expert_Sender_Admin
 
                     var template = document.querySelector("#wpstatus");
                     const wpSelect = template.content.cloneNode(true);
-                    let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_order_status]";
+                    let wp = wpSelect.querySelectorAll("input")[0].name = slug + "[" + id + "][wp_order_status]";
 
                     var template2 = document.querySelector("#ecdpstatus");
                     const ecdpSelect = template2.content.cloneNode(true);
@@ -1602,53 +1591,47 @@ class Expert_Sender_Admin
 
     public function expert_sender_order_synchronize_submission()
     {
-        if (isset($_POST['expert-sender-order-synchronize-form'])) {
-            $startDate = $_POST['datefrom'];
-            $endDate = $_POST['dateto'];
+        if ( isset( $_POST[ 'expert-sender-order-synchronize-form' ] ) ) {
+            $start_date = $_POST[ 'datefrom' ];
+            $end_date = $_POST[ 'dateto' ];
             $orders = $this->expert_sender_get_orders_by_dates(
-                $startDate,
-                $endDate
+                $start_date,
+                $end_date
             );
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'expert_sender_requests';
-            $orderRequest = new Expert_Sender_Order_Request();
+            $order_request = new Expert_Sender_Order_Request();
 
             $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
-            $result = $wpdb->get_row($query);
-
+            $result = $wpdb->get_row( $query );
             $sync_id = 1;
-            if ($result->last_sync > 0) {
+
+            if ( $result->last_sync > 0 ) {
                 $sync_id = $result->last_sync + 1;
             }
 
-            $orderIds = [];
+            $order_ids = array();
 
-            foreach ($orders as $order) {
-                $sOrder = wc_get_order($order->id);
-                $processedId = 0;
-                if ($sOrder instanceof WC_Order) {
-                    $processedId = $sOrder->get_id();
+            foreach ( $orders as $order ) {
+                $s_order = wc_get_order( $order->id );
+                $processed_id = 0;
+
+                if ( $s_order instanceof WC_Order ) {
+                    $processed_id = $s_order->get_id();
                 } else {
-                    $order_id = $sOrder->get_parent_id();
-                    $processedId = wc_get_order($order_id)->get_id();
+                    $order_id = $s_order->get_parent_id();
+                    $s_order = wc_get_order( $order_id );
+                    $processed_id = wc_get_order( $order_id )->get_id();
                 }
 
-                if (!in_array($processedId, $orderIds)) {
-                    $status = $orderRequest->expert_sender_get_api_order_status_slug(
-                        $sOrder->get_data()['status']
+                if (!in_array($processed_id, $order_ids)) {
+                    $order_request->expert_sender_order_save_request(
+                        $order->id,
+                        $s_order,
+                        $sync_id
                     );
-
-                    if ($status) {
-                        $orderRequest->expert_sender_order_save_request(
-                            $order->id,
-                            $status,
-                            null,
-                            $sync_id
-                        );
-                    }
-
-                    $orderIds[] = $processedId;
+                    $order_ids[] = $processed_id;
                 }
             }
         }
