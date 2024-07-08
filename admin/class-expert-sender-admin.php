@@ -125,8 +125,6 @@ class Expert_Sender_Admin
             $this,
             'expert_sender_order_synchronize_submission',
         ]);
-
-        add_action('admin_notices', [$this, 'expert_sender_data_saved_notice']);
     }
 
     /**
@@ -316,7 +314,7 @@ class Expert_Sender_Admin
 
         <div class="wrap">
             <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <form id="expertSenderForm" method="post" action="options.php">
+            <form id="expertSenderForm" method="post" action="">
                 <input type="hidden" name="expert-sender-main-form">
 
                 <?php settings_fields('expert_sender_settings_group'); ?>
@@ -438,8 +436,7 @@ class Expert_Sender_Admin
     <?php
     }
 
-    public function expert_sender_handle_form_submission()
-    {
+    public function expert_sender_handle_form_submission() {
         if (isset($_POST['expert-sender-main-form'])) {
             register_setting(
                 'expert_sender_settings_group',
@@ -466,27 +463,22 @@ class Expert_Sender_Admin
                 'expert_sender_settings_group',
                 'expert_sender_website_id'
             );
-
             $expert_sender_key = sanitize_text_field(
                 $_POST['expert_sender_key']
             );
             update_option('expert_sender_key', $expert_sender_key);
-
             update_option(
                 'expert_sender_enable_script',
-                $_POST['expert_sender_enable_script']
+                $_POST['expert_sender_enable_script'] ?? false
             );
-
             update_option(
                 'expert_sender_enable_phone',
-                $_POST['expert_sender_enable_phone']
+                $_POST['expert_sender_enable_phone'] ?? false
             );
-
             update_option(
                 'expert_sender_script',
                 $_POST['expert_sender_script']
             );
-
             $expert_sender_website_id = sanitize_text_field(
                 $_POST['expert_sender_website_id']
             );
@@ -494,22 +486,12 @@ class Expert_Sender_Admin
                 'expert_sender_website_id',
                 $expert_sender_website_id
             );
-
             update_option(
                 self::OPTION_ENABLE_LOGS,
-                $_POST[ self::OPTION_ENABLE_LOGS ]
+                $_POST[ self::OPTION_ENABLE_LOGS ] ?? false
             );
+            $this->add_admin_success_notice();
         }
-    }
-
-    // Display notice after data is saved
-    public function expert_sender_data_saved_notice()
-    {
-    ?>
-        <div class="notice notice-success is-dismissible">
-            <p>Data saved successfully.</p>
-        </div>
-    <?php
     }
 
     public function render_mappings_page()
@@ -774,13 +756,6 @@ class Expert_Sender_Admin
 
                     var id = document.getElementById("idCounter").value;
                     var slug = container.getAttribute("data-slug");
-
-                    // const wpInput = document.createElement("input");
-                    // wpInput.type = "text";
-                    // wpInput.name = slug + "[" + id + "][wp_field]";
-                    // wpInput.placeholder = "Woocommerce Field";
-                    // wpInput.required = true;
-
                     var template = document.querySelector("#" + slug + "keys");
                     const wpSelect = template.content.cloneNode(true);
                     let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_field]";
@@ -809,46 +784,75 @@ class Expert_Sender_Admin
     <?php
     }
 
+    /**
+     * @return void
+     */
     public function expert_sender_mappings_handle_form_submission()
     {
         if (isset($_POST['expert-sender-mapping-form'])) {
+             /** @var \wpdb $wpdb */
             global $wpdb;
-
+            $resources = array(
+                self::RESOURCE_CUSTOMER,
+                self::RESOURCE_ORDER,
+                self::RESOURCE_PRODUCT
+            );
             $table_name = $wpdb->prefix . 'expert_sender_mappings';
+            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
-
-            if (isset($_POST['customer'])) {
-                foreach ($_POST['customer'] as $mapping) {
-                    $wpdb->insert($table_name, [
-                        'resource_type' => $this::RESOURCE_CUSTOMER,
-                        'wp_field' => $mapping['wp_field'],
-                        'ecdp_field' => $mapping['ecdp_field'],
-                    ]);
+            $insert_query = <<<SQL
+                INSERT INTO $table_name (resource_type, wp_field, ecdp_field)
+                VALUES
+            SQL;
+            $placeholders = array();
+            $values = array();
+            
+            foreach ($_POST as $resource => $mappings) {
+                if ( in_array( $resource, $resources ) ) {
+                    foreach ( $mappings as $mapping ) {
+                        $placeholders[] = "('%s', '%s', '%s')";
+                        array_push(
+                            $values,
+                            $resource,
+                            $mapping[ 'wp_field' ],
+                            $mapping[ 'ecdp_field' ]
+                        );
+                    }
                 }
             }
 
-            if (isset($_POST['product'])) {
-                foreach ($_POST['product'] as $mapping) {
-                    $object = [
-                        'resource_type' => $this::RESOURCE_PRODUCT,
-                        'wp_field' => $mapping['wp_field'],
-                        'ecdp_field' => $mapping['ecdp_field'],
-                    ];
+            if ( ! empty( $values ) ) {
+                $query = $insert_query . implode( ', ', $placeholders );
+                $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
 
-                    $wpdb->insert($table_name, $object);
+                if ( false === $inserted ) {
+                    if ( ! empty( $current_data ) ) {
+                        $placeholders = array();
+                        $values = array();
+
+                        foreach ( $current_data as $current_row ) {
+                            $placeholders[] = "('%s', '%s', '%s')";
+                            array_push(
+                                $values,
+                                $current_row[ 'resource_type' ],
+                                $current_row[ 'wp_field' ],
+                                $current_row[ 'ecdp_field' ]
+                            );
+                        }
+
+                        $query = $insert_query . implode( ', ', $placeholders );
+                        $wpdb->query( $wpdb->prepare( $query, $values) );
+                    }
+                    
+                    $this->add_admin_error_notice(__(
+                        'Duplicate entry: each WooCommerce field for every resource should be mapped only once.',
+                        'expert-sender'
+                    ));
+                } else {
+                    $this->add_admin_success_notice();
                 }
-            }
-
-            if (isset($_POST['order'])) {
-                foreach ($_POST['order'] as $mapping) {
-                    $object = [
-                        'resource_type' => $this::RESOURCE_ORDER,
-                        'wp_field' => $mapping['wp_field'],
-                        'ecdp_field' => $mapping['ecdp_field'],
-                    ];
-
-                    $wpdb->insert($table_name, $object);
-                }
+            } else if (! empty ( $current_data ) ) {
+                $this->add_admin_success_notice();
             }
         }
     }
@@ -1125,22 +1129,65 @@ class Expert_Sender_Admin
         );
     }
 
+    /**
+     * @return void
+     */
     public function expert_sender_consents_handle_form_submission()
     {
         if (isset($_POST['expert-sender-consents-form'])) {
             global $wpdb;
 
             $table_name = $wpdb->prefix . 'expert_sender_consents';
+            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
+            $insert_query = <<<SQL
+                INSERT INTO $table_name (api_consent_id, consent_location, consent_text)
+                VALUES
+            SQL;
+            $placeholders = array();
+            $values = array();
 
             if (isset($_POST['consent'])) {
                 foreach ($_POST['consent'] as $mapping) {
-                    $wpdb->insert($table_name, [
-                        'api_consent_id' => $mapping['api_consent_id'],
-                        'consent_location' => $mapping['consent_location'],
-                        'consent_text' => $mapping['consent_text'],
-                    ]);
+                    $placeholders[] = "('%s', '%s', '%s')";
+                    array_push(
+                        $values,
+                        $mapping[ 'api_consent_id' ],
+                        $mapping[ 'consent_location' ],
+                        $mapping[ 'consent_text' ]
+                    );
                 }
+
+                if ( ! empty ( $values ) ) {
+                    $query = $insert_query . implode( ', ', $placeholders );
+                    $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
+
+                    if ( false === $inserted ) {
+                        if ( ! empty( $current_data ) ) {
+                            $placeholders = array();
+                            $values = array();
+
+                            foreach ( $current_data as $current_row ) {
+                                $placeholders[] = "('%s', '%s', '%s')";
+                                array_push(
+                                    $values,
+                                    $current_row[ 'api_consent_id' ],
+                                    $current_row[ 'consent_location' ],
+                                    $current_row[ 'consent_text' ]
+                                );
+                            }
+                        }
+
+                        $this->add_admin_error_notice(__(
+                            'Duplicate entry: each ECDP consent for every form location should be mapped only once.',
+                            'expert-sender'
+                        ));
+                    } else {
+                        $this->add_admin_success_notice();
+                    }
+                } 
+            } else if ( ! empty ( $current_data ) ) {
+                $this->add_admin_success_notice();
             }
         }
     }
@@ -1299,6 +1346,8 @@ class Expert_Sender_Admin
 
                 update_option( $option, $value );
             }
+
+            $this->add_admin_success_notice();
         }
     }
 
@@ -1453,21 +1502,61 @@ class Expert_Sender_Admin
         return ['Placed', 'Paid', 'Completed', 'Cancelled'];
     }
 
-    public function expert_sender_order_status_mapping_handle_form_submission()
-    {
-        if (isset($_POST['expert-sender-order-status-mapping-form'])) {
+    /**
+     * @return void
+     */
+    public function expert_sender_order_status_mapping_handle_form_submission() {
+        if ( isset( $_POST[ 'expert-sender-order-status-mapping-form' ] ) ) {
+            /** @var \wpdb $wpdb */
             global $wpdb;
 
             $table_name = $wpdb->prefix . 'expert_sender_order_status_mappings';
+            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
+            $insert_query = <<<SQL
+                INSERT INTO $table_name (wp_order_status, ecdp_order_status)
+                VALUES 
+            SQL;
+            $placeholders = array();
+            $values = array();
 
-            if (isset($_POST['orderMapping'])) {
-                foreach ($_POST['orderMapping'] as $mapping) {
-                    $wpdb->insert($table_name, [
-                        'wp_order_status' => $mapping['wp_order_status'],
-                        'ecdp_order_status' => $mapping['ecdp_order_status'],
-                    ]);
+            if ( isset( $_POST['orderMapping'] ) ) {
+                foreach ( $_POST['orderMapping'] as $mapping ) {
+                    $placeholders[] = "('%s', '%s')";
+                    array_push( $values, $mapping[ 'wp_order_status' ], $mapping[ 'ecdp_order_status' ] );
                 }
+
+                if ( ! empty( $values ) ) {
+                    $query = $insert_query . implode( ', ', $placeholders );
+                    $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
+
+                    if ( false === $inserted ) {
+                        if ( ! empty ( $current_data ) ) {
+                            $placeholders = array();
+                            $values = array();
+
+                            foreach ( $current_data as $current_row ) {
+                                $placeholders[] = "('%s', '%s')";
+                                array_push(
+                                    $values,
+                                    $current_row[ 'wp_order_status' ],
+                                    $current_row[ 'ecdp_order_status' ]
+                                );
+                            }
+
+                            $query = $insert_query . implode( ', ', $placeholders );
+                            $wpdb->query( $wpdb->prepare( $query, $values) );
+                        }
+                        
+                        $this->add_admin_error_notice(
+                            __( 'Duplicate entry: each WooCommerce status should be mapped only once.' )
+                        );
+                    } else {
+                        $this->add_admin_success_notice();
+                    }
+                }
+            } else if (! empty ( $current_data ) ) {
+                $this->add_admin_success_notice();
             }
         }
     }
@@ -1668,5 +1757,60 @@ class Expert_Sender_Admin
                 )
             );
         }
+    }
+
+    /**
+     * @param string|null $message
+     * 
+     * @return void
+     */
+    public function expert_sender_success_notice( $message = null ) {
+        $this->add_admin_success_notice( $message );
+    }
+
+    public function expert_sender_data_error_notice( $message = null ) {
+        $this->add_admin_error_notice( $message );
+    }
+
+    /**
+     * @param string|null $message
+     * 
+     * @return void
+     */
+    private function add_admin_success_notice( $message = null ) {
+        add_action( 'admin_notices', function () use ( $message ) {
+            if ( null === $message ) {
+                $message = __('Data saved successfully.', 'exper');
+            }
+
+            $notice = <<<HTML
+                <div class="notice is-dismissible notice-success">
+                    <p>$message</p>
+                </div>
+            HTML;
+
+            echo $notice;
+        } );
+    }
+
+    /**
+     * @param string|null $message
+     * 
+     * @return void
+     */
+    private function add_admin_error_notice( $message = null ) {
+        add_action( 'admin_notices', function () use ( $message ) {
+            if ( null === $message ) {
+                $message = 'The server encountered an error. Please try again later.';
+            }
+
+            $notice = <<<HTML
+                <div class="notice is-dismissible notice-error">
+                    <p>$message</p>
+                </div>
+            HTML;
+
+            echo $notice;
+        } );
     }
 }

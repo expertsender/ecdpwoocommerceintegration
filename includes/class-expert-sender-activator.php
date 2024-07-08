@@ -39,7 +39,8 @@ class Expert_Sender_Activator {
 			resource_type varchar(20) NOT NULL,
 			wp_field varchar(50) NOT NULL,
 			ecdp_field varchar(50) NOT NULL,
-			PRIMARY KEY  (id)
+			PRIMARY KEY (id),
+            UNIQUE INDEX es_mappings_resource_type_wp_field_unique (resource_type, wp_field)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -52,7 +53,8 @@ class Expert_Sender_Activator {
 			api_consent_id mediumint(9) NOT NULL,
 			consent_location varchar(50) NOT NULL,
 			consent_text TEXT,
-			PRIMARY KEY  (id)
+			PRIMARY KEY (id),
+            UNIQUE INDEX es_consents_api_consent_id_consent_location_unique (api_consent_id, consent_location)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -83,7 +85,8 @@ class Expert_Sender_Activator {
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
 			wp_order_status varchar(50) NOT NULL,
 			ecdp_order_status varchar(50) NOT NULL,
-			PRIMARY KEY  (id)
+			PRIMARY KEY (id),
+            UNIQUE (wp_order_status)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
