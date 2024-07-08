@@ -158,6 +158,8 @@ class Expert_Sender
         $this->require( 'includes/utilities/class-expert-sender-logging-util.php' );
 
         $this->require( 'includes/expert-sender-core-functions.php' );
+        $this->require( 'includes/expert-sender-order-status-mapping-functions.php' );
+        $this->require( 'includes/expert-sender-order-functions.php' );
 
         $this->loader = new Expert_Sender_Loader();
     }
