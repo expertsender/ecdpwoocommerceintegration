@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 class Expert_Sender_Order_Request
 {
     /**
@@ -191,7 +195,7 @@ class Expert_Sender_Order_Request
             'data' => [ $order_data ],
         ] );
 
-        $url = 'https://api.ecdp.app/orders';
+        $url = ES_API_URL . 'orders';
 
         global $wpdb;
         $table_name = $wpdb->prefix . 'expert_sender_requests';

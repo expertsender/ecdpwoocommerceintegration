@@ -145,7 +145,7 @@ class Expert_Sender_Inject_Consent
 
     public function expert_sender_get_user_consents_from_api($email)
     {
-        $api_url = 'https://api.ecdp.app/customers/email/' . urlencode($email);
+        $api_url = ES_API_URL . 'customers/email/' . urlencode($email);
 
         $headers = [
             'accept' => 'application/json',
@@ -160,7 +160,7 @@ class Expert_Sender_Inject_Consent
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            echo "Something went wrong: $error_message";
+            echo "Coś poszło nie tak: $error_message";
             return null;
         } else {
             $response_body = wp_remote_retrieve_body($response);

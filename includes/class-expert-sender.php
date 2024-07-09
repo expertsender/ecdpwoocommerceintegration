@@ -1,5 +1,9 @@
 <?php
 
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
+
 /**
  * The file that defines the core plugin class
  *
@@ -79,6 +83,7 @@ class Expert_Sender
         $this->set_locale();
         $this->expert_sender_define_admin_hooks();
         $this->expert_sender_define_public_hooks();
+        $this->define_constants();
     }
 
     /**
@@ -403,5 +408,21 @@ class Expert_Sender
      */
     private function require( $filepath ) {
         require_once plugin_dir_path( dirname( __FILE__ ) ) . $filepath;
+    }
+
+    private function define_constants() {
+        $this->define( 'ES_API_URL', 'https://api.ecdp.app/');
+    }
+
+    /**
+     * @param string $name
+     * @param string $value
+     * 
+     * @return void
+     */
+    private function define($name, $value) {
+        if ( ! defined( $name ) ) {
+            define( $name, $value );
+        }
     }
 }

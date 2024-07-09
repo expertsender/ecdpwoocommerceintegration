@@ -106,7 +106,7 @@ class Expert_Sender_Client_Request
      */
     public static function expert_sender_add_or_update_customer( $customerData, $sync = false )
     {
-        $url = 'https://api.ecdp.app/customers';
+        $url = ES_API_URL . 'customers';
         $logger = expert_sender_get_logger();
 
         $body = json_encode([
@@ -139,11 +139,8 @@ class Expert_Sender_Client_Request
                 'body' => $body,
             ]);
 
-			$responseCode = wp_remote_retrieve_response_code($response);
             $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
-
             $response = wp_remote_retrieve_body($response);
-
             $wpdb->insert($table_name, [
                 'created_at' => current_time('mysql'),
                 'is_sent' => true,
