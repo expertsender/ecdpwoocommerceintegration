@@ -14,7 +14,7 @@ function es_get_mapped_order_status( $status ) {
         return $status;
     }
 
-    $table = $wpdb->prefix . 'expert_sender_order_status_mappings';
+    $table = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
     $query = <<<SQL
         SELECT ecdp_order_status
         FROM {$table}

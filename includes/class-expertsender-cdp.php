@@ -5,19 +5,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * The file that defines the core plugin class
- *
- * A class definition that includes attributes and functions used across both the
- * public-facing side of the site and the admin area.
- *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
- */
-
-/**
  * The core plugin class.
  *
  * This is used to define internationalization, admin-specific hooks, and
@@ -27,11 +14,11 @@ if ( ! defined( 'ABSPATH' ) ) {
  * version of the plugin.
  *
  * @since      1.0.0
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/includes
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender
+class ExpertSender_CDP
 {
     /**
      * The loader that's responsible for maintaining and registering all hooks that power
@@ -39,7 +26,7 @@ class Expert_Sender
      *
      * @since    1.0.0
      * @access   protected
-     * @var      Expert_Sender_Loader    $loader    Maintains and registers all hooks for the plugin.
+     * @var      ExpertSender_CDP_Loader    $loader    Maintains and registers all hooks for the plugin.
      */
     protected $loader;
 
@@ -72,17 +59,17 @@ class Expert_Sender
      */
     public function __construct()
     {
-        if (defined('EXPERT_SENDER_VERSION')) {
-            $this->version = EXPERT_SENDER_VERSION;
+        if (defined('EXPERTSENDER_CDP_VERSION')) {
+            $this->version = EXPERTSENDER_CDP_VERSION;
         } else {
             $this->version = '1.0.0';
         }
-        $this->plugin_name = 'expert-sender';
+        $this->plugin_name = 'expertsender-cdp';
 
         $this->load_dependencies();
         $this->set_locale();
-        $this->expert_sender_define_admin_hooks();
-        $this->expert_sender_define_public_hooks();
+        $this->expertsender_cdp_define_admin_hooks();
+        $this->expertsender_cdp_define_public_hooks();
         $this->define_constants();
     }
 
@@ -91,10 +78,10 @@ class Expert_Sender
      *
      * Include the following files that make up the plugin:
      *
-     * - Expert_Sender_Loader. Orchestrates the hooks of the plugin.
-     * - Expert_Sender_i18n. Defines internationalization functionality.
-     * - Expert_Sender_Admin. Defines all hooks for the admin area.
-     * - Expert_Sender_Public. Defines all hooks for the public side of the site.
+     * - ExpertSender_CDP_Loader. Orchestrates the hooks of the plugin.
+     * - ExpertSender_CDP_i18n. Defines internationalization functionality.
+     * - ExpertSender_CDP_Admin. Defines all hooks for the admin area.
+     * - ExpertSender_CDP_Public. Defines all hooks for the public side of the site.
      *
      * Create an instance of the loader which will be used to register the hooks
      * with WordPress.
@@ -109,69 +96,69 @@ class Expert_Sender
          * core plugin.
          */
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'includes/class-expert-sender-loader.php';
+            'includes/class-expertsender-cdp-loader.php';
 
         /**
          * The class responsible for defining internationalization functionality
          * of the plugin.
          */
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'includes/class-expert-sender-i18n.php';
+            'includes/class-expertsender-cdp-i18n.php';
 
         /**
          * The class responsible for defining all actions that occur in the admin area.
          */
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'admin/class-expert-sender-admin.php';
+            'admin/class-expertsender-cdp-admin.php';
 
         /**
          * The class responsible for defining all actions that occur in the public-facing
          * side of the site.
          */
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'public/class-expert-sender-public.php';
+            'public/class-expertsender-cdp-public.php';
 
-        //require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-expert-sender-product-request.php';
-
-        require_once plugin_dir_path(dirname(__FILE__)) .
-            'includes/class-expert-sender-inject-consent.php';
+        //require_once plugin_dir_path( dirname( __FILE__ ) ) . 'includes/class-expertsender-cdp-product-request.php';
 
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'includes/class-expert-sender-client-request.php';
+            'includes/class-expertsender-cdp-inject-consent.php';
+
         require_once plugin_dir_path(dirname(__FILE__)) .
-            'includes/class-expert-sender-order-request.php';
+            'includes/class-expertsender-cdp-client-request.php';
+        require_once plugin_dir_path(dirname(__FILE__)) .
+            'includes/class-expertsender-cdp-order-request.php';
 
         /**
          * Interfaces
          */
-        $this->require( 'includes/interfaces/class-expert-sender-log-handler-interface.php' );
-        $this->require( 'includes/interfaces/class-expert-sender-logger-interface.php' );
+        $this->require( 'includes/interfaces/class-expertsender-cdp-log-handler-interface.php' );
+        $this->require( 'includes/interfaces/class-expertsender-cdp-logger-interface.php' );
 
         /**
          * Abstracts
          */
-        $this->require( 'includes/abstracts/abstract-expert-sender-log-handler.php' );
+        $this->require( 'includes/abstracts/abstract-expertsender-cdp-log-handler.php' );
 
         /**
          * Classes
          */
-        $this->require( 'includes/class-expert-sender-ajax.php' );
-        $this->require( 'includes/class-expert-sender-api.php' );
-        $this->require( 'includes/class-expert-sender-log-levels.php' );
-        $this->require( 'includes/class-expert-sender-logger.php' );
-        $this->require( 'includes/log-handlers/class-expert-sender-log-handler-file.php' );
-        $this->require( 'includes/utilities/class-expert-sender-logging-util.php' );
+        $this->require( 'includes/class-expertsender-cdp-ajax.php' );
+        $this->require( 'includes/class-expertsender-cdp-api.php' );
+        $this->require( 'includes/class-expertsender-cdp-log-levels.php' );
+        $this->require( 'includes/class-expertsender-cdp-logger.php' );
+        $this->require( 'includes/log-handlers/class-expertsender-cdp-log-handler-file.php' );
+        $this->require( 'includes/utilities/class-expertsender-cdp-logging-util.php' );
 
-        $this->require( 'includes/expert-sender-core-functions.php' );
-        $this->require( 'includes/expert-sender-order-status-mapping-functions.php' );
+        $this->require( 'includes/expertsender-cdp-core-functions.php' );
+        $this->require( 'includes/expertsender-cdp-order-status-mapping-functions.php' );
 
-        $this->loader = new Expert_Sender_Loader();
+        $this->loader = new ExpertSender_CDP_Loader();
     }
 
     /**
      * Define the locale for this plugin for internationalization.
      *
-     * Uses the Expert_Sender_i18n class in order to set the domain and to register the hook
+     * Uses the ExpertSender_CDP_i18n class in order to set the domain and to register the hook
      * with WordPress.
      *
      * @since    1.0.0
@@ -179,7 +166,7 @@ class Expert_Sender
      */
     private function set_locale()
     {
-        $plugin_i18n = new Expert_Sender_i18n();
+        $plugin_i18n = new ExpertSender_CDP_i18n();
 
         $this->loader->add_action(
             'plugins_loaded',
@@ -195,9 +182,9 @@ class Expert_Sender
      * @since    1.0.0
      * @access   private
      */
-    private function expert_sender_define_admin_hooks()
+    private function expertsender_cdp_define_admin_hooks()
     {
-        $plugin_admin = new Expert_Sender_Admin(
+        $plugin_admin = new ExpertSender_CDP_Admin(
             $this->get_plugin_name(),
             $this->get_version()
         );
@@ -207,14 +194,10 @@ class Expert_Sender
             $plugin_admin,
             'enqueue_styles'
         );
-        $this->loader->add_action(
-            'admin_enqueue_scripts',
-            $plugin_admin,
-            'enqueue_scripts'
-        );
-        add_action('expert_sender_cron_job', [
+
+        add_action('expertsender_cdp_cron_job', [
             $this,
-            'expert_sender_cron_job_send_request',
+            'expertsender_cdp_cron_job_send_request',
         ]);
     }
 
@@ -225,66 +208,73 @@ class Expert_Sender
      * @since    1.0.0
      * @access   private
      */
-    public function expert_sender_define_public_hooks()
+    public function expertsender_cdp_define_public_hooks()
     {
-        $plugin_public = new Expert_Sender_Public(
+        $plugin_public = new ExpertSender_CDP_Public(
             $this->get_plugin_name(),
             $this->get_version()
         );
-        $plugin_public_customer = new Expert_Sender_Client_Request(
+
+        $plugin_public_customer = new ExpertSender_CDP_Client_Request(
             $this->get_plugin_name(),
             $this->get_version()
         );
-        $plugin_public_consent = new Expert_Sender_Inject_Consent(
+
+        $plugin_public_consent = new ExpertSender_CDP_Inject_Consent(
             $this->get_plugin_name(),
             $this->get_version()
         );
-        $plugin_public_order = new Expert_Sender_Order_Request();
-        $plugin_api = new Expert_Sender_Api();
-        new Expert_Sender_Ajax();
+
+        new ExpertSender_CDP_Order_Request();
+        $plugin_api = new ExpertSender_CDP_Api();
+        new ExpertSender_CDP_Ajax();
 
         $this->loader->add_action(
             'wp_enqueue_scripts',
             $plugin_public,
             'enqueue_styles'
         );
+
         $this->loader->add_action(
             'wp_enqueue_scripts',
             $plugin_public,
             'enqueue_scripts'
         );
 
-        if (get_option('expert_sender_enable_script')) {
+        if (get_option('expertsender_cdp_enable_script')) {
             $this->loader->add_action(
                 'wp_footer',
                 $plugin_public,
-                'add_expert_sender_script'
+                'add_expertsender_cdp_script'
             );
         }
 
         $this->loader->add_action(
             'woocommerce_created_customer',
             $plugin_public_customer,
-            'expert_sender_create_customer',
+            'expertsender_cdp_create_customer',
             10,
             3
         );
+
         $this->loader->add_action(
             'woocommerce_save_account_details',
             $plugin_public_customer,
-            'expert_sender_edit_customer'
+            'expertsender_cdp_edit_customer'
         );
+
         $this->loader->add_action(
             'woocommerce_customer_save_address',
             $plugin_public_customer,
-            'expert_sender_edit_billing_address',
+            'expertsender_cdp_edit_billing_address',
             10,
             2
         );
+
         $this->loader->add_action(
             'woocommerce_customer_save_address',
             $plugin_public_customer,
-            'expert_sender_edit_shipping_address',
+            'expertsender_cdp_edit_shipping_address',
             10,
             2
         );
@@ -292,7 +282,7 @@ class Expert_Sender
         $this->loader->add_action(
             'woocommerce_register_form',
             $plugin_public_consent,
-            'expert_sender_add_consents_in_register_form',
+            'expertsender_cdp_add_consents_in_register_form',
             10,
             1
         );
@@ -332,7 +322,7 @@ class Expert_Sender
      * The reference to the class that orchestrates the hooks with the plugin.
      *
      * @since     1.0.0
-     * @return    Expert_Sender_Loader    Orchestrates the hooks of the plugin.
+     * @return    ExpertSender_CDP_Loader    Orchestrates the hooks of the plugin.
      */
     public function get_loader()
     {
@@ -350,13 +340,13 @@ class Expert_Sender
         return $this->version;
     }
 
-    public function expert_sender_cron_job_send_request()
+    public function expertsender_cdp_cron_job_send_request()
     {
-        $logger = expert_sender_get_logger();
+        $logger = expertsender_cdp_get_logger();
         $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_requests';
+        $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
 
         $expertSenderRequests = $wpdb->get_results(
             $wpdb->prepare(
@@ -368,10 +358,9 @@ class Expert_Sender
         foreach ($expertSenderRequests as $request) {
             $headers = [
                 'Accept' => 'application/json',
-                'x-api-key' => get_option('expert_sender_key'),
+                'x-api-key' => get_option( ExpertSender_CDP_Admin::OPTION_API_KEY ),
                 'Content-Type' => 'application/json',
             ];
-
 
             $response = wp_remote_post($request->url_address, [
                 'headers' => $headers,
@@ -410,6 +399,9 @@ class Expert_Sender
         require_once plugin_dir_path( dirname( __FILE__ ) ) . $filepath;
     }
 
+    /**
+     * @return void
+     */
     private function define_constants() {
         $this->define( 'ES_API_URL', 'https://api.ecdp.app/');
     }
@@ -420,7 +412,7 @@ class Expert_Sender
      * 
      * @return void
      */
-    private function define($name, $value) {
+    private function define( $name, $value ) {
         if ( ! defined( $name ) ) {
             define( $name, $value );
         }

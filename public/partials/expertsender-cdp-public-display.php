@@ -8,8 +8,8 @@
  * @link       https://test.pl
  * @since      1.0.0
  *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/public/partials
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/public/partials
  */
 ?>
 

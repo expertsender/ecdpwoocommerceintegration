@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class Expert_Sender_Log_Handler_File extends Expert_Sender_Log_Handler
+class ExpertSender_CDP_Log_Handler_File extends ExpertSender_CDP_Log_Handler
 {
     /**
      * @var array
@@ -16,13 +16,17 @@ class Expert_Sender_Log_Handler_File extends Expert_Sender_Log_Handler
      * @return string|false
      */
     public static function get_log_file_path( $handle ) {
-        $log_directory = Expert_Sender_Logging_Util::get_log_directory();
+        $log_directory = ExpertSender_CDP_Logging_Util::get_log_directory();
+
+        if ( null === $log_directory ) {
+            return false;
+        }
 
         if ( function_exists( 'wp_hash' ) ) {
             return trailingslashit( $log_directory ) . self::get_log_file_name( $handle );
         }
 
-        _doing_it_wrong(__METHOD__, __( 'This method should not be called before plugins_loaded.', 'expert-sender'), '' );
+        _doing_it_wrong(__METHOD__, __( 'This method should not be called before plugins_loaded.', 'expertsender_cdp'), '' );
         return false;
     }
 

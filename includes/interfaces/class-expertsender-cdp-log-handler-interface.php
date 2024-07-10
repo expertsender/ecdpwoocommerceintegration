@@ -1,6 +1,6 @@
 <?php
 
-interface Expert_Sender_Log_Handler_Interface {
+interface ExpertSender_CDP_Log_Handler_Interface {
     /**
      * @param int $timestamp
      * @param string $level

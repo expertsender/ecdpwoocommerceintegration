@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-abstract class Expert_Sender_Log_Handler implements Expert_Sender_Log_Handler_Interface {
+abstract class ExpertSender_CDP_Log_Handler implements ExpertSender_CDP_Log_Handler_Interface {
     /**
      * @param int $timestamp
      * @return string
@@ -26,7 +26,7 @@ abstract class Expert_Sender_Log_Handler implements Expert_Sender_Log_Handler_In
         $entry = "{$time_string} {$level_string} {$message}";
 
         return apply_filters(
-            'expert_sender_format_log_entry',
+            'expertsender_cdp_format_log_entry',
             $entry,
             array(
                 'timestamp' => $timestamp,

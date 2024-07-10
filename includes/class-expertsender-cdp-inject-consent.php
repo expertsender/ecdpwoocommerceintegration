@@ -1,8 +1,8 @@
 <?php
 
-class Expert_Sender_Inject_Consent
+class ExpertSender_CDP_Inject_Consent
 {
-    public const CONSENT_INPUT_KEY = 'expert-sender-consents';
+    public const CONSENT_INPUT_KEY = 'expertsender-cdp-consents';
 
     /**
      * The ID of this plugin.
@@ -35,14 +35,14 @@ class Expert_Sender_Inject_Consent
         $this->version = $version;
         add_filter(
             'woocommerce_edit_account_form_fields',
-            array( $this, 'expert_sender_add_consents_in_customer_settings_form' ),
+            array( $this, 'expertsender_cdp_add_consents_in_customer_settings_form' ),
             9,
             1
         );
 
         add_action(
             'woocommerce_review_order_before_submit',
-            array( $this, 'expert_sender_add_consents_in_checkout_form' ),
+            array( $this, 'expertsender_cdp_add_consents_in_checkout_form' ),
             20
         );
 
@@ -51,23 +51,23 @@ class Expert_Sender_Inject_Consent
     /**
      * @return void
      */
-    public function expert_sender_add_consents_in_register_form() {
-        $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_REGISTRATION_KEY );
+    public function expertsender_cdp_add_consents_in_register_form() {
+        $this->expertsender_cdp_add_consents( ExpertSender_CDP_Admin::FORM_REGISTRATION_KEY );
     }
 
     /**
      * @return void
      */
-    public function expert_sender_add_consents_in_customer_settings_form() {
-        $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY );
+    public function expertsender_cdp_add_consents_in_customer_settings_form() {
+        $this->expertsender_cdp_add_consents( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY );
     }
 
     /**
      * @param array $checkout_fields
      * @return array
      */
-    public function expert_sender_add_consents_in_checkout_form( $checkout_fields ) {
-        return $this->expert_sender_add_consents( Expert_Sender_Admin::FORM_CHECKOUT_KEY, $checkout_fields );
+    public function expertsender_cdp_add_consents_in_checkout_form( $checkout_fields ) {
+        return $this->expertsender_cdp_add_consents( ExpertSender_CDP_Admin::FORM_CHECKOUT_KEY, $checkout_fields );
     }
 
     /**
@@ -75,12 +75,12 @@ class Expert_Sender_Inject_Consent
      * @param mixed $returned_data
      * @return mixed|void
      */
-    public function expert_sender_add_consents( $form_location, $return_data = null )
+    public function expertsender_cdp_add_consents( $form_location, $return_data = null )
     {
         $customer = new WC_Customer( get_current_user_id() );
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_consents';
+        $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
 
         $consents = $wpdb->get_results(
             $wpdb->prepare(
@@ -90,9 +90,9 @@ class Expert_Sender_Inject_Consent
         );
         $consentsData = array();
 
-        if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+        if ( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
             if ( count( $consents ) ) {
-                $data = $this->expert_sender_get_user_consents_from_api( $customer->get_email() );
+                $data = $this->expertsender_cdp_get_user_consents_from_api( $customer->get_email() );
 
                 if ( $data != null && property_exists( $data, "consentsData" )
                     && property_exists( $data->consentsData, "consents" ) 
@@ -106,15 +106,15 @@ class Expert_Sender_Inject_Consent
 
         if ( ! empty ($consents ) ) {
             if (
-                Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY !== $form_location &&
+                ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY !== $form_location &&
                 $text_before = get_option( $form_location . '_text_before' )
             ) {
-                echo '<div class="expert-sender-text-before-consents">' . esc_html( $text_before ) . '</div>';
+                echo '<div class="expertsender_cdp-text-before-consents">' . esc_html( $text_before ) . '</div>';
             };
 
-            if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
-                echo '<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide expert-sender">';
-                echo '<label class="expert-sender">' . __( 'Consents', 'expert-sender' ) . '</label>';
+            if ( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+                echo '<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide expertsender_cdp">';
+                echo '<label class="expertsender_cdp">Zgody</label>';
             }
 
             foreach ( $consents as $consent ) {
@@ -133,7 +133,7 @@ class Expert_Sender_Inject_Consent
                 woocommerce_form_field( $key, $field_args );
             }
 
-            if ( Expert_Sender_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
+            if ( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
                 echo '</p>';
             }
         }
@@ -143,13 +143,13 @@ class Expert_Sender_Inject_Consent
         }
     }
 
-    public function expert_sender_get_user_consents_from_api($email)
+    public function expertsender_cdp_get_user_consents_from_api($email)
     {
         $api_url = ES_API_URL . 'customers/email/' . urlencode($email);
 
         $headers = [
             'accept' => 'application/json',
-            'x-api-key' => get_option('expert_sender_key'),
+            'x-api-key' => get_option( ExpertSender_CDP_Admin::OPTION_API_KEY ),
         ];
 
         $args = [

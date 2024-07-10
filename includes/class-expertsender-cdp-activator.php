@@ -5,27 +5,16 @@ if ( ! defined( 'ABSPATH' ) ) {
 }
 
 /**
- * Fired during plugin activation
- *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
- */
-
-/**
  * Fired during plugin activation.
  *
  * This class defines all code necessary to run during the plugin's activation.
  *
  * @since      1.0.0
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/includes
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender_Activator {
-
+class ExpertSender_CDP_Activator {
 	/**
 	 * Short Description. (use period)
 	 *
@@ -36,7 +25,7 @@ class Expert_Sender_Activator {
 	public static function activate() {
 		global $wpdb;
 		
-		$table_name = $wpdb->prefix . 'expert_sender_mappings';
+		$table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
 		
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -50,7 +39,7 @@ class Expert_Sender_Activator {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 
-		$table_name = $wpdb->prefix . 'expert_sender_consents';
+		$table_name = $wpdb->prefix . 'expertsender_cdp_consents';
 		
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -64,7 +53,7 @@ class Expert_Sender_Activator {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 
-		$table_name = $wpdb->prefix . 'expert_sender_requests';
+		$table_name = $wpdb->prefix . 'expertsender_cdp_requests';
 		
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -83,7 +72,7 @@ class Expert_Sender_Activator {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 
-		$table_name = $wpdb->prefix . 'expert_sender_order_status_mappings';
+		$table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
 		
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -96,8 +85,8 @@ class Expert_Sender_Activator {
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 		dbDelta($sql);
 
-		if ( ! wp_next_scheduled( 'expert_sender_cron_job' ) ) {
-			wp_schedule_event( time(), 'every_minute', 'expert_sender_cron_job' );
+		if ( ! wp_next_scheduled( 'expertsender_cdp_cron_job' ) ) {
+			wp_schedule_event( time(), 'every_minute', 'expertsender_cdp_cron_job' );
 		}
 	}
 }

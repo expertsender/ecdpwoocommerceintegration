@@ -4,31 +4,39 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class Expert_Sender_Logging_Util {
+class ExpertSender_CDP_Logging_Util {
     /**
      * @return bool
      */
     public static function is_logging_enabled() {
-        return (bool) get_option(Expert_Sender_Admin::OPTION_ENABLE_LOGS);
+        return (bool) get_option( ExpertSender_CDP_Admin::OPTION_ENABLE_LOGS );
     }
 
     /**
-     * @return Expert_Sender_Log_Handler_File
+     * @return ExpertSender_CDP_Log_Handler_File
      */
     public static function get_default_handler() {
-        return new Expert_Sender_Log_Handler_File();
+        return new ExpertSender_CDP_Log_Handler_File();
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public static function get_log_directory() {
         /** @var \WP_Filesystem_Base $wp_filesystem */
         global $wp_filesystem;
+        
+        if ( null === $wp_filesystem && function_exists( 'WP_Filesystem' ) ) {
+            WP_Filesystem();
+
+            if ( null === $wp_filesystem ) {
+                return null;
+            }
+        }
 
         $dir = apply_filters(
-            'expert_sender_log_directory',
-            wp_upload_dir()['basedir'] . '/expert-sender-logs/'
+            'expertsender_cdp_log_directory',
+            wp_upload_dir()[ 'basedir' ] . '/expertsender-cdp-logs/'
         );
 
         $dir = trailingslashit( $dir );

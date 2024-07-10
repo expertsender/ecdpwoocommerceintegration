@@ -1,26 +1,15 @@
 <?php
-
-/**
- * The public-facing functionality of the plugin.
- *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/public
- */
-
 /**
  * The public-facing functionality of the plugin.
  *
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the public-facing stylesheet and JavaScript.
  *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/public
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/public
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender_Public {
+class ExpertSender_CDP_Public {
 
 	/**
 	 * The ID of this plugin.
@@ -48,7 +37,6 @@ class Expert_Sender_Public {
 	 * @param      string    $version    The version of this plugin.
 	 */
 	public function __construct( $plugin_name, $version ) {
-
 		$this->plugin_name = $plugin_name;
 		$this->version = $version;
 	}
@@ -59,21 +47,19 @@ class Expert_Sender_Public {
 	 * @since    1.0.0
 	 */
 	public function enqueue_styles() {
-
 		/**
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Expert_Sender_Loader as all of the hooks are defined
+		 * defined in ExpertSender_CDP_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Expert_Sender_Loader will then create the relationship
+		 * The ExpertSender_CDP_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/expert-sender-public.css', array(), $this->version, 'all' );
-
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/expertsender_cdp-public.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -82,29 +68,27 @@ class Expert_Sender_Public {
 	 * @since    1.0.0
 	 */
 	public function enqueue_scripts() {
-
 		/**
 		 * This function is provided for demonstration purposes only.
 		 *
 		 * An instance of this class should be passed to the run() function
-		 * defined in Expert_Sender_Loader as all of the hooks are defined
+		 * defined in ExpertSender_CDP_Loader as all of the hooks are defined
 		 * in that particular class.
 		 *
-		 * The Expert_Sender_Loader will then create the relationship
+		 * The ExpertSender_CDP_Loader will then create the relationship
 		 * between the defined hooks and the functions defined in this
 		 * class.
 		 */
 
-		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/expert-sender-public.js', array( 'jquery' ), $this->version, false );
+		wp_enqueue_script( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'js/expertsender-cdp-public.js', array( 'jquery' ), $this->version, false );
         wp_localize_script(
             $this->plugin_name,
             'settings',
             array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) )
         );
-
 	}
 
-	public function add_expert_sender_script() {
-		echo base64_decode(get_option('expert_sender_script'));
+	public function add_expertsender_cdp_script() {
+		echo base64_decode(get_option('expertsender_cdp_script'));
 	}
 }

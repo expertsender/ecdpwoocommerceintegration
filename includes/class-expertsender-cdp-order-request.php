@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class Expert_Sender_Order_Request
+class ExpertSender_CDP_Order_Request
 {
     /**
      * The ID of this plugin.
@@ -38,8 +38,13 @@ class Expert_Sender_Order_Request
     public function __construct()
     {
         add_action(
+            'woocommerce_checkout_order_processed',
+            array( $this, 'expertsender_cdp_order_save_request' )
+        );
+
+        add_action(
             'woocommerce_update_order',
-            array( $this, 'expert_sender_order_save_request' )
+            array( $this, 'expertsender_cdp_order_save_request' )
         );
     }
 
@@ -50,7 +55,7 @@ class Expert_Sender_Order_Request
      * 
      * @return void
      */
-    public function expert_sender_order_save_request(
+    public function expertsender_cdp_order_save_request(
         $order_id,
         $order = null,
         $sync_id = null
@@ -60,30 +65,30 @@ class Expert_Sender_Order_Request
         }
 
         $customer = new WC_Customer( $order->get_user_id() );
-        $order_data[ 'id' ] = $order->get_id();
+        $order_data[ 'id' ] = (string) $order->get_id();
         $order_data[ 'date' ] = $order->get_data()[ 'date_modified' ]->date( 'Y-m-d\TH:i:s.u\Z' );
         $order_data[ 'timeZone' ] = 'UTC';
-        $website_id = get_option( 'expert_sender_website_id', null );
+        $website_id = get_option( 'expertsender_cdp_website_id', null );
 
         if ( empty( $website_id ) ) {
             $website_id = null;
         }
 
         $order_data[ 'websiteId' ] = $website_id;
-        $order_data[ 'status' ] = es_get_mapped_order_status( $order->status );
+        $order_data[ 'status' ] = es_get_mapped_order_status( $order->get_status() );
         $order_data[ 'currency' ] = $order->get_currency();
         $order_data[ 'totalValue' ] = (float) $order->get_total();
         $order_data[ 'returnsValue' ] = $order->get_total_refunded();
         $customer_data[ 'email' ] = $customer->get_email();
 
-        if ( get_option('expert_sender_enable_script') ) {
+        if ( get_option('expertsender_cdp_enable_script') ) {
             $customer_data[ 'phone' ] = $customer->get_billing_phone();
         }
 
         $customer_data[ 'crmId' ] = $customer->get_billing_phone();
         $order_data[ 'customer' ] = $customer_data;
-        $consents_data = Expert_Sender_Client_Request::get_consents_from_request(
-            Expert_Sender_Admin::FORM_CHECKOUT_KEY
+        $consents_data = ExpertSender_CDP_Client_Request::get_consents_from_request(
+            ExpertSender_CDP_Admin::FORM_CHECKOUT_KEY
         );
         $order_data[ 'customer' ][ 'consentsData' ] = ! empty ( $consents_data ) ? $consents_data : null;
         $items = $order->get_items();
@@ -92,7 +97,7 @@ class Expert_Sender_Order_Request
         foreach ( $items as $item ) {
             $product_id = $item->get_product_id();
             $product_item = wc_get_product( $product_id );
-            $product[ 'id' ] = $product_item->get_id();
+            $product[ 'id' ] = (string) $product_item->get_id();
             $product[ 'name' ] = $product_item->get_name();
             $product[ 'price' ] = $product_item->get_price();
             $product[ 'quantity' ] = $item->get_quantity();
@@ -110,6 +115,10 @@ class Expert_Sender_Order_Request
             $product[ 'returned' ] = abs( $returned );
             $product[ 'url' ] = $product_item->get_permalink();
             $image_url = wp_get_attachment_image_src( get_post_thumbnail_id( $product_id ), 'single-post-thumbnail' );
+
+            if ( is_array( $image_url ) && ! empty( $image_url ) ) {
+                $image_url = $image_url[ 0 ];
+            }
 
             if ( false === $image_url ) {
                 $image_url = wc_placeholder_img_src();
@@ -137,7 +146,7 @@ class Expert_Sender_Order_Request
             $attributes = $product_item->get_attributes();
 
             global $wpdb;
-            $table_name = $wpdb->prefix . 'expert_sender_mappings';
+            $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
 
             if ( ! empty( $attributes ) ) {
                 $this->log_order_details($attributes);
@@ -198,7 +207,7 @@ class Expert_Sender_Order_Request
         $url = ES_API_URL . 'orders';
 
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_requests';
+        $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
 
         $wpdb->replace( $table_name, array(
             'created_at' => current_time( 'mysql' ),
@@ -231,7 +240,7 @@ class Expert_Sender_Order_Request
         $log_message = $fullLog;
         $log_message .= "\n";
 
-        $logger = expert_sender_get_logger();
+        $logger = expertsender_cdp_get_logger();
         $logger->debug( $log_message, array( 'source' => 'custom_order' ) );
     }
 }

@@ -22,7 +22,7 @@
  * @link       https://test.pl
  * @since      1.0.0
  *
- * @package    Expert_Sender
+ * @package    ExpertSender_CDP
  */
 
 // If uninstall not called from WordPress, then exit.
