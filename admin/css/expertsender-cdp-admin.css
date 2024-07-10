@@ -1,0 +1,99 @@
+h1.es-bold {
+    font-weight: bold;
+}
+
+button.submit:hover{
+    background-color: darkgray;
+}
+
+.input-wrap {
+    display: flex;
+    flex-direction: column;
+    max-width: 400px;
+    margin-bottom: 15px;
+}
+
+.input-wrap label {
+    font-weight: bold;
+    margin-bottom: 5px;
+}
+
+.es-divider {
+    max-width: 400px;
+    border-bottom: 1px solid #333;
+    margin: 25px 0;
+}
+
+.es-button {
+    background: #da1884;
+    color: #fff;
+    padding: 12px 20px;
+    border-radius: 6px;
+    font-size: 16px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+.es-button.submit {
+    font-size: 18px;
+    line-height: 18px;
+    padding: 10px;
+    height: auto;
+}
+
+.es-button:hover, .es-button.submit:hover {
+    background: #ff1c9b;
+}
+
+.es-input[type="checkbox"] {
+    accent-color: #da1884;
+    appearance: auto;
+    -webkit-appearance: auto;
+}
+
+.es-input[type="checkbox"]:checked::before {
+    display: none;
+}
+
+.es-table {
+    width: unset;
+}
+
+.es-table th {
+    vertical-align: middle;
+}
+
+.es-table tr td:nth-of-type(1) {
+    padding-right: 20px;
+}
+
+form .es-button {
+    font-size: 13px;
+    line-height: 13px;
+    padding: 7px;
+    height: 30px;
+}
+
+form .es-button.submit {
+    margin-top: 15px;
+}
+
+.es-input-pairs-container {
+    padding: 10px 0;
+}
+
+.es-input-pair {
+    display: flex;
+    gap: 10px;
+    padding-bottom: 10px;
+}
+
+.es-input-pair select {
+    width: 100%;
+    max-width: 300px;
+}
+
+.es-input-list {
+    line-height: unset;
+}

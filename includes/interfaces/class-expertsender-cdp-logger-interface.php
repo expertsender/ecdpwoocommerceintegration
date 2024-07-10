@@ -1,6 +1,6 @@
 <?php
 
-interface Expert_Sender_Logger_Interface {
+interface ExpertSender_CDP_Logger_Interface {
 
     /**
      * @param string $level

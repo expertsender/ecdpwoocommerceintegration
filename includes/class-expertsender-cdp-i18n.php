@@ -1,17 +1,8 @@
 <?php
 
-/**
- * Define the internationalization functionality
- *
- * Loads and defines the internationalization files for this plugin
- * so that it is ready for translation.
- *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
- */
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Define the internationalization functionality.
@@ -20,28 +11,21 @@
  * so that it is ready for translation.
  *
  * @since      1.0.0
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/includes
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender_i18n {
-
-
+class ExpertSender_CDP_i18n {
 	/**
 	 * Load the plugin text domain for translation.
 	 *
 	 * @since    1.0.0
 	 */
 	public function load_plugin_textdomain() {
-
 		load_plugin_textdomain(
-			'expert-sender',
+			'expertsender_cdp',
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);
-
 	}
-
-
-
 }

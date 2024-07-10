@@ -1,14 +1,8 @@
 <?php
 
-/**
- * Register all actions and filters for the plugin
- *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
- */
+if ( ! defined( 'ABSPATH' ) ) {
+	exit;
+}
 
 /**
  * Register all actions and filters for the plugin.
@@ -17,12 +11,11 @@
  * the plugin, and register them with the WordPress API. Call the
  * run function to execute the list of actions and filters.
  *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/includes
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/includes
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender_Loader {
-
+class ExpertSender_CDP_Loader {
 	/**
 	 * The array of actions registered with WordPress.
 	 *
@@ -105,7 +98,6 @@ class Expert_Sender_Loader {
 		);
 
 		return $hooks;
-
 	}
 
 	/**
@@ -122,7 +114,5 @@ class Expert_Sender_Loader {
 		foreach ( $this->actions as $hook ) {
 			add_action( $hook['hook'], array( $hook['component'], $hook['callback'] ), $hook['priority'], $hook['accepted_args'] );
 		}
-
 	}
-
 }

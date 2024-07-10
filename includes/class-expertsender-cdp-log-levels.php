@@ -4,7 +4,7 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-final class Expert_Sender_Log_Levels {
+final class ExpertSender_CDP_Log_Levels {
     const EMERGENCY = 'emergency';
     const ALERT     = 'alert';
     const CRITICAL  = 'critical';

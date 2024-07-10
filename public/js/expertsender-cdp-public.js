@@ -27,7 +27,7 @@
 
 		if (null !== email) {
 			let data = {
-				'action': 'expert_sender_update_newsletter_consents',
+				'action': 'expertsender_cdp_update_newsletter_consents',
 				email
 			};
 

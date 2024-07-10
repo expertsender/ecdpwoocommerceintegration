@@ -4,8 +4,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 
-class Expert_Sender_Ajax {
-    const REQUEST_UPDATE_NEWSLETTER_CONSENTS = 'expert_sender_update_newsletter_consents';
+class ExpertSender_CDP_Ajax {
+    const REQUEST_UPDATE_NEWSLETTER_CONSENTS = 'expertsender_cdp_update_newsletter_consents';
 
     public function __construct() {
         add_action(
@@ -22,12 +22,12 @@ class Expert_Sender_Ajax {
      * @return void
      */
     public function update_newsletter_consents() {
-        $consents_data = Expert_Sender_Client_Request::get_consents_from_request(
-            Expert_Sender_Admin::FORM_NEWSLETTER_KEY
+        $consents_data = ExpertSender_CDP_Client_Request::get_consents_from_request(
+            ExpertSender_CDP_Admin::FORM_NEWSLETTER_KEY
         );
         
         if ( ( $email = $_POST['email'] ?? false ) && ! empty( $consents_data ) ) {
-            Expert_Sender_Client_Request::expert_sender_add_or_update_customer(
+            ExpertSender_CDP_Client_Request::expertsender_cdp_add_or_update_customer(
                 array(
                     'email' => $email,
                     'consentsData' => $consents_data

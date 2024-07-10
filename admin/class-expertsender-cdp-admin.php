@@ -3,27 +3,15 @@
 /**
  * The admin-specific functionality of the plugin.
  *
- * @link       https://test.pl
- * @since      1.0.0
- *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/admin
- */
-
-/**
- * The admin-specific functionality of the plugin.
- *
  * Defines the plugin name, version, and two examples hooks for how to
  * enqueue the admin-specific stylesheet and JavaScript.
  *
- * @package    Expert_Sender
- * @subpackage Expert_Sender/admin
+ * @package    ExpertSender_CDP
+ * @subpackage ExpertSender_CDP/admin
  * @author     Endora <marcin.krupa@endora.pl>
  */
-class Expert_Sender_Admin
+class ExpertSender_CDP_Admin
 {
-    private static $initiated = false;
-
     const RESOURCE_PRODUCT = 'product';
     const RESOURCE_CUSTOMER = 'customer';
     const RESOURCE_ORDER = 'order';
@@ -33,24 +21,27 @@ class Expert_Sender_Admin
     const FORM_CHECKOUT_KEY = 'checkout';
     const FORM_NEWSLETTER_KEY = 'newsletter';
 
-    const FORM_CONSENT_FORMS = 'expert-sender-consent-forms-form';
+    const FORM_CONSENT_FORMS = 'expertsender_cdp-consent-forms-form';
     const OPTION_VALUE_SINGLE_OPT_IN = 'single-opt-in';
     const OPTION_VALUE_DOUBLE_OPT_IN = 'double-opt-in';
 
-    const OPTION_FORM_REGISTRATION_TEXT_BEFORE = 'expert_sender_registration_text_before';
-    const OPTION_FORM_REGISTRATION_TYPE = 'expert_sender_registration_form_type';
-    const OPTION_FORM_REGISTRATION_MESSAGE_ID = 'expert_sender_registration_form_message_id';
-    const OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE = 'expert_sender_customer_settings_text_before';
-    const OPTION_FORM_CUSTOMER_SETTINGS_TYPE = 'expert_sender_customer_settings_form_type';
-    const OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID = 'expert_sender_customer_settings_form_message_id';
-    const OPTION_FORM_CHECKOUT_TEXT_BEFORE = 'expert_sender_checkout_text_before';
-    const OPTION_FORM_CHECKOUT_TYPE = 'expert_sender_checkout_form_type';
-    const OPTION_FORM_CHECKOUT_MESSAGE_ID = 'expert_sender_checkout_form_message_id';
-    const OPTION_FORM_NEWSLETTER_TEXT_BEFORE = 'expert_sender_newsletter_text_before';
-    const OPTION_FORM_NEWSLETTER_TYPE = 'expert_sender_newsletter_form_type';
-    const OPTION_FORM_NEWSLETTER_MESSAGE_ID = 'expert_sender_newsletter_form_message_id';
+    const OPTION_FORM_REGISTRATION_TEXT_BEFORE = 'expertsender_cdp_registration_text_before';
+    const OPTION_FORM_REGISTRATION_TYPE = 'expertsender_cdp_registration_form_type';
+    const OPTION_FORM_REGISTRATION_MESSAGE_ID = 'expertsender_cdp_registration_form_message_id';
+    const OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE = 'expertsender_cdp_customer_settings_text_before';
+    const OPTION_FORM_CUSTOMER_SETTINGS_TYPE = 'expertsender_cdp_customer_settings_form_type';
+    const OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID = 'expertsender_cdp_customer_settings_form_message_id';
+    const OPTION_FORM_CHECKOUT_TEXT_BEFORE = 'expertsender_cdp_checkout_text_before';
+    const OPTION_FORM_CHECKOUT_TYPE = 'expertsender_cdp_checkout_form_type';
+    const OPTION_FORM_CHECKOUT_MESSAGE_ID = 'expertsender_cdp_checkout_form_message_id';
+    const OPTION_FORM_NEWSLETTER_TEXT_BEFORE = 'expertsender_cdp_newsletter_text_before';
+    const OPTION_FORM_NEWSLETTER_TYPE = 'expertsender_cdp_newsletter_form_type';
+    const OPTION_FORM_NEWSLETTER_MESSAGE_ID = 'expertsender_cdp_newsletter_form_message_id';
 
-    const OPTION_ENABLE_LOGS = 'expert_sender_enable_logs';
+    const OPTION_ENABLE_LOGS = 'expertsender_cdp_enable_logs';
+    const OPTION_API_KEY = 'expertsender_cdp_api_key';
+
+    const PARAMETER_MISSING_API_KEY = 'missing_api_key';
 
     /**
      * The ID of this plugin.
@@ -98,17 +89,17 @@ class Expert_Sender_Admin
 
         add_action('admin_init', [
             $this,
-            'expert_sender_handle_form_submission',
+            'expertsender_cdp_handle_form_submission',
         ]);
 
         add_action('admin_init', [
             $this,
-            'expert_sender_mappings_handle_form_submission',
+            'expertsender_cdp_mappings_handle_form_submission',
         ]);
 
         add_action('admin_init', [
             $this,
-            'expert_sender_consents_handle_form_submission',
+            'expertsender_cdp_consents_handle_form_submission',
         ]);
 
         add_action( 'admin_init', array(
@@ -118,13 +109,17 @@ class Expert_Sender_Admin
 
         add_action('admin_init', [
             $this,
-            'expert_sender_order_status_mapping_handle_form_submission',
+            'expertsender_cdp_order_status_mapping_handle_form_submission',
         ]);
 
         add_action('admin_init', [
             $this,
-            'expert_sender_order_synchronize_submission',
+            'expertsender_cdp_order_synchronize_submission',
         ]);
+
+        if ( isset ( $_GET[ self::PARAMETER_MISSING_API_KEY ] ) ) {
+            $this->add_admin_error_notice( 'Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz API.' );
+        }
     }
 
     /**
@@ -136,7 +131,7 @@ class Expert_Sender_Admin
     {
         wp_enqueue_style(
             $this->plugin_name . '_admin',
-            plugin_dir_url(__FILE__) . 'css/expert-sender-admin.css',
+            plugin_dir_url(__FILE__) . 'css/expertsender-cdp-admin.css',
             [],
             $this->version,
             'all'
@@ -199,35 +194,23 @@ class Expert_Sender_Admin
         }
 
         if ( null !== $option ) {
-            return (int) get_option( $option );
+            $value = get_option( $option );
+
+            if ( null !== $value ) {
+                return (int) $value;
+            }
         }
 
         return null;
     }
 
-    /**
-     * Register the JavaScript for the admin area.
-     *
-     * @since    1.0.0
-     */
-    public function enqueue_scripts()
-    {
-        wp_enqueue_script(
-            $this->plugin_name,
-            plugin_dir_url(__FILE__) . 'js/expert-sender-admin.js',
-            ['jquery'],
-            $this->version,
-            false
-        );
-    }
-
     public function add_plugin_admin_menu()
     {
         add_menu_page(
-            'Expert Sender', // Page title
-            'Expert Sender', // Menu title
+            'Ustawienia ogólne', // Page title
+            'ExpertSender CDP', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings', // Menu slug
+            'expertsender_cdp-settings', // Menu slug
             [$this, 'render_settings_page'] // Callback function to render the settings page
         );
     }
@@ -235,11 +218,11 @@ class Expert_Sender_Admin
     public function add_plugin_admin_mappings()
     {
         add_submenu_page(
-            'expert-sender-settings', // Page title
-            'Expert Sender Mappings',
-            'Mappings', // Menu title
+            'expertsender_cdp-settings', // Page title
+            'Mapowania pól',
+            'Mapowania pól', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings-mappings', // Menu slug
+            'expertsender_cdp-settings-mappings', // Menu slug
             [$this, 'render_mappings_page'] // Callback function to render the settings page
         );
     }
@@ -247,11 +230,11 @@ class Expert_Sender_Admin
     public function add_plugin_admin_consents()
     {
         add_submenu_page(
-            'expert-sender-settings', // parent
-            'Expert Sender Consents',
-            'Consents', // Menu title
+            'expertsender_cdp-settings', // parent
+            'Mapowania zgód',
+            'Mapowania zgód', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings-consents', // Menu slug
+            'expertsender_cdp-settings-consents', // Menu slug
             [$this, 'render_consents_page'] // Callback function to render the settings page
         );
     }
@@ -262,11 +245,11 @@ class Expert_Sender_Admin
     public function add_plugin_admin_consent_forms()
     {
         add_submenu_page(
-            'expert-sender-settings', // parent
-            'Expert Sender Consent Forms',
-            'Consent Forms', // Menu title
+            'expertsender_cdp-settings', // parent
+            'Ustawienia formularzy ze zgodami',
+            'Ustawienia formularzy ze zgodami', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings-consent-forms', // Menu slug
+            'expertsender_cdp-settings-consent-forms', // Menu slug
             array( $this, 'render_consent_forms_page' ) // Callback function to render the settings page
         );
     }
@@ -274,11 +257,11 @@ class Expert_Sender_Admin
     public function add_plugin_admin_order_status_mapping()
     {
         add_submenu_page(
-            'expert-sender-settings', // parent
-            'Order Status Mapping',
-            'Order Status Mapping', // Menu title
+            'expertsender_cdp-settings', // parent
+            'Mapowania statusów zamówienia',
+            'Mapowania statusów zamówienia', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings-order-status-mapping', // Menu slug
+            'expertsender_cdp-settings-order-status-mapping', // Menu slug
             [$this, 'render_order_status_mapping_page'] // Callback function to render the settings page
         );
     }
@@ -286,49 +269,38 @@ class Expert_Sender_Admin
     public function add_plugin_admin_synchronize_orders()
     {
         add_submenu_page(
-            'expert-sender-settings', // parent
-            'Synchronize orders',
-            'Synchronize orders', // Menu title
+            'expertsender_cdp-settings', // parent
+            'Synchronizacja zamówień',
+            'Synchronizacja zamówień', // Menu title
             'manage_options', // Capability
-            'expert-sender-settings-synchronize-orders', // Menu slug
+            'expertsender_cdp-settings-synchronize-orders', // Menu slug
             [$this, 'render_order_synchronize_page'] // Callback function to render the settings page
         );
     }
 
     public function render_settings_page()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
-        $value = get_option('expert_sender_enable_script');
+        $this->check_permissions();
+        $value = get_option('expertsender_cdp_enable_script');
         $checked = $value ? 'checked' : '';
-        $phoneChecked = get_option('expert_sender_enable_phone')
+        $phoneChecked = get_option('expertsender_cdp_enable_phone')
             ? 'checked'
             : '';
         $enableLogs = get_option( self::OPTION_ENABLE_LOGS ) ? 'checked' : '';
 ?>
 
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?></h1>
-            <form id="expertSenderForm" method="post" action="">
-                <input type="hidden" name="expert-sender-main-form">
+            <h1 class="es-bold"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form id="expertSenderForm" method="post" action="/wp-admin/admin.php?page=expertsender_cdp-settings">
+                <input type="hidden" name="expertsender_cdp-main-form">
 
-                <?php settings_fields('expert_sender_settings_group'); ?>
-                <?php do_settings_sections('expert-sender-settings'); ?>
-                <table class="form-table">
+                <?php settings_fields('expertsender_cdp_settings_group'); ?>
+                <?php do_settings_sections('expertsender_cdp-settings'); ?>
+                <table class="form-table es-table">
                     <tr valign="top">
-                        <th scope="row"><?php _e(
-                                            'API Key',
-                                            'expert-sender'
-                                        ); ?></th>
+                        <th scope="row">Klucz API</th>
                         <td>
-                            <input type="password" name="expert_sender_key" value="<?php echo esc_attr(
-                                                                                        get_option('expert_sender_key')
-                                                                                    ); ?>" />
+                            <input type="password" name="<?= ExpertSender_CDP_Admin::OPTION_API_KEY; ?>" value="<?php echo esc_attr( get_option( self::OPTION_API_KEY ) ); ?>" />
                         </td>
                         <td>
                             <p>Skąd pobrać klucz API? </p>
@@ -341,24 +313,16 @@ class Expert_Sender_Admin
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row"><?php _e(
-                                            'Enable Script',
-                                            'expert-sender'
-                                        ); ?></th>
+                        <th scope="row">Włącz skrypt śledzący ruch</th>
                         <td>
-                            <input type="checkbox" id="expert_sender_enable_script" name="expert_sender_enable_script" value="1" <?= $checked ?> />
-                        </td>
-                        <td>
-                            <p>Włącz skrypt śledzący ruch</p>
+                            <input type="checkbox" class="es-input" id="expertsender_cdp_enable_script" name="expertsender_cdp_enable_script" value="1" <?= $checked ?> />
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row"><?php _e('Script', 'expert-sender'); ?></th>
+                        <th scope="row">Skrypt śledzący ruch</th>
                         <td>
-                            <textarea name="expert_sender_script" id="expert_sender_script" rows="8" cols="50"><?php echo esc_textarea(
-                                                                                                                    base64_decode(get_option('expert_sender_script'))
-                                                                                                                ); ?></textarea>
+                            <textarea name="expertsender_cdp_script" id="expertsender_cdp_script" rows="8" cols="50"><?php echo esc_textarea( base64_decode( get_option( 'expertsender_cdp_script' ) ) ); ?></textarea>
                         </td>
                         <td>
                             <p>Skąd pobrać skrypt? </p>
@@ -372,14 +336,9 @@ class Expert_Sender_Admin
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row"><?php _e(
-                                            'Website Id',
-                                            'expert-sender'
-                                        ); ?></th>
+                        <th scope="row">ID strony internetowej</th>
                         <td>
-                            <input type="text" name="expert_sender_website_id" value="<?php echo esc_attr(
-                                                                                            get_option('expert_sender_website_id')
-                                                                                        ); ?>" />
+                            <input type="text" name="expertsender_cdp_website_id" value="<?php echo esc_attr( get_option( 'expertsender_cdp_website_id' ) ); ?>" />
                         </td>
                         <td>
                             <p>Skąd pobrać numer ID strony internetowej? </p>
@@ -393,27 +352,18 @@ class Expert_Sender_Admin
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row"><?php _e(
-                                            'Enable sending phone number to Expert Sender',
-                                            'expert-sender'
-                                        ); ?></th>
+                        <th scope="row">
+                            Wysyłaj numer telefonu użytkowników do ExpertSender CDP
+                        </th>
                         <td>
-                            <input type="checkbox" id="expert_sender_enable_phone" name="expert_sender_enable_phone" value="1" <?= $phoneChecked ?> />
-                        </td>
-                        <td>
-                            <p>Wysyłaj numer telefonu do Expert Sender</p>
+                            <input type="checkbox" class="es-input" id="expertsender_cdp_enable_phone" name="expertsender_cdp_enable_phone" value="1" <?= $phoneChecked ?> />
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">
-                            <?= __('Enable logs'); ?>
-                        </th>
+                        <th scope="row">Włącz logi</th>
                         <td>
-                            <input type="checkbox" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/>
-                        </td>
-                        <td>
-                            <p><?= __('Enable logging by ExpertSender plugin.'); ?>
+                            <input type="checkbox" class="es-input" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/>
                         </td>
                     </tr>
                 </table>
@@ -422,37 +372,37 @@ class Expert_Sender_Admin
                         $("#expertSenderForm").submit(function(event) {
                             event.preventDefault();
 
-                            var inputValue = $("#expert_sender_script").val();
+                            var inputValue = $("#expertsender_cdp_script").val();
                             var encodedValue = btoa(inputValue);
-                            $("#expert_sender_script").val(encodedValue);
+                            $("#expertsender_cdp_script").val(encodedValue);
 
                             event.target.submit();
                         });
                     });
                 </script>
-                <button> Save </button>
+                <button class="es-button submit" type="submit">Zapisz zmiany</button>
             </form>
         </div>
     <?php
     }
 
-    public function expert_sender_handle_form_submission() {
-        if (isset($_POST['expert-sender-main-form'])) {
+    public function expertsender_cdp_handle_form_submission() {
+        if (isset($_POST['expertsender_cdp-main-form'])) {
             register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_key'
+                'expertsender_cdp_settings_group',
+                self::OPTION_API_KEY
             );
             register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_enable_script'
+                'expertsender_cdp_settings_group',
+                'expertsender_cdp_enable_script'
             );
             register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_enable_phone'
+                'expertsender_cdp_settings_group',
+                'expertsender_cdp_enable_phone'
             );
             register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_script',
+                'expertsender_cdp_settings_group',
+                'expertsender_cdp_script',
                 [
                     'type' => 'string',
                     'sanitize_callback' => 'sanitize_text_field',
@@ -460,31 +410,31 @@ class Expert_Sender_Admin
                 ]
             );
             register_setting(
-                'expert_sender_settings_group',
-                'expert_sender_website_id'
+                'expertsender_cdp_settings_group',
+                'expertsender_cdp_website_id'
             );
-            $expert_sender_key = sanitize_text_field(
-                $_POST['expert_sender_key']
+            $expertsender_cdp_key = sanitize_text_field(
+                $_POST[self::OPTION_API_KEY]
             );
-            update_option('expert_sender_key', $expert_sender_key);
+            update_option(self::OPTION_API_KEY, $expertsender_cdp_key);
             update_option(
-                'expert_sender_enable_script',
-                $_POST['expert_sender_enable_script'] ?? false
-            );
-            update_option(
-                'expert_sender_enable_phone',
-                $_POST['expert_sender_enable_phone'] ?? false
+                'expertsender_cdp_enable_script',
+                $_POST['expertsender_cdp_enable_script'] ?? false
             );
             update_option(
-                'expert_sender_script',
-                $_POST['expert_sender_script']
-            );
-            $expert_sender_website_id = sanitize_text_field(
-                $_POST['expert_sender_website_id']
+                'expertsender_cdp_enable_phone',
+                $_POST['expertsender_cdp_enable_phone'] ?? false
             );
             update_option(
-                'expert_sender_website_id',
-                $expert_sender_website_id
+                'expertsender_cdp_script',
+                $_POST['expertsender_cdp_script']
+            );
+            $expertsender_cdp_website_id = sanitize_text_field(
+                $_POST['expertsender_cdp_website_id']
+            );
+            update_option(
+                'expertsender_cdp_website_id',
+                $expertsender_cdp_website_id
             );
             update_option(
                 self::OPTION_ENABLE_LOGS,
@@ -496,15 +446,10 @@ class Expert_Sender_Admin
 
     public function render_mappings_page()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
+        $this->check_permissions();
+        $this->check_api_key();
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_mappings';
+        $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
 
         $customerMappings = $wpdb->get_results(
             $wpdb->prepare(
@@ -530,144 +475,102 @@ class Expert_Sender_Admin
         $orderKeys = $this->get_order_keys();
         $productKeys = $this->get_product_keys();
         $customerKeys = $this->get_customer_keys();
-
-        $customerOptions = $this->expert_sender_get_customer_attributes_from_api();
-
-        $productOptions = $this->expert_sender_get_product_attributes_from_api();
-
-        $orderOptions = $this->expert_sender_get_order_attributes_from_api();
-
+        $customerOptions = $this->expertsender_cdp_get_customer_attributes_from_api();
+        $productOptions = $this->expertsender_cdp_get_product_attributes_from_api();
+        $orderOptions = $this->expertsender_cdp_get_order_attributes_from_api();
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
     ?>
 
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?>
-            </h1>
-            <form id="expertSenderMappingsForm" method="post" action="">
-                <input type="hidden" name="expert-sender-mapping-form">
+            <h1 class="es-bold"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form id="es-field-mappings-form" method="post" action="">
+                <input type="hidden" name="expertsender_cdp-mapping-form">
                 <div id="productMapping" class="mappingSection">
-                    <h2>Product Mapping</h2>
-                    <button type="button" class="addPairBtn">Add Pair</button>
+                    <h2>Mapowania pól produktów</h2>
+                    <button type="button" class="addPairBtn es-button">Dodaj</button>
 
-                    <div class="inputPairsContainer" data-slug="product">
+                    <div class="es-input-pairs-container" data-slug="product">
                         <?php foreach ($productMappings as $productMapping) {
-                            echo '<div class="inputPair">';
-
-                            echo '<select name="product[' .
-                                $productMapping->id .
-                                '][wp_field]">
-        ';
+                            echo '<div class="es-input-pair">';
+                            echo '<select name="product[' . $productMapping->id . '][wp_field]">';
 
                             foreach ($productKeys as $productKey => $value) {
                                 $selected = $productMapping->wp_field == $value ? 'selected' : '';
-
                                 echo "<option value=\"$value\" $selected>$value</option>";
                             }
 
                             echo '</select>';
-                            echo '<select name="product[' .
-                                $productMapping->id .
-                                '][ecdp_field]">
-    ';
+                            echo '<select name="product[' . $productMapping->id . '][ecdp_field]">';
 
                             foreach ($productOptions as $value) {
                                 $value = $value->name;
-                                $selected =
-                                    $productMapping->ecdp_field == $value ? 'selected' : '';
-
+                                $selected = $productMapping->ecdp_field == $value ? 'selected' : '';
                                 echo "<option value=\"$value\" $selected>$value</option>";
                             }
 
-                            echo '
-		</select>
-			<button class="removeButton" type="button">Remove</button></div>';
+                            echo '</select><button class="removeButton es-button" type="button">Usuń</button></div>';
                         } ?>
                     </div>
                 </div>
 
                 <div id="customerMapping" class="mappingSection">
-                    <h2>Customer Mapping</h2>
-                    <button type="button" class="addPairBtn">Add Pair</button>
+                    <h2>Mapowania pól użytkowników</h2>
+                    <button type="button" class="addPairBtn es-button">Dodaj</button>
 
-                    <div class="inputPairsContainer" data-slug="customer">
+                    <div class="es-input-pairs-container" data-slug="customer">
                         <?php foreach ($customerMappings as $customerMapping) {
-                            echo '<div class="inputPair">';
-
-                            echo '<select name="customer[' .
-                                $customerMapping->id .
-                                '][wp_field]">
-        ';
+                            echo '<div class="es-input-pair">';
+                            echo '<select name="customer[' . $customerMapping->id . '][wp_field]">';
 
                             foreach ($customerKeys as $customerKey => $value) {
-                                $selected =
-                                    $customerMapping->wp_field == $customerKey ? 'selected' : '';
-
+                                $selected = $customerMapping->wp_field == $customerKey ? 'selected' : '';
                                 echo "<option value=\"$customerKey\" $selected>$customerKey</option>";
                             }
 
                             echo '</select>';
-
-                            echo '<select name="customer[' .
-                                $customerMapping->id .
-                                '][ecdp_field]">
-    ';
+                            echo '<select name="customer[' . $customerMapping->id . '][ecdp_field]">';
 
                             foreach ($customerOptions as $value) {
                                 $value = $value->name;
-                                $selected =
-                                    $customerMapping->ecdp_field == $value ? 'selected' : '';
-
+                                $selected = $customerMapping->ecdp_field == $value ? 'selected' : '';
                                 echo "<option value=\"$value\" $selected>$value</option>";
                             }
 
-                            echo '
-		</select>
-			<button class="removeButton" type="button">Remove</button></div>';
+                            echo '</select><button class="removeButton es-button" type="button">Usuń</button></div>';
                         } ?>
                     </div>
                 </div>
 
                 <div id="orderMapping" class="mappingSection">
-                    <h2>Order Mapping</h2>
-                    <button type="button" class="addPairBtn">Add Pair</button>
+                    <h2>Mapowania pól zamówień</h2>
+                    <button type="button" class="addPairBtn es-button">Dodaj</button>
 
-                    <div class="inputPairsContainer" data-slug="order">
+                    <div class="es-input-pairs-container" data-slug="order">
                         <?php foreach ($orderMappings as $orderMapping) {
-                            echo '<div class="inputPair">';
-
-                            echo '<select name="order[' .
-                                $orderMapping->id .
-                                '][wp_field]">
-			';
+                            echo '<div class="es-input-pair">';
+                            echo '<select name="order[' . $orderMapping->id . '][wp_field]">';
 
                             foreach ($orderKeys as $orderKey => $orderValue) {
                                 $selected = $orderMapping->wp_field == $orderKey ? 'selected' : '';
-
                                 echo "<option value=\"$orderKey\" $selected>$orderKey</option>";
                             }
 
                             echo '</select>';
-
-                            echo '<select name="order[' .
-                                $orderMapping->id .
-                                '][ecdp_field]">
-			';
+                            echo '<select name="order[' . $orderMapping->id . '][ecdp_field]">';
 
                             foreach ($orderOptions as $value) {
                                 $value = $value->name;
                                 $selected = $orderMapping->ecdp_field == $value ? 'selected' : '';
-
                                 echo "<option value=\"$value\" $selected>$value</option>";
                             }
 
                             echo '</select>';
-
-                            echo '<button class="removeButton" type="button">Remove</button></div>';
+                            echo '<button class="removeButton es-button" type="button">Usuń</button></div>';
                         } ?>
                     </div>
                 </div>
                 <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                <button class="submit" type="submit"> Save </button>
+                <button class="es-button submit" type="submit">Zapisz zmiany</button>
             </form>
 
             <template id="productselect">
@@ -742,7 +645,7 @@ class Expert_Sender_Admin
                 const sections = document.querySelectorAll(".mappingSection");
 
                 sections.forEach(function(section) {
-                    const inputPairsContainer = section.querySelector(".inputPairsContainer");
+                    const inputPairsContainer = section.querySelector(".es-input-pairs-container");
                     const addPairBtn = section.querySelector(".addPairBtn");
 
                     addPairBtn.addEventListener("click", function() {
@@ -752,7 +655,7 @@ class Expert_Sender_Admin
 
                 function createInputPair(container) {
                     const pairDiv = document.createElement("div");
-                    pairDiv.classList.add("inputPair");
+                    pairDiv.classList.add("es-input-pair");
 
                     var id = document.getElementById("idCounter").value;
                     var slug = container.getAttribute("data-slug");
@@ -766,8 +669,9 @@ class Expert_Sender_Admin
                     let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_field]";
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Remove";
+                    removeBtn.textContent = "Usuń";
                     removeBtn.type = "button"
+                    removeBtn.classList.add('es-button');
                     removeBtn.addEventListener("click", function() {
                         pairDiv.remove();
                     });
@@ -787,9 +691,9 @@ class Expert_Sender_Admin
     /**
      * @return void
      */
-    public function expert_sender_mappings_handle_form_submission()
+    public function expertsender_cdp_mappings_handle_form_submission()
     {
-        if (isset($_POST['expert-sender-mapping-form'])) {
+        if (isset($_POST['expertsender_cdp-mapping-form'])) {
              /** @var \wpdb $wpdb */
             global $wpdb;
             $resources = array(
@@ -797,7 +701,7 @@ class Expert_Sender_Admin
                 self::RESOURCE_ORDER,
                 self::RESOURCE_PRODUCT
             );
-            $table_name = $wpdb->prefix . 'expert_sender_mappings';
+            $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
             $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
             $insert_query = <<<SQL
@@ -844,10 +748,7 @@ class Expert_Sender_Admin
                         $wpdb->query( $wpdb->prepare( $query, $values) );
                     }
                     
-                    $this->add_admin_error_notice(__(
-                        'Duplicate entry: each WooCommerce field for every resource should be mapped only once.',
-                        'expert-sender'
-                    ));
+                    $this->add_admin_error_notice('Zduplikowana wartość: każde pole WooCommerce dla każdego zasobu powinno być zmapowane tylko raz.');
                 } else {
                     $this->add_admin_success_notice();
                 }
@@ -857,13 +758,13 @@ class Expert_Sender_Admin
         }
     }
 
-    public function expert_sender_get_customer_attributes_from_api()
+    public function expertsender_cdp_get_customer_attributes_from_api()
     {
-        $api_url = 'https://api.ecdp.app/customerattributes';
+        $api_url = ES_API_URL . 'customerattributes';
 
         $headers = [
             'accept' => 'application/json',
-            'x-api-key' => get_option('expert_sender_key'),
+            'x-api-key' => get_option(self::OPTION_API_KEY),
         ];
 
         $args = [
@@ -875,20 +776,20 @@ class Expert_Sender_Admin
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            echo "Something went wrong: $error_message";
+            echo "Coś poszło nie tak: $error_message";
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
         }
     }
 
-    public function expert_sender_get_product_attributes_from_api()
+    public function expertsender_cdp_get_product_attributes_from_api()
     {
-        $api_url = 'https://api.ecdp.app/productattributes';
+        $api_url = ES_API_URL . 'productattributes';
 
         $headers = [
             'accept' => 'application/json',
-            'x-api-key' => get_option('expert_sender_key'),
+            'x-api-key' => get_option(self::OPTION_API_KEY),
         ];
 
         $args = [
@@ -900,20 +801,20 @@ class Expert_Sender_Admin
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            echo "Something went wrong: $error_message";
+            echo "Coś poszło nie tak: $error_message";
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
         }
     }
 
-    public function expert_sender_get_order_attributes_from_api()
+    public function expertsender_cdp_get_order_attributes_from_api()
     {
-        $api_url = 'https://api.ecdp.app/orderattributes';
+        $api_url = ES_API_URL . 'orderattributes';
 
         $headers = [
             'accept' => 'application/json',
-            'x-api-key' => get_option('expert_sender_key'),
+            'x-api-key' => get_option(self::OPTION_API_KEY),
         ];
 
         $args = [
@@ -925,7 +826,7 @@ class Expert_Sender_Admin
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            echo "Something went wrong: $error_message";
+            echo "Coś poszło nie tak: $error_message";
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -934,70 +835,46 @@ class Expert_Sender_Admin
 
     public function render_consents_page()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
+        $this->check_permissions();
+        $this->check_api_key();
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_consents';
-
+        $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
         $consents = $wpdb->get_results("SELECT * FROM $table_name");
-
-        $apiConsents = $this->expert_sender_get_consents_from_api();
-        $consentLocations = $this->expert_sender_get_consents_locations();
-        $consentTypes = ['single', 'double'];
-
+        $apiConsents = $this->expertsender_cdp_get_consents_from_api();
+        $consentLocations = $this->expertsender_cdp_get_consents_locations();
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
     ?>
-
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?>
-            </h1>
+            <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="expertSenderConsentsForm" method="post" action="">
-                <input type="hidden" name="expert-sender-consents-form">
+                <input type="hidden" name="expertsender_cdp-consents-form">
                 <div id="consentSection" class="consentSection">
-                    <h2>Consent Mapping</h2>
-                    <button type="button" class="addPairBtn">Add Pair</button>
-
-                    <div class="elementContainer">
-
-                        <?php foreach ($consents as $consent) {
-                            echo '<div class="inputPair">';
+                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <div class="es-input-pairs-container">
+                        <?php foreach ( $consents as $consent ) {
+                            echo '<div class="es-input-pair">';
                             echo '<select name="consent[' . $consent->id . '][api_consent_id]">';
 
-                            foreach ($apiConsents as $value) {
-                                $selected =
-                                    $consent->api_consent_id == $value->id ? 'selected' : '';
-
+                            foreach ( $apiConsents as $value ) {
+                                $selected = $consent->api_consent_id == $value->id ? 'selected' : '';
                                 echo "<option value=\"$value->id\" $selected>$value->name</option>";
                             }
 
                             echo '</select>';
-
                             echo '<select name="consent[' . $consent->id . '][consent_location]">';
 
-                            foreach ($consentLocations as $value) {
+                            foreach ( $consentLocations as $value => $label ) {
                                 $selected = $consent->consent_location == $value ? 'selected' : '';
-
-                                echo "<option value=\"$value\" $selected>$value</option>";
+                                echo "<option value=\"$value\" $selected>$label</option>";
                             }
 
                             echo '</select>';
-
-                            echo '<input type="text" placeholder="Consent Text" required="true" name="consent[' .
-                                $consent->id .
-                                '][consent_text]" value="' .
-                                $consent->consent_text .
-                                '">';
-
-                            echo '<button class="removeButton" type="button">Remove</button></div>';
+                            echo '<input type="text" placeholder="Tekst zgody" required="true" name="consent[' . $consent->id . '][consent_text]" value="' . $consent->consent_text . '">';
+                            echo '<button class="removeButton es-button" type="button">Usuń</button></div>';
                         } ?>
                     </div>
                     <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                    <button class="submit" type="submit"> Save </button>
+                    <button class="es-button submit" type="submit">Zapisz zmiany</button>
             </form>
 
             <template id="apiConsentsTemplate">
@@ -1010,16 +887,8 @@ class Expert_Sender_Admin
 
             <template id="consentLocationTemplate">
                 <select name="">
-                    <?php foreach ($consentLocations as $value) {
-                        echo "<option value=\"$value\">$value</option>";
-                    } ?>
-                </select>
-            </template>
-
-            <template id="consentTypeTemplate">
-                <select name="">
-                    <?php foreach ($consentTypes as $value) {
-                        echo "<option value=\"$value\">$value</option>";
+                    <?php foreach ( $consentLocations as $value => $label ) {
+                        echo "<option value=\"$value\">$label</option>";
                     } ?>
                 </select>
             </template>
@@ -1042,7 +911,7 @@ class Expert_Sender_Admin
                 const sections = document.querySelectorAll(".consentSection");
 
                 sections.forEach(function(section) {
-                    const elementContainer = section.querySelector(".elementContainer");
+                    const elementContainer = section.querySelector(".es-input-pairs-container");
                     const addPairBtn = section.querySelector(".addPairBtn");
 
                     addPairBtn.addEventListener("click", function() {
@@ -1052,7 +921,7 @@ class Expert_Sender_Admin
 
                 function createInputPair(container) {
                     const pairDiv = document.createElement("div");
-                    pairDiv.classList.add("inputPair");
+                    pairDiv.classList.add("es-input-pair");
 
                     var id = document.getElementById("idCounter").value;
 
@@ -1065,8 +934,9 @@ class Expert_Sender_Admin
                     consentLocation.querySelectorAll("select")[0].name = "consent[" + id + "][consent_location]";
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Remove";
+                    removeBtn.textContent = "Usuń";
                     removeBtn.type = "button"
+                    removeBtn.classList.add('es-button')
                     removeBtn.addEventListener("click", function() {
                         pairDiv.remove();
                     });
@@ -1074,7 +944,7 @@ class Expert_Sender_Admin
                     const consentTextInput = document.createElement("input");
                     consentTextInput.type = "text";
                     consentTextInput.name = "consent[" + id + "][consent_text]";
-                    consentTextInput.placeholder = "Consent Text";
+                    consentTextInput.placeholder = "Tekst zgody";
                     consentTextInput.required = true;
 
 
@@ -1091,13 +961,13 @@ class Expert_Sender_Admin
     <?php
     }
 
-    public function expert_sender_get_consents_from_api()
+    public function expertsender_cdp_get_consents_from_api()
     {
-        $api_url = 'https://api.ecdp.app/customerconsents';
+        $api_url = ES_API_URL . 'customerconsents';
 
         $headers = [
             'accept' => 'application/json',
-            'x-api-key' => get_option('expert_sender_key'),
+            'x-api-key' => get_option(self::OPTION_API_KEY),
         ];
 
         $args = [
@@ -1109,7 +979,7 @@ class Expert_Sender_Admin
 
         if (is_wp_error($response)) {
             $error_message = $response->get_error_message();
-            echo "Something went wrong: $error_message";
+            echo "Coś poszło nie tak: $error_message";
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -1119,25 +989,24 @@ class Expert_Sender_Admin
     /**
      * @return array
      */
-    public function expert_sender_get_consents_locations()
-    {
+    public function expertsender_cdp_get_consents_locations() {
         return array(
-            self::FORM_CHECKOUT_KEY,
-            self::FORM_CUSTOMER_SETTINGS_KEY,
-            self::FORM_NEWSLETTER_KEY,
-            self::FORM_REGISTRATION_KEY
+            self::FORM_CHECKOUT_KEY => 'Checkout',
+            self::FORM_CUSTOMER_SETTINGS_KEY => 'Edycja profilu',
+            self::FORM_NEWSLETTER_KEY => 'Newsletter',
+            self::FORM_REGISTRATION_KEY => 'Rejestracja'
         );
     }
 
     /**
      * @return void
      */
-    public function expert_sender_consents_handle_form_submission()
+    public function expertsender_cdp_consents_handle_form_submission()
     {
-        if (isset($_POST['expert-sender-consents-form'])) {
+        if (isset($_POST['expertsender_cdp-consents-form'])) {
             global $wpdb;
 
-            $table_name = $wpdb->prefix . 'expert_sender_consents';
+            $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
             $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
             $insert_query = <<<SQL
@@ -1178,10 +1047,7 @@ class Expert_Sender_Admin
                             }
                         }
 
-                        $this->add_admin_error_notice(__(
-                            'Duplicate entry: each ECDP consent for every form location should be mapped only once.',
-                            'expert-sender'
-                        ));
+                        $this->add_admin_error_notice('Zduplikowana wartość: każda zgoda ECDP dla danego formularza powinna być zmapowana tylko raz.');
                     } else {
                         $this->add_admin_success_notice();
                     }
@@ -1238,9 +1104,9 @@ class Expert_Sender_Admin
     /**
      * @return void
      */
-    public function render_consent_forms_page()
-    {
+    public function render_consent_forms_page() {
         $this->check_permissions();
+        $this->check_api_key();
         $options = get_options( array(
             self::OPTION_FORM_CHECKOUT_TEXT_BEFORE,
             self::OPTION_FORM_CHECKOUT_TYPE,
@@ -1257,79 +1123,97 @@ class Expert_Sender_Admin
         ) );
     ?>
         <div class="wrap">
-            <h1><?php _e( get_admin_page_title() ); ?></h1>
+            <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="<?= self::FORM_CONSENT_FORMS; ?>" method="post" action="">
                 <input type="hidden" name="<?= self::FORM_CONSENT_FORMS; ?>" />
-                <h3><?= __( 'Registration Form', 'expert-sender' ); ?></h3>
+                <h3>Rejestracja</h3>
                 <div class="input-wrap">
-                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
-                    <input type="text" name="<?= self::OPTION_FORM_REGISTRATION_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_TEXT_BEFORE]; ?>" />
+                    <label>Tekst wyświetlany przed zgodami</label>
+                    <input type="text" name="<?= self::OPTION_FORM_REGISTRATION_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
-                    <select name="<?= self::OPTION_FORM_REGISTRATION_TYPE ?>">
+                    <label>Tryb formularza</label>
+                    <select name="<?= self::OPTION_FORM_REGISTRATION_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
-                    <input type="number" name="<?= self::OPTION_FORM_REGISTRATION_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_MESSAGE_ID]; ?>" placeholder="1" />
+                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <input type="number" name="<?= self::OPTION_FORM_REGISTRATION_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_REGISTRATION_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
-                <div class="expert-sender-divider"></div>
-                <h3><?= __( 'Customer Settings Form', 'expert-sender' ); ?></h3>
+                <div class="es-divider"></div>
+                <h3><?= __( 'Edycja profilu', 'expertsender_cdp' ); ?></h3>
                 <div class="input-wrap">
-                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
-                    <input type="text" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE]; ?>" />
+                    <label>Tekst wyświetlany przed zgodami</label>
+                    <input type="text" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
-                    <select name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ?>">
+                    <label>Tryb formularza</label>
+                    <select name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
-                    <input type="number" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID]; ?>" placeholder="1" />
+                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <input type="number" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?>/>
                 </div>
-                <div class="expert-sender-divider"></div>
-                <h3><?= __( 'Checkout Form', 'expert-sender' ); ?></h3>
+                <div class="es-divider"></div>
+                <h3>Checkout</h3>
                 <div class="input-wrap">
-                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
-                    <input type="text" name="<?= self::OPTION_FORM_CHECKOUT_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_TEXT_BEFORE]; ?>" />
+                    <label>Tekst wyświetlany przed zgodami</label>
+                    <input type="text" name="<?= self::OPTION_FORM_CHECKOUT_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
-                    <select name="<?= self::OPTION_FORM_CHECKOUT_TYPE ?>">
+                    <label>Tryb formularza</label>
+                    <select name="<?= self::OPTION_FORM_CHECKOUT_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
-                    <input type="number" name="<?= self::OPTION_FORM_CHECKOUT_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_MESSAGE_ID]; ?>" placeholder="1" />
+                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <input type="number" name="<?= self::OPTION_FORM_CHECKOUT_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CHECKOUT_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
-                <div class="expert-sender-divider"></div>
-                <h3><?= __( 'Newsletter Form', 'expert-sender' ); ?></h3>
+                <div class="es-divider"></div>
+                <h3>Newsletter</h3>
                 <div class="input-wrap">
-                    <label><?= __( 'Text before consents', 'expert-sender' ); ?></label>
-                    <input type="text" name="<?= self::OPTION_FORM_NEWSLETTER_TEXT_BEFORE; ?>" placeholder="<?= __( 'Text before consents', 'expert-sender' ); ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_TEXT_BEFORE]; ?>" />
-                </div>
-                <div class="input-wrap">
-                    <label><?= __( 'Form type', 'expert-sender' ); ?></label>
-                    <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>">
+                    <label><?= __( 'Form type', 'expertsender_cdp' ); ?></label>
+                    <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
                 <div class="input-wrap">
-                    <label><?= __( 'Confirmation message ID', 'expert-sender' ); ?></label>
-                    <input type="number" name="<?= self::OPTION_FORM_NEWSLETTER_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_MESSAGE_ID]; ?>" placeholder="1" />
+                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <input type="number" name="<?= self::OPTION_FORM_NEWSLETTER_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_NEWSLETTER_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
-                <button class="submit" type="submit"><?= __( 'Save', 'expert-sender' ); ?></button>
+                <button class="submit es-button" type="submit">Zapisz zmiany</button>
             </form>
         </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function () {
+                const formTypeSelects = document.querySelectorAll('.es-form-type-select');
+                formTypeSelects.forEach(function (select) {
+                    select.addEventListener('change', function () {
+                        const self = this;
+                        const matches = this.name.matchAll(/expertsender_cdp_([a-z_]+)_form_type/g);
+                        matches.forEach(function (match) {
+                            const confirmationMessageInput = document.querySelector('[name="expertsender_cdp_' + match[1] + '_form_message_id"]');
+                            
+                            if ('double-opt-in' === self.value) {
+                                confirmationMessageInput.setAttribute('required', 'true');
+                                confirmationMessageInput.removeAttribute('disabled');
+                            } else {
+                                confirmationMessageInput.removeAttribute('required');
+                                confirmationMessageInput.setAttribute('disabled', 'true');
+                            }
+                        });
+                    })
+                });
+            })
+        </script>
     <?php
     }
 
@@ -1353,31 +1237,24 @@ class Expert_Sender_Admin
 
     public function render_order_status_mapping_page()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
+        $this->check_permissions();
+        $this->check_api_key();
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_order_status_mappings';
+        $table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
 
         $orderStatusMappings = $wpdb->get_results("SELECT * FROM $table_name");
-        $wpStatuses = $this->expert_sender_get_wp_order_statuses();
-        $ecdpStatuses = $this->expert_sender_get_ecdp_order_statuses();
+        $wpStatuses = $this->expertsender_cdp_get_wp_order_statuses();
+        $ecdpStatuses = $this->expertsender_cdp_get_ecdp_order_statuses();
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
     ?>
 
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?>
-            </h1>
+            <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="expertSenderOrderStatusMappingsForm" method="post" action="">
-                <input type="hidden" name="expert-sender-order-status-mapping-form">
+                <input type="hidden" name="expertsender_cdp-order-status-mapping-form">
                 <div id="orderStatusMapping" class="mappingSection">
-                    <h2>Order Status Mapping</h2>
-                    <button type="button" class="addPairBtn">Add Pair</button>
+                    <button type="button" class="addPairBtn es-button">Dodaj</button>
                     <?php 
                     echo '<datalist id="expertsender_wp_order_list">';
                     foreach ($wpStatuses as $status) {
@@ -1386,10 +1263,10 @@ class Expert_Sender_Admin
                     }
                     echo '</datalist>';
                     ?>
-                    <div class="inputPairsContainer" data-slug="product">
+                    <div class="es-input-pairs-container" data-slug="product">
                         <?php foreach ($orderStatusMappings as $orderMapping) {
-                            echo '<div class="inputPair">';
-                            echo '<input type="text" name="orderMapping[' . $orderMapping->id
+                            echo '<div class="es-input-pair">';
+                            echo '<input type="text es-input-list" name="orderMapping[' . $orderMapping->id
                                 . '][wp_order_status]" list="expertsender_wp_order_list" value="'
                                 . $orderMapping->wp_order_status . '"/>';
                             echo '<select name="orderMapping[' . $orderMapping->id . '][ecdp_order_status]">';
@@ -1403,12 +1280,12 @@ class Expert_Sender_Admin
 
                             echo '
 		</select>
-			<button class="removeButton" type="button">Remove</button></div>';
+			<button class="removeButton es-button" type="button">Usuń</button></div>';
                         } ?>
                     </div>
                 </div>
                 <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                <button class="submit" type="submit"> Save </button>
+                <button class="submit es-button" type="submit">Zapisz zmiany</button>
             </form>
 
             <template id="wpstatus">
@@ -1441,7 +1318,7 @@ class Expert_Sender_Admin
                 const sections = document.querySelectorAll(".mappingSection");
 
                 sections.forEach(function(section) {
-                    const inputPairsContainer = section.querySelector(".inputPairsContainer");
+                    const inputPairsContainer = section.querySelector(".es-input-pairs-container");
                     const addPairBtn = section.querySelector(".addPairBtn");
 
                     addPairBtn.addEventListener("click", function() {
@@ -1451,7 +1328,7 @@ class Expert_Sender_Admin
 
                 function createInputPair(container) {
                     const pairDiv = document.createElement("div");
-                    pairDiv.classList.add("inputPair");
+                    pairDiv.classList.add("es-input-pair");
 
                     var id = document.getElementById("idCounter").value;
                     var slug = 'orderMapping';
@@ -1465,8 +1342,9 @@ class Expert_Sender_Admin
                     let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_order_status]";
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Remove";
+                    removeBtn.textContent = "Usuń";
                     removeBtn.type = "button"
+                    removeBtn.classList.add('es-button');
                     removeBtn.addEventListener("click", function() {
                         pairDiv.remove();
                     });
@@ -1483,7 +1361,7 @@ class Expert_Sender_Admin
     <?php
     }
 
-    public function expert_sender_get_wp_order_statuses()
+    public function expertsender_cdp_get_wp_order_statuses()
     {
         return [
             'placed',
@@ -1497,7 +1375,7 @@ class Expert_Sender_Admin
             'failed',
         ];
     }
-    public function expert_sender_get_ecdp_order_statuses()
+    public function expertsender_cdp_get_ecdp_order_statuses()
     {
         return ['Placed', 'Paid', 'Completed', 'Cancelled'];
     }
@@ -1505,12 +1383,12 @@ class Expert_Sender_Admin
     /**
      * @return void
      */
-    public function expert_sender_order_status_mapping_handle_form_submission() {
-        if ( isset( $_POST[ 'expert-sender-order-status-mapping-form' ] ) ) {
+    public function expertsender_cdp_order_status_mapping_handle_form_submission() {
+        if ( isset( $_POST[ 'expertsender_cdp-order-status-mapping-form' ] ) ) {
             /** @var \wpdb $wpdb */
             global $wpdb;
 
-            $table_name = $wpdb->prefix . 'expert_sender_order_status_mappings';
+            $table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
             $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
             $wpdb->query("DELETE FROM $table_name");
             $insert_query = <<<SQL
@@ -1563,22 +1441,14 @@ class Expert_Sender_Admin
 
     public function render_order_synchronize_page()
     {
-        if (!current_user_can('manage_options')) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
-
+        $this->check_permissions();
+        $this->check_api_key();
         global $wpdb;
-        $table_name = $wpdb->prefix . 'expert_sender_requests';
-        $orderRequest = new Expert_Sender_Order_Request();
-
+        $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
         $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
         $result = $wpdb->get_row($query);
-
         $sync_id = 0;
+
         if ($result->last_sync > 0) {
             $sync_id = $result->last_sync;
         }
@@ -1632,23 +1502,21 @@ class Expert_Sender_Admin
         </script>
 
         <div class="wrap">
-            <h1><?php echo esc_html(get_admin_page_title()); ?>
-            </h1>
-            <form id="expertSenderSynchronizeOrdesForm" method="post" action="">
-                <input type="hidden" name="expert-sender-order-synchronize-form">
-                <h2>Synchronize order</h2>
-                <label for="datefrom">From:</label>
+            <h1 class="es-bold"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <form id="es-synchronize-ordes-form" method="post" action="">
+                <input type="hidden" name="expertsender_cdp-order-synchronize-form">
+                <label for="datefrom">Od:</label>
                 <input type="datetime-local" id="datefrom" name="datefrom"><br><br>
-
-                <label for="dateto">To:</label>
+                <label for="dateto">Do:</label>
                 <input type="datetime-local" id="dateto" name="dateto"><br><br>
-                <button class="submit" type="submit"> Synchronize </button>
+                <button class="submit es-button" type="submit">Synchronizuj</button>
             </form>
-            <p>LAST SYNCHRONIZATION</p>
-            <div> Synchronizing <?= count($expertSenderRequests) ?> orders</div>
-            <div> Synchronized: <?= count($sent) ?></div>
-            <div> Not synchronized yet: <?= count($toBeSend) ?></div>
-            <div> Failed: <?= count($failed) ?></div>
+            <h2>Ostatnia synchronizacja</h2>
+            <div>Synchronizacja zamówień: <?= count($expertSenderRequests) ?></div>
+            <div>Zsynchronizowano: <?= count($sent) ?></div>
+            <div>W kolejce: <?= count($toBeSend) ?></div>
+            <div>Błędy: <?= count($failed) ?></div>
+            <div class="es-divider"></div>
             <div class="log-container" id="logContainer">
                 <?php foreach ($failed as $fail) {
                     echo '<div class=log-message>' .
@@ -1658,7 +1526,6 @@ class Expert_Sender_Admin
                         '</div>';
                 } ?>
             </div>
-
         </div>
         <style>
             .log-container {
@@ -1678,19 +1545,19 @@ class Expert_Sender_Admin
 <?php
     }
 
-    public function expert_sender_order_synchronize_submission()
+    public function expertsender_cdp_order_synchronize_submission()
     {
-        if ( isset( $_POST[ 'expert-sender-order-synchronize-form' ] ) ) {
+        if ( isset( $_POST[ 'expertsender_cdp-order-synchronize-form' ] ) ) {
             $start_date = $_POST[ 'datefrom' ];
             $end_date = $_POST[ 'dateto' ];
-            $orders = $this->expert_sender_get_orders_by_dates(
+            $orders = $this->expertsender_cdp_get_orders_by_dates(
                 $start_date,
                 $end_date
             );
 
             global $wpdb;
-            $table_name = $wpdb->prefix . 'expert_sender_requests';
-            $order_request = new Expert_Sender_Order_Request();
+            $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
+            $order_request = new ExpertSender_CDP_Order_Request();
 
             $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
             $result = $wpdb->get_row( $query );
@@ -1715,7 +1582,7 @@ class Expert_Sender_Admin
                 }
 
                 if (!in_array($processed_id, $order_ids)) {
-                    $order_request->expert_sender_order_save_request(
+                    $order_request->expertsender_cdp_order_save_request(
                         $order->id,
                         $s_order,
                         $sync_id
@@ -1726,7 +1593,7 @@ class Expert_Sender_Admin
         }
     }
 
-    function expert_sender_get_orders_by_dates($startDate, $endDate)
+    function expertsender_cdp_get_orders_by_dates($startDate, $endDate)
     {
         global $wpdb;
 
@@ -1746,29 +1613,15 @@ class Expert_Sender_Admin
     }
 
     /**
-     * @return void
-     */
-    public function check_permissions()
-    {
-        if ( ! current_user_can( 'manage_options' ) ) {
-            wp_die(
-                __(
-                    'You do not have sufficient permissions to access this page.'
-                )
-            );
-        }
-    }
-
-    /**
      * @param string|null $message
      * 
      * @return void
      */
-    public function expert_sender_success_notice( $message = null ) {
+    public function expertsender_cdp_success_notice( $message = null ) {
         $this->add_admin_success_notice( $message );
     }
 
-    public function expert_sender_data_error_notice( $message = null ) {
+    public function expertsender_cdp_data_error_notice( $message = null ) {
         $this->add_admin_error_notice( $message );
     }
 
@@ -1780,7 +1633,7 @@ class Expert_Sender_Admin
     private function add_admin_success_notice( $message = null ) {
         add_action( 'admin_notices', function () use ( $message ) {
             if ( null === $message ) {
-                $message = __('Data saved successfully.', 'exper');
+                $message = __('Zmiany zostały zapisane.', 'exper');
             }
 
             $notice = <<<HTML
@@ -1801,7 +1654,7 @@ class Expert_Sender_Admin
     private function add_admin_error_notice( $message = null ) {
         add_action( 'admin_notices', function () use ( $message ) {
             if ( null === $message ) {
-                $message = 'The server encountered an error. Please try again later.';
+                $message = 'Serwer napotkał błąd. Spróbuj ponownie później.';
             }
 
             $notice = <<<HTML
@@ -1812,5 +1665,30 @@ class Expert_Sender_Admin
 
             echo $notice;
         } );
+    }
+
+    /**
+     * @return void
+     */
+    private function check_permissions() {
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_die(
+                __(
+                    'Nie masz wystarczających uprawnień do tej strony.'
+                )
+            );
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function check_api_key() {
+        if ( ! get_option( self::OPTION_API_KEY ) ) {
+            wp_safe_redirect(
+                '/wp-admin/admin.php?page=expertsender_cdp-settings&' . self::PARAMETER_MISSING_API_KEY
+                . '=true'
+            );
+        }
     }
 }
