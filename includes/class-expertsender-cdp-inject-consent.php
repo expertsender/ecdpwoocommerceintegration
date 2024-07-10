@@ -107,14 +107,14 @@ class ExpertSender_CDP_Inject_Consent
         if ( ! empty ($consents ) ) {
             if (
                 ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY !== $form_location &&
-                $text_before = get_option( $form_location . '_text_before' )
+                $text_before = get_option( 'expertsender_cdp_' . $form_location . '_text_before' )
             ) {
                 echo '<div class="expertsender_cdp-text-before-consents">' . esc_html( $text_before ) . '</div>';
             };
 
             if ( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
                 echo '<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide expertsender_cdp">';
-                echo '<label class="expertsender_cdp">Zgody</label>';
+                echo '<label class="expertsender_cdp">Zgody marketingowe</label>';
             }
 
             foreach ( $consents as $consent ) {
