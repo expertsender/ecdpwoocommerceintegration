@@ -60,6 +60,9 @@ class ExpertSender_CDP_Order_Request
         $order = null,
         $sync_id = null
     ) {
+        /** @var \wpdb */
+        global $wpdb;
+
         if ( null === $order ) {
             $order = wc_get_order( $order_id );
         }
@@ -144,8 +147,6 @@ class ExpertSender_CDP_Order_Request
             $product[ 'category' ] = implode( ', ', $categories_array );
             $product_attributes = [];
             $attributes = $product_item->get_attributes();
-
-            global $wpdb;
             $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
 
             if ( ! empty( $attributes ) ) {
@@ -206,7 +207,6 @@ class ExpertSender_CDP_Order_Request
 
         $url = ES_API_URL . 'orders';
 
-        global $wpdb;
         $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
 
         $wpdb->replace( $table_name, array(
