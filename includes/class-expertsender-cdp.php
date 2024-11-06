@@ -370,7 +370,10 @@ class ExpertSender_CDP
             $responseBody = wp_remote_retrieve_body($response);
             $reponseData = json_decode($responseBody);
 
-            if (is_wp_error($response) || $responseCode == 500 || $responseCode == 401 || property_exists($reponseData, "errors")) {
+            if (
+                is_wp_error( $response ) || $responseCode == 500 || $responseCode == 401 ||
+                ( null !== $reponseData && property_exists( $reponseData, 'errors' ) )
+            ) {
                 $wpdb->update(
                     $table_name,
                     array('is_sent' => 1, 'response' => implode("\n", $reponseData->errors)),
