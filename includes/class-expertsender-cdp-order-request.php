@@ -1,5 +1,7 @@
 <?php
 
+use Automattic\WooCommerce\Blocks\Domain\Services\DraftOrders;
+
 if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
@@ -65,6 +67,10 @@ class ExpertSender_CDP_Order_Request
 
         if ( null === $order ) {
             $order = wc_get_order( $order_id );
+        }
+
+        if ( DraftOrders::STATUS=== $order->get_status() ) {
+            return;
         }
 
         $customer = new WC_Customer( $order->get_user_id() );
