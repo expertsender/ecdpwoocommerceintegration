@@ -33,7 +33,8 @@ class ExpertSender_CDP_Activator {
 			wp_field varchar(50) NOT NULL,
 			ecdp_field varchar(50) NOT NULL,
 			PRIMARY KEY (id),
-            UNIQUE INDEX es_mappings_resource_type_wp_field_unique (resource_type, wp_field)
+            UNIQUE INDEX es_mappings_resource_type_wp_field_unique (resource_type, wp_field),
+            UNIQUE INDEX es_mappings_resource_type_ecdp_field_unique (resource_type, ecdp_field)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
@@ -76,10 +77,10 @@ class ExpertSender_CDP_Activator {
 		
 		$sql = "CREATE TABLE IF NOT EXISTS $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
-			wp_order_status varchar(50) NOT NULL,
+			wp_order_statuses text NOT NULL,
+            wp_custom_order_statuses text,
 			ecdp_order_status varchar(50) NOT NULL,
-			PRIMARY KEY (id),
-            UNIQUE (wp_order_status)
+			PRIMARY KEY (id)
 		);";
 		
 		require_once(ABSPATH . 'wp-admin/includes/upgrade.php');

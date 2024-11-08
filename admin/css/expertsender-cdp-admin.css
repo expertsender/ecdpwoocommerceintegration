@@ -6,14 +6,14 @@ button.submit:hover{
     background-color: darkgray;
 }
 
-.input-wrap {
+.es-input-wrap {
     display: flex;
     flex-direction: column;
     max-width: 400px;
     margin-bottom: 15px;
 }
 
-.input-wrap label {
+.es-input-wrap label {
     font-weight: bold;
     margin-bottom: 5px;
 }
@@ -96,4 +96,25 @@ form .es-button.submit {
 
 .es-input-list {
     line-height: unset;
+}
+
+.es-order-status-mappings-page .es-input-pair {
+    align-items: flex-start;
+}
+
+.es-order-status-mappings-page .es-remove-button {
+    margin-top: auto;
+    margin-bottom: auto;
+}
+
+.es-order-status-mappings-page .es-input-pair {
+    gap: 20px;
+}
+
+.es-order-status-mappings-page .es-input-wrap {
+    min-width: max-content;
+}
+
+.es-order-status-mappings-page .es-custom-order-statuses-wrap {
+    width: 100%;
 }

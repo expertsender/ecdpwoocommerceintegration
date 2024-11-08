@@ -714,6 +714,10 @@ class ExpertSender_CDP_Admin
             foreach ($_POST as $resource => $mappings) {
                 if ( in_array( $resource, $resources ) ) {
                     foreach ( $mappings as $mapping ) {
+                        if ( empty( $mapping[ 'wp_field' ] ) || empty( $mapping[ 'ecdp_field' ] ) ) {
+                            continue;
+                        }
+
                         $placeholders[] = "('%s', '%s', '%s')";
                         array_push(
                             $values,
@@ -748,7 +752,7 @@ class ExpertSender_CDP_Admin
                         $wpdb->query( $wpdb->prepare( $query, $values) );
                     }
                     
-                    $this->add_admin_error_notice('Zduplikowana wartość: każde pole WooCommerce dla każdego zasobu powinno być zmapowane tylko raz.');
+                    $this->add_admin_error_notice('Zduplikowana wartość: każde pole WooCommerce i pole ECDP dla każdego zasobu powinno być zmapowane tylko raz.');
                 } else {
                     $this->add_admin_success_notice();
                 }
@@ -1127,65 +1131,65 @@ class ExpertSender_CDP_Admin
             <form id="<?= self::FORM_CONSENT_FORMS; ?>" method="post" action="">
                 <input type="hidden" name="<?= self::FORM_CONSENT_FORMS; ?>" />
                 <h3>Rejestracja</h3>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tekst wyświetlany przed zgodami</label>
                     <input type="text" name="<?= self::OPTION_FORM_REGISTRATION_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_TEXT_BEFORE]; ?>" />
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tryb formularza</label>
                     <select name="<?= self::OPTION_FORM_REGISTRATION_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
                     <input type="number" name="<?= self::OPTION_FORM_REGISTRATION_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_REGISTRATION_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
                 <div class="es-divider"></div>
                 <h3><?= __( 'Edycja profilu', 'expertsender_cdp' ); ?></h3>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tekst wyświetlany przed zgodami</label>
                     <input type="text" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE]; ?>" />
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tryb formularza</label>
                     <select name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
                     <input type="number" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?>/>
                 </div>
                 <div class="es-divider"></div>
                 <h3>Checkout</h3>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tekst wyświetlany przed zgodami</label>
                     <input type="text" name="<?= self::OPTION_FORM_CHECKOUT_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_TEXT_BEFORE]; ?>" />
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>Tryb formularza</label>
                     <select name="<?= self::OPTION_FORM_CHECKOUT_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
                     <input type="number" name="<?= self::OPTION_FORM_CHECKOUT_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CHECKOUT_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
                 <div class="es-divider"></div>
                 <h3>Newsletter</h3>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label><?= __( 'Form type', 'expertsender_cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>" class="es-form-type-select">
                         <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
                         <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
                     </select>
                 </div>
-                <div class="input-wrap">
+                <div class="es-input-wrap">
                     <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
                     <input type="number" name="<?= self::OPTION_FORM_NEWSLETTER_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_NEWSLETTER_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
@@ -1241,63 +1245,96 @@ class ExpertSender_CDP_Admin
         $this->check_api_key();
         global $wpdb;
         $table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
+        $is_error = $_GET['es_is_error'] ?? false;
 
-        $orderStatusMappings = $wpdb->get_results("SELECT * FROM $table_name");
+        if ( true === $is_error && isset( $_POST['orderMapping'] ) ) {
+            $orderStatusMappings = $_POST['orderMapping'];
+            $orderStatusMappings = array_map( function ( $mapping ) {
+                $mapping['wp_order_statuses'] = implode( ',', $mapping['wp_order_statuses'] ?? array() );
+                return $mapping;
+            }, $orderStatusMappings );
+        } else {
+            $orderStatusMappings = es_get_all_order_status_mappings();
+        }
+
         $wpStatuses = $this->expertsender_cdp_get_wp_order_statuses();
         $ecdpStatuses = $this->expertsender_cdp_get_ecdp_order_statuses();
 
         $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
     ?>
 
-        <div class="wrap">
+        <div class="wrap es-order-status-mappings-page">
             <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="expertSenderOrderStatusMappingsForm" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-order-status-mapping-form">
                 <div id="orderStatusMapping" class="mappingSection">
                     <button type="button" class="addPairBtn es-button">Dodaj</button>
-                    <?php 
-                    echo '<datalist id="expertsender_wp_order_list">';
-                    foreach ($wpStatuses as $status) {
-                        $status = esc_html($status);
-                        echo "<option value=\"$status\">$status</option>";
-                    }
-                    echo '</datalist>';
-                    ?>
                     <div class="es-input-pairs-container" data-slug="product">
-                        <?php foreach ($orderStatusMappings as $orderMapping) {
-                            echo '<div class="es-input-pair">';
-                            echo '<input type="text es-input-list" name="orderMapping[' . $orderMapping->id
-                                . '][wp_order_status]" list="expertsender_wp_order_list" value="'
-                                . $orderMapping->wp_order_status . '"/>';
-                            echo '<select name="orderMapping[' . $orderMapping->id . '][ecdp_order_status]">';
-
-                            foreach ($ecdpStatuses as $status) {
-                                $selected =
-                                    $orderMapping->ecdp_order_status == $status ? 'selected' : '';
-
-                                echo "<option value=\"$status\" $selected>$status</option>";
-                            }
-
-                            echo '
-		</select>
-			<button class="removeButton es-button" type="button">Usuń</button></div>';
-                        } ?>
+                        <?php foreach ($orderStatusMappings as $orderMapping): ?>
+                            <?php $mapping_wp_statuses = es_get_order_status_mapping_wc_statuses( $orderMapping ); ?>
+                            <div class="es-input-pair">
+                                <input type="hidden" name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][id]" value="<?= esc_attr( $orderMapping['id'] ); ?>"/>
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__('Statusy WC', 'expertsender-cdp'); ?></label>
+                                    <select name="orderMapping[<?= esc_attr($orderMapping['id']);?>][wp_order_statuses][]" multiple>
+                                        <?php foreach ( $wpStatuses as $status ): ?>
+                                            <option value="<?= esc_attr( $status ); ?>"<?php if ( in_array( $status, $mapping_wp_statuses ) ) { echo ' selected'; } ?>><?= esc_html( $status ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                <div class="es-input-wrap es-custom-order-statuses-wrap">
+                                    <label><?= esc_html__('Niestandardowe statusy WC', 'expertsender-cdp'); ?></label>
+                                    <input type="text" name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][wp_custom_order_statuses]" value="<?= esc_attr( $orderMapping['wp_custom_order_statuses'] ); ?>" placeholder="<?= esc_attr__( 'Statusy rozdzielone przecinkiem', 'expertsender-cdp' ); ?>"/>
+                                </div>
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__('Status ECDP', 'expertsender-cdp'); ?></label>
+                                    <select name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][ecdp_order_status]">
+                                        <?php foreach ($ecdpStatuses as $status): ?>
+                                            <option value="<?= esc_attr( $status ); ?>"<?php if ( $status === $orderMapping['ecdp_order_status'] ) { echo ' selected'; } ?>><?= esc_html( $status ); ?></option>
+                                        <?php endforeach;?>
+                                    </select>
+                                </div>
+                                <button class="removeButton es-button es-remove-button" type="button"><?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?></button>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
                 <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
                 <button class="submit es-button" type="submit">Zapisz zmiany</button>
             </form>
 
+            <template id="order_status_mapping_id">
+                <input type="hidden"/> 
+            </template>
             <template id="wpstatus">
-                <input type="text" list="expertsender_wp_order_list"/>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Statusy WC', 'expertsender-cdp'); ?></label>
+                    <select multiple>
+                        <?php
+                        foreach ( $wpStatuses as $status ) {
+                            echo '<option value="' . esc_attr($status) . '">' . esc_html($status) . '</option>';
+                        }
+                        ?>
+                    </select>
+                </div>
+            </template>
+
+            <template id="wp_custom_order_statuses">
+                <div class="es-input-wrap es-custom-order-statuses-wrap">
+                    <label><?= esc_html__('Niestandardowe statusy WC', 'expertsender-cdp'); ?></label>
+                    <input type="text"/>
+                </div>
             </template>
 
             <template id="ecdpstatus">
-                <select name="">
-                    <?php foreach ($ecdpStatuses as $status) {
-                        echo "<option value=\"$status\">$status</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Status ECDP', 'expertsender-cdp'); ?></label>
+                    <select>
+                        <?php foreach ($ecdpStatuses as $status) {
+                            echo "<option value=\"$status\">$status</option>";
+                        } ?>
+                    </select>
+                </div>
             </template>
         </div>
 
@@ -1333,9 +1370,18 @@ class ExpertSender_CDP_Admin
                     var id = document.getElementById("idCounter").value;
                     var slug = 'orderMapping';
 
+                    const idTemplate = document.querySelector('#order_status_mapping_id');
+                    const idTemplateContent = idTemplate.content.cloneNode(true);
+                    const idInput = idTemplateContent.querySelector('input');
+                    idInput.name = `${slug}[${id}][id]`;
+                    idInput.value = id;
                     var template = document.querySelector("#wpstatus");
                     const wpSelect = template.content.cloneNode(true);
-                    let wp = wpSelect.querySelectorAll("input")[0].name = slug + "[" + id + "][wp_order_status]";
+                    let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_order_statuses][]";
+
+                    const customOrderStatusesTemplate = document.querySelector('#wp_custom_order_statuses');
+                    const customOrderStatusesInput = customOrderStatusesTemplate.content.cloneNode(true);
+                    customOrderStatusesInput.querySelector('input').name = `${slug}[${id}][wp_custom_order_statuses]`;
 
                     var template2 = document.querySelector("#ecdpstatus");
                     const ecdpSelect = template2.content.cloneNode(true);
@@ -1349,7 +1395,9 @@ class ExpertSender_CDP_Admin
                         pairDiv.remove();
                     });
 
+                    pairDiv.appendChild(idInput);
                     pairDiv.appendChild(wpSelect);
+                    pairDiv.appendChild(customOrderStatusesInput);
                     pairDiv.appendChild(ecdpSelect);
                     pairDiv.appendChild(removeBtn);
 
@@ -1385,55 +1433,40 @@ class ExpertSender_CDP_Admin
      */
     public function expertsender_cdp_order_status_mapping_handle_form_submission() {
         if ( isset( $_POST[ 'expertsender_cdp-order-status-mapping-form' ] ) ) {
-            /** @var \wpdb $wpdb */
-            global $wpdb;
-
-            $table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
-            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
-            $wpdb->query("DELETE FROM $table_name");
-            $insert_query = <<<SQL
-                INSERT INTO $table_name (wp_order_status, ecdp_order_status)
-                VALUES 
-            SQL;
-            $placeholders = array();
-            $values = array();
+            $current_data = es_get_all_order_status_mappings();
+            es_truncate_order_status_mappings();
 
             if ( isset( $_POST['orderMapping'] ) ) {
-                foreach ( $_POST['orderMapping'] as $mapping ) {
-                    $placeholders[] = "('%s', '%s')";
-                    array_push( $values, $mapping[ 'wp_order_status' ], $mapping[ 'ecdp_order_status' ] );
-                }
+                $errors = es_validate_order_status_mapping_data( $_POST['orderMapping'] );
 
-                if ( ! empty( $values ) ) {
-                    $query = $insert_query . implode( ', ', $placeholders );
-                    $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
-
-                    if ( false === $inserted ) {
-                        if ( ! empty ( $current_data ) ) {
-                            $placeholders = array();
-                            $values = array();
-
-                            foreach ( $current_data as $current_row ) {
-                                $placeholders[] = "('%s', '%s')";
-                                array_push(
-                                    $values,
-                                    $current_row[ 'wp_order_status' ],
-                                    $current_row[ 'ecdp_order_status' ]
-                                );
-                            }
-
-                            $query = $insert_query . implode( ', ', $placeholders );
-                            $wpdb->query( $wpdb->prepare( $query, $values) );
-                        }
-                        
-                        $this->add_admin_error_notice(
-                            __( 'Duplicate entry: each WooCommerce status should be mapped only once.' )
-                        );
-                    } else {
-                        $this->add_admin_success_notice();
+                if ( ! empty ( $errors ) ) {
+                    foreach ( $errors as $error ) {
+                        $this->add_admin_error_notice( $error );
                     }
+
+                    $_GET['es_is_error'] = true;
+
+                    if ( ! empty( $current_data ) ) {
+                        es_insert_order_status_mappings( $current_data );
+                    }
+
+                    return;
                 }
-            } else if (! empty ( $current_data ) ) {
+
+                $result = es_insert_order_status_mappings( $_POST['orderMapping'] );
+
+                if ( false === $result ) {
+                    if ( ! empty( $current_data ) ) {
+                        es_insert_order_status_mappings( $current_data );
+                    }
+                    
+                    $this->add_admin_error_notice(
+                        __( 'Każdy status powinien być zmapowany raz.', 'expertsender-cdp' )
+                    );
+                } else {
+                    $this->add_admin_success_notice();
+                }
+            } else if ( ! empty ( $current_data ) ) {
                 $this->add_admin_success_notice();
             }
         }
