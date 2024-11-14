@@ -448,29 +448,18 @@ class ExpertSender_CDP_Admin
     {
         $this->check_permissions();
         $this->check_api_key();
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
 
-        $customerMappings = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s",
-                $this::RESOURCE_CUSTOMER
-            )
-        );
+        $is_error = $_GET['es_is_error'] ?? false;
 
-        $productMappings = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s",
-                $this::RESOURCE_PRODUCT
-            )
-        );
-
-        $orderMappings = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s",
-                $this::RESOURCE_ORDER
-            )
-        );
+        if ( true === $is_error && isset( $_POST['expertsender_cdp-mapping-form'] ) ) {
+            $customerMappings = $this->get_post_field_mappings( self::RESOURCE_CUSTOMER );
+            $orderMappings = $this->get_post_field_mappings( self::RESOURCE_ORDER );
+            $productMappings = $this->get_post_field_mappings( self::RESOURCE_PRODUCT );
+        } else {
+            $customerMappings = es_get_field_mappings_by_resource_type( self::RESOURCE_CUSTOMER );
+            $productMappings = es_get_field_mappings_by_resource_type( self::RESOURCE_PRODUCT );
+            $orderMappings = es_get_field_mappings_by_resource_type( self::RESOURCE_ORDER );
+        }
 
         $orderKeys = $this->get_order_keys();
         $productKeys = $this->get_product_keys();
@@ -478,7 +467,7 @@ class ExpertSender_CDP_Admin
         $customerOptions = $this->expertsender_cdp_get_customer_attributes_from_api();
         $productOptions = $this->expertsender_cdp_get_product_attributes_from_api();
         $orderOptions = $this->expertsender_cdp_get_order_attributes_from_api();
-        $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
+        $last_id = es_get_max_field_mapping_id() + 1;
     ?>
 
         <div class="wrap">
@@ -486,144 +475,206 @@ class ExpertSender_CDP_Admin
             <form id="es-field-mappings-form" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-mapping-form">
                 <div id="productMapping" class="mappingSection">
-                    <h2>Mapowania pól produktów</h2>
-                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <h2><?= esc_html( 'Mapowania pól produktów', 'expertsender-cdp' ); ?></h2>
+
+                    <button type="button" class="addPairBtn es-button"><?= esc_html( 'Dodaj', 'expertsender-cdp' ); ?></button>
 
                     <div class="es-input-pairs-container" data-slug="product">
-                        <?php foreach ($productMappings as $productMapping) {
-                            echo '<div class="es-input-pair">';
-                            echo '<select name="product[' . $productMapping->id . '][wp_field]">';
+                        <?php foreach ( $productMappings as $productMapping ): ?>
+                            <div class="es-input-pair">
+                                <input type="hidden" name="product[<?= esc_attr( $productMapping['id'] ); ?>][id]" value="<?= esc_attr( $productMapping['id'] ); ?>"/>
 
-                            foreach ($productKeys as $productKey => $value) {
-                                $selected = $productMapping->wp_field == $value ? 'selected' : '';
-                                echo "<option value=\"$value\" $selected>$value</option>";
-                            }
-
-                            echo '</select>';
-                            echo '<select name="product[' . $productMapping->id . '][ecdp_field]">';
-
-                            foreach ($productOptions as $value) {
-                                $value = $value->name;
-                                $selected = $productMapping->ecdp_field == $value ? 'selected' : '';
-                                echo "<option value=\"$value\" $selected>$value</option>";
-                            }
-
-                            echo '</select><button class="removeButton es-button" type="button">Usuń</button></div>';
-                        } ?>
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__('Pole produktu WC'); ?></label>
+                                    <select name="product[<?= esc_attr( $productMapping['id'] ); ?>][wp_field]">
+                                        <?php foreach ( $productKeys as $value ): ?>
+                                            <?php $selected = $productMapping['wp_field'] == $value ? 'selected' : ''; ?>
+                                            <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $value ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__('Pole produktu ECDP', 'expertsender-cdp'); ?></label>
+                                    <select name="product[<?= esc_attr( $productMapping['id'] ); ?>][ecdp_field]">
+                                        <?php foreach ( $productOptions as $value ): ?>
+                                            <?php
+                                            $value = $value->name;
+                                            $selected = $productMapping['ecdp_field'] == $value ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $value ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <button class="removeButton es-button" type="button"><?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?></button>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
                 <div id="customerMapping" class="mappingSection">
-                    <h2>Mapowania pól użytkowników</h2>
-                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <h2><?= esc_html__( 'Mapowania pól użytkowników', 'expertsender-cdp' ); ?></h2>
+
+                    <button type="button" class="addPairBtn es-button"><?= esc_html__( 'Dodaj', 'expertsender-cdp' ); ?></button>
 
                     <div class="es-input-pairs-container" data-slug="customer">
-                        <?php foreach ($customerMappings as $customerMapping) {
-                            echo '<div class="es-input-pair">';
-                            echo '<select name="customer[' . $customerMapping->id . '][wp_field]">';
+                        <?php foreach ( $customerMappings as $customerMapping ): ?>
+                            <div class="es-input-pair">
+                                <input type="hidden" name="customer[<?= esc_attr( $customerMapping['id'] ); ?>][id]" value="<?= esc_attr( $customerMapping['id'] ); ?>"/>
 
-                            foreach ($customerKeys as $customerKey => $value) {
-                                $selected = $customerMapping->wp_field == $customerKey ? 'selected' : '';
-                                echo "<option value=\"$customerKey\" $selected>$customerKey</option>";
-                            }
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Pole użytkownika WC', 'expertsender-cdp' ); ?></label>
 
-                            echo '</select>';
-                            echo '<select name="customer[' . $customerMapping->id . '][ecdp_field]">';
+                                    <select name="customer[<?= esc_attr( $customerMapping['id'] ); ?>][wp_field]">
+                                        <?php foreach ( $customerKeys as $customerKey => $value ): ?>
+                                            <?php $selected = $customerMapping['wp_field'] == $customerKey ? 'selected' : ''; ?>
+                                            <option value="<?= esc_attr( $customerKey ); ?>" <?= $selected; ?>><?= esc_html( $customerKey ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                            
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Pole użytkownika ECDP', 'expertsender-cdp' ); ?></label>
 
-                            foreach ($customerOptions as $value) {
-                                $value = $value->name;
-                                $selected = $customerMapping->ecdp_field == $value ? 'selected' : '';
-                                echo "<option value=\"$value\" $selected>$value</option>";
-                            }
+                                    <select name="customer[<?= esc_attr( $customerMapping['id'] ); ?>][ecdp_field]">
+                                        <?php foreach ($customerOptions as $value): ?>
+                                            <?php
+                                            $value = $value->name;
+                                            $selected = $customerMapping['ecdp_field'] == $value ? 'selected' : '';
+                                            ?>
+                                        <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $value ); ?></option>";
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-                            echo '</select><button class="removeButton es-button" type="button">Usuń</button></div>';
-                        } ?>
+                            <button class="removeButton es-button" type="button"><?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?></button>
+                        </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
 
                 <div id="orderMapping" class="mappingSection">
-                    <h2>Mapowania pól zamówień</h2>
-                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <h2><?= esc_html__( 'Mapowania pól zamówień', 'expertsender-cdp' ); ?></h2>
+
+                    <button type="button" class="addPairBtn es-button"><?= esc_html__( 'Dodaj', 'expertsender-cdp' ); ?></button>
 
                     <div class="es-input-pairs-container" data-slug="order">
-                        <?php foreach ($orderMappings as $orderMapping) {
-                            echo '<div class="es-input-pair">';
-                            echo '<select name="order[' . $orderMapping->id . '][wp_field]">';
+                        <?php foreach ( $orderMappings as $orderMapping ): ?>
+                            <div class="es-input-pair">
+                                <input type="hidden" name="order[<?= esc_attr( $orderMapping['id'] ); ?>][id]" value="<?= esc_attr( $orderMapping['id'] ); ?>"/>
 
-                            foreach ($orderKeys as $orderKey => $orderValue) {
-                                $selected = $orderMapping->wp_field == $orderKey ? 'selected' : '';
-                                echo "<option value=\"$orderKey\" $selected>$orderKey</option>";
-                            }
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Pole zamówienia WC', 'expertsender-cdp' ); ?></label>
+                                    <select name="order[<?= esc_attr( $orderMapping['id'] ); ?>][wp_field]">
+                                        <?php foreach ($orderKeys as $orderKey => $orderValue): ?>
+                                            <?php $selected = $orderMapping['wp_field'] == $orderKey ? 'selected' : ''; ?>
+                                            <option value="<?= esc_attr( $orderKey ); ?>" <?= $selected; ?>><?= esc_html( $orderKey ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-                            echo '</select>';
-                            echo '<select name="order[' . $orderMapping->id . '][ecdp_field]">';
-
-                            foreach ($orderOptions as $value) {
-                                $value = $value->name;
-                                $selected = $orderMapping->ecdp_field == $value ? 'selected' : '';
-                                echo "<option value=\"$value\" $selected>$value</option>";
-                            }
-
-                            echo '</select>';
-                            echo '<button class="removeButton es-button" type="button">Usuń</button></div>';
-                        } ?>
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Pole zamówienia ECDP', 'expertsender-cdp' ); ?></label>
+                                    <select name="order[<?= esc_attr( $orderMapping['id'] ); ?>][ecdp_field]">
+                                        <?php foreach ($orderOptions as $value): ?>
+                                            <?php
+                                            $value = $value->name;
+                                            $selected = $orderMapping['ecdp_field'] == $value ? 'selected' : '';
+                                            ?>
+                                            <option value="<?= esc_attr( $value ); ?>" $selected><?= esc_html( $value ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
+                                
+                                <button class="removeButton es-button" type="button"><?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?></button>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
                 </div>
+
                 <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                <button class="es-button submit" type="submit">Zapisz zmiany</button>
+
+                <button class="es-button submit" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
             </form>
 
+            <template id="es-field-mapping-id-template">
+                <input type="hidden"/> 
+            </template>
+
             <template id="productselect">
-                <select name="">
-                    <?php foreach ($productOptions as $value) {
-                        $value = $value->name;
-                        echo "<option value=\"$value\">$value</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Pole produktu ECDP'); ?></label>
+
+                    <select>
+                        <?php foreach ($productOptions as $value): ?>
+                            <?php $value = $value->name; ?>
+                            <option value="<?= esc_attr( $value ); ?>"><?= esc_html( $value ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="orderselect">
-                <select name="">
-                    <?php foreach ($orderOptions as $value) {
-                        $value = $value->name;
-                        echo "<option value=\"$value\">$value</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__( 'Pole zamówienia ECDP', 'expertsender-cdp' ); ?></label>
+
+                    <select>
+                        <?php foreach ($orderOptions as $value): ?>
+                            <?php $value = $value->name; ?>
+                            <option value="<?= esc_attr( $value ); ?>"><?= esc_html( $value ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="customerselect">
-                <select name="">
-                    <?php foreach ($customerOptions as $value) {
-                        $value = $value->name;
-                        echo "<option value=\"$value\">$value</option>";
-                    } ?>
-                </select>
-            </template>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__( 'Pole użytkownika ECDP', 'expertsender-cdp' ); ?></label>
 
+                    <select>
+                        <?php foreach ($customerOptions as $value): ?>
+                            <?php $value = $value->name; ?>
+                            <option value="<?= esc_attr( $value ); ?>"><?= esc_html( $value ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="orderkeys">
-                <select name="">
-                    <?php foreach ($orderKeys as $key => $value) {
-                        echo "<option value=\"$key\">$key</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Pole zamówienia WC'); ?></label>
+
+                    <select>
+                        <?php foreach ( $orderKeys as $key => $value ): ?>
+                            <option value="<?= esc_attr( $key ); ?>"><?= esc_html( $key ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="productkeys">
-                <select name="">
-                    <?php foreach ($productKeys as $key => $value) {
-                        echo "<option value=\"$value\">$value</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Pole produktu WC'); ?></label>
+
+                    <select>
+                        <?php foreach ( $productKeys as $value ): ?>
+                            <option value="<?= esc_attr( $value ); ?>"><?= esc_html( $value ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="customerkeys">
-                <select name="">
-                    <?php foreach ($customerKeys as $key => $value) {
-                        echo "<option value=\"$key\">$key</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__('Pole użytkownika WC'); ?></label>
+
+                    <select>
+                        <?php foreach ( $customerKeys as $key => $value ): ?>
+                            <option value="<?= esc_attr( $key ); ?>"><?= esc_html( $key ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
         </div>
 
@@ -659,6 +710,13 @@ class ExpertSender_CDP_Admin
 
                     var id = document.getElementById("idCounter").value;
                     var slug = container.getAttribute("data-slug");
+
+                    const idTemplate = document.querySelector('#es-field-mapping-id-template');
+                    const idTemplateContent = idTemplate.content.cloneNode(true);
+                    const idInput = idTemplateContent.querySelector('input');
+                    idInput.name = `${slug}[${id}][id]`;
+                    idInput.value = id;
+
                     var template = document.querySelector("#" + slug + "keys");
                     const wpSelect = template.content.cloneNode(true);
                     let wp = wpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][wp_field]";
@@ -676,6 +734,7 @@ class ExpertSender_CDP_Admin
                         pairDiv.remove();
                     });
 
+                    pairDiv.appendChild(idInput);
                     pairDiv.appendChild(wpSelect);
                     pairDiv.appendChild(ecdpSelect);
                     pairDiv.appendChild(removeBtn);
@@ -691,68 +750,39 @@ class ExpertSender_CDP_Admin
     /**
      * @return void
      */
-    public function expertsender_cdp_mappings_handle_form_submission()
-    {
-        if (isset($_POST['expertsender_cdp-mapping-form'])) {
-             /** @var \wpdb $wpdb */
-            global $wpdb;
-            $resources = array(
-                self::RESOURCE_CUSTOMER,
-                self::RESOURCE_ORDER,
-                self::RESOURCE_PRODUCT
-            );
-            $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
-            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
-            $wpdb->query("DELETE FROM $table_name");
-            $insert_query = <<<SQL
-                INSERT INTO $table_name (resource_type, wp_field, ecdp_field)
-                VALUES
-            SQL;
-            $placeholders = array();
-            $values = array();
-            
-            foreach ($_POST as $resource => $mappings) {
-                if ( in_array( $resource, $resources ) ) {
-                    foreach ( $mappings as $mapping ) {
-                        if ( empty( $mapping[ 'wp_field' ] ) || empty( $mapping[ 'ecdp_field' ] ) ) {
-                            continue;
-                        }
+    public function expertsender_cdp_mappings_handle_form_submission() {
+        if ( isset( $_POST['expertsender_cdp-mapping-form'] ) ) {
+            $current_data = es_get_all_field_mappings();
+            es_truncate_field_mappings();
+            $mappings = $this->get_post_field_mappings();
 
-                        $placeholders[] = "('%s', '%s', '%s')";
-                        array_push(
-                            $values,
-                            $resource,
-                            $mapping[ 'wp_field' ],
-                            $mapping[ 'ecdp_field' ]
-                        );
+            if ( ! empty( $mappings ) ) {
+                $errors = es_validate_field_mapping_data( $mappings );
+
+                if ( ! empty( $errors ) ) {
+                    foreach( $errors as $error ) {
+                        $this->add_admin_error_notice( $error );
                     }
-                }
-            }
 
-            if ( ! empty( $values ) ) {
-                $query = $insert_query . implode( ', ', $placeholders );
-                $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
+                    $_GET['es_is_error'] = true;
 
-                if ( false === $inserted ) {
                     if ( ! empty( $current_data ) ) {
-                        $placeholders = array();
-                        $values = array();
-
-                        foreach ( $current_data as $current_row ) {
-                            $placeholders[] = "('%s', '%s', '%s')";
-                            array_push(
-                                $values,
-                                $current_row[ 'resource_type' ],
-                                $current_row[ 'wp_field' ],
-                                $current_row[ 'ecdp_field' ]
-                            );
-                        }
-
-                        $query = $insert_query . implode( ', ', $placeholders );
-                        $wpdb->query( $wpdb->prepare( $query, $values) );
+                        es_insert_field_mappings( $current_data );
                     }
-                    
-                    $this->add_admin_error_notice('Zduplikowana wartość: każde pole WooCommerce i pole ECDP dla każdego zasobu powinno być zmapowane tylko raz.');
+
+                    return;
+                }
+
+                $result = es_insert_field_mappings( $mappings );
+
+                if ( false === $result ) {
+                    if ( ! empty( $current_data ) ) {
+                        es_insert_field_mappings( $current_data );
+                    }
+
+                    $this->add_admin_error_notice(
+                        __( 'Wystąpił błąd w trakcie zapisywania mapowań.', 'expertsender-cdp' )
+                    );
                 } else {
                     $this->add_admin_success_notice();
                 }
@@ -760,6 +790,35 @@ class ExpertSender_CDP_Admin
                 $this->add_admin_success_notice();
             }
         }
+    }
+
+    /**
+     * @param string|null $resource
+     *
+     * @return array
+     */
+    public function get_post_field_mappings( $by_resource = null ) {
+        $mappings = array();
+        $resources = array(
+            self::RESOURCE_CUSTOMER,
+            self::RESOURCE_ORDER,
+            self::RESOURCE_PRODUCT
+        );
+
+        foreach ($_POST as $resource => $resource_mappings) {
+            if ( is_string( $by_resource ) && $resource !== $by_resource ) {
+                continue;
+            }
+
+            if ( in_array( $resource, $resources ) ) {
+                foreach ( $resource_mappings as $mapping ) {
+                    $mapping['resource_type'] = $resource;
+                    $mappings[] = $mapping; 
+                }
+            }
+        }
+
+        return $mappings;
     }
 
     public function expertsender_cdp_get_customer_attributes_from_api()
@@ -841,60 +900,96 @@ class ExpertSender_CDP_Admin
     {
         $this->check_permissions();
         $this->check_api_key();
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
-        $consents = $wpdb->get_results("SELECT * FROM $table_name");
+
+        $consents = es_get_all_consents();
         $apiConsents = $this->expertsender_cdp_get_consents_from_api();
         $consentLocations = $this->expertsender_cdp_get_consents_locations();
-        $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
+        $last_id = es_get_max_consent_id() + 1;
     ?>
         <div class="wrap">
             <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="expertSenderConsentsForm" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-consents-form">
                 <div id="consentSection" class="consentSection">
-                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <button type="button" class="addPairBtn es-button"><?= esc_html__( 'Dodaj', 'expertsender-cdp' ); ?></button>
+
                     <div class="es-input-pairs-container">
-                        <?php foreach ( $consents as $consent ) {
-                            echo '<div class="es-input-pair">';
-                            echo '<select name="consent[' . $consent->id . '][api_consent_id]">';
+                        <?php foreach ( $consents as $consent ): ?>
+                            <div class="es-input-pair">
+                                <input type="hidden" name="consent[<?= esc_attr( $consent['id'] ); ?>][id]" value="<?= esc_attr( $consent['id'] ); ?>"/>
+    
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Zgoda ECDP', 'expertsender-cdp' ); ?></label>    
 
-                            foreach ( $apiConsents as $value ) {
-                                $selected = $consent->api_consent_id == $value->id ? 'selected' : '';
-                                echo "<option value=\"$value->id\" $selected>$value->name</option>";
-                            }
+                                    <select name="consent[<?= esc_attr( $consent['id'] ); ?>][api_consent_id]">   
+                                        <?php foreach ( $apiConsents as $value ): ?>
+                                            <?php $selected = $consent['api_consent_id'] == $value->id ? 'selected' : ''; ?>
+                                            <option value="<?= esc_attr( $value->id ); ?>" <?= $selected; ?>><?= esc_html( $value->name ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-                            echo '</select>';
-                            echo '<select name="consent[' . $consent->id . '][consent_location]">';
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Lokalizacja', 'expertsender-cdp' ); ?></label> 
 
-                            foreach ( $consentLocations as $value => $label ) {
-                                $selected = $consent->consent_location == $value ? 'selected' : '';
-                                echo "<option value=\"$value\" $selected>$label</option>";
-                            }
+                                    <select name="consent[<?= esc_attr( $consent['id'] ); ?>][consent_location]">';
+                                        <?php foreach ( $consentLocations as $value => $label ): ?>
+                                            <?php $selected = $consent['consent_location'] == $value ? 'selected' : ''; ?>
+                                            <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $label ); ?></option>
+                                        <?php endforeach; ?>
+                                    </select>
+                                </div>
 
-                            echo '</select>';
-                            echo '<input type="text" placeholder="Tekst zgody" required="true" name="consent[' . $consent->id . '][consent_text]" value="' . $consent->consent_text . '">';
-                            echo '<button class="removeButton es-button" type="button">Usuń</button></div>';
-                        } ?>
+                                <div class="es-input-wrap">
+                                    <label><?= esc_html__( 'Tekst zgody', 'expertsender-cdp' ); ?></label> 
+
+                                    <input type="text" placeholder="<?= esc_attr__( 'Tekst zgody', 'expertsender-cdp' ); ?>" required="true" name="consent[<?= esc_attr( $consent['id'] ); ?>][consent_text]" value="<?= esc_attr( $consent['consent_text'] ); ?>">
+                                </div>
+
+                                <button class="removeButton es-button" type="button"><?= esc_html__( 'Usuń', 'expertsender-cdp'); ?></button>
+                            </div>
+                        <?php endforeach; ?>
                     </div>
+
                     <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                    <button class="es-button submit" type="submit">Zapisz zmiany</button>
+
+                    <button class="es-button submit" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
             </form>
 
+            <template id="es-consent-id-template">
+                <input type="hidden"/> 
+            </template>
+
             <template id="apiConsentsTemplate">
-                <select name="">
-                    <?php foreach ($apiConsents as $value) {
-                        echo "<option value=\"$value->id\">$value->name</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__( 'Zgoda ECDP', 'expertsender-cdp' ); ?></label>
+
+                    <select>
+                        <?php foreach ($apiConsents as $value): ?>
+                            <option value="<?= esc_attr( $value->id ); ?>"><?= esc_html( $value->name ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
             </template>
 
             <template id="consentLocationTemplate">
-                <select name="">
-                    <?php foreach ( $consentLocations as $value => $label ) {
-                        echo "<option value=\"$value\">$label</option>";
-                    } ?>
-                </select>
+                <div class="es-input-wrap">
+                    <label><?= esc_html__( 'Lokalizacja', 'expertsender-cdp' ); ?></label>
+
+                    <select>
+                        <?php foreach ( $consentLocations as $value => $label ): ?>
+                            <option value="<?= esc_attr( $value ); ?>"><?= esc_html( $label ); ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </div>
+            </template>
+
+            <template id="es-consent-text-template">
+                <div class="es-input-wrap">
+                    <label><?= esc_html__( 'Tekst zgody', 'expertsedner-cdp' ); ?></label>
+
+                    <input type="text" placeholder="<?= esc_attr__( 'Tekst zgody', 'expertsender-cdp' ); ?>" required="true"/>
+                </div>
             </template>
         </div>
 
@@ -929,6 +1024,12 @@ class ExpertSender_CDP_Admin
 
                     var id = document.getElementById("idCounter").value;
 
+                    const idTemplate = document.querySelector('#es-consent-id-template');
+                    const idTemplateContent = idTemplate.content.cloneNode(true);
+                    const idInput = idTemplateContent.querySelector('input');
+                    idInput.name = `consent[${id}][id]`;
+                    idInput.value = id;
+
                     var template = document.querySelector("#apiConsentsTemplate");
                     const apiConsent = template.content.cloneNode(true);
                     apiConsent.querySelectorAll("select")[0].name = "consent[" + id + "][api_consent_id]";
@@ -937,24 +1038,23 @@ class ExpertSender_CDP_Admin
                     const consentLocation = template2.content.cloneNode(true);
                     consentLocation.querySelectorAll("select")[0].name = "consent[" + id + "][consent_location]";
 
+                    const consentTextTemplate = document.querySelector('#es-consent-text-template');
+                    const consentText = consentTextTemplate.content.cloneNode(true);
+                    const consentTextInput = consentText.querySelector('input');
+                    consentTextInput.name = `consent[${id}][consent_text]`;
+
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Usuń";
+                    removeBtn.textContent = "<?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?>";
                     removeBtn.type = "button"
                     removeBtn.classList.add('es-button')
                     removeBtn.addEventListener("click", function() {
                         pairDiv.remove();
                     });
 
-                    const consentTextInput = document.createElement("input");
-                    consentTextInput.type = "text";
-                    consentTextInput.name = "consent[" + id + "][consent_text]";
-                    consentTextInput.placeholder = "Tekst zgody";
-                    consentTextInput.required = true;
-
-
+                    pairDiv.appendChild(idInput);
                     pairDiv.appendChild(apiConsent);
                     pairDiv.appendChild(consentLocation);
-                    pairDiv.appendChild(consentTextInput);
+                    pairDiv.appendChild(consentText);
                     pairDiv.appendChild(removeBtn);
 
                     container.appendChild(pairDiv);
@@ -1005,57 +1105,41 @@ class ExpertSender_CDP_Admin
     /**
      * @return void
      */
-    public function expertsender_cdp_consents_handle_form_submission()
-    {
-        if (isset($_POST['expertsender_cdp-consents-form'])) {
-            global $wpdb;
+    public function expertsender_cdp_consents_handle_form_submission() {
+        if ( isset( $_POST['expertsender_cdp-consents-form'] ) ) {
+            $current_data = es_get_all_consents();
+            es_truncate_consents();
 
-            $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
-            $current_data = $wpdb->get_results( "SELECT * FROM $table_name", ARRAY_A );
-            $wpdb->query("DELETE FROM $table_name");
-            $insert_query = <<<SQL
-                INSERT INTO $table_name (api_consent_id, consent_location, consent_text)
-                VALUES
-            SQL;
-            $placeholders = array();
-            $values = array();
+            if ( isset( $_POST['consent'] ) ) {
+                $errors = es_validate_consent_data( $_POST['consent'] );
 
-            if (isset($_POST['consent'])) {
-                foreach ($_POST['consent'] as $mapping) {
-                    $placeholders[] = "('%s', '%s', '%s')";
-                    array_push(
-                        $values,
-                        $mapping[ 'api_consent_id' ],
-                        $mapping[ 'consent_location' ],
-                        $mapping[ 'consent_text' ]
-                    );
+                if ( ! empty( $errors ) ) {
+                    foreach ( $errors as $error ) {
+                        $this->add_admin_error_notice( $error );
+                    }
+
+                    $_GET['es_is_error'] = true;
+
+                    if ( ! empty( $current_data ) ) {
+                        es_insert_consents( $current_data );
+                    }
+
+                    return;
                 }
 
-                if ( ! empty ( $values ) ) {
-                    $query = $insert_query . implode( ', ', $placeholders );
-                    $inserted = $wpdb->query( $wpdb->prepare( $query, $values ) );
+                $result = es_insert_consents( $_POST['consent'] );
 
-                    if ( false === $inserted ) {
-                        if ( ! empty( $current_data ) ) {
-                            $placeholders = array();
-                            $values = array();
-
-                            foreach ( $current_data as $current_row ) {
-                                $placeholders[] = "('%s', '%s', '%s')";
-                                array_push(
-                                    $values,
-                                    $current_row[ 'api_consent_id' ],
-                                    $current_row[ 'consent_location' ],
-                                    $current_row[ 'consent_text' ]
-                                );
-                            }
-                        }
-
-                        $this->add_admin_error_notice('Zduplikowana wartość: każda zgoda ECDP dla danego formularza powinna być zmapowana tylko raz.');
-                    } else {
-                        $this->add_admin_success_notice();
+                if ( false === $result ) {
+                    if ( ! empty ( $current_data ) ) {
+                        es_insert_consents( $current_data );
                     }
-                } 
+
+                    $this->add_admin_error_notice(
+                        __( 'Wystąpił błąd w trakcie zapisywania mapowań.', 'expertsender-cdp' )
+                    );
+                } else {
+                    $this->add_admin_success_notice();
+                }
             } else if ( ! empty ( $current_data ) ) {
                 $this->add_admin_success_notice();
             }
@@ -1243,8 +1327,6 @@ class ExpertSender_CDP_Admin
     {
         $this->check_permissions();
         $this->check_api_key();
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
         $is_error = $_GET['es_is_error'] ?? false;
 
         if ( true === $is_error && isset( $_POST['orderMapping'] ) ) {
@@ -1259,8 +1341,7 @@ class ExpertSender_CDP_Admin
 
         $wpStatuses = $this->expertsender_cdp_get_wp_order_statuses();
         $ecdpStatuses = $this->expertsender_cdp_get_ecdp_order_statuses();
-
-        $last_id = $wpdb->get_var("SELECT MAX(id) FROM $table_name") + 1;
+        $last_id = es_get_max_order_status_mapping_id() + 1;
     ?>
 
         <div class="wrap es-order-status-mappings-page">
@@ -1274,6 +1355,7 @@ class ExpertSender_CDP_Admin
                             <?php $mapping_wp_statuses = es_get_order_status_mapping_wc_statuses( $orderMapping ); ?>
                             <div class="es-input-pair">
                                 <input type="hidden" name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][id]" value="<?= esc_attr( $orderMapping['id'] ); ?>"/>
+
                                 <div class="es-input-wrap">
                                     <label><?= esc_html__('Statusy WC', 'expertsender-cdp'); ?></label>
                                     <select name="orderMapping[<?= esc_attr($orderMapping['id']);?>][wp_order_statuses][]" multiple>
@@ -1461,7 +1543,7 @@ class ExpertSender_CDP_Admin
                     }
                     
                     $this->add_admin_error_notice(
-                        __( 'Każdy status powinien być zmapowany raz.', 'expertsender-cdp' )
+                        __( 'Wystąpił błąd w trakcie zapisywania mapowań.', 'expertsender-cdp' )
                     );
                 } else {
                     $this->add_admin_success_notice();

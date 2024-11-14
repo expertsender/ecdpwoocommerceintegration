@@ -98,6 +98,22 @@ function es_get_all_order_status_mappings() {
 
     return $wpdb->get_results( $query, ARRAY_A );
 }
+
+/**
+ * @return int
+ */
+function es_get_max_order_status_mapping_id() {
+    /** @var \wpdb $wpdb */
+    global $wpdb;
+
+    $query = <<<SQL
+        SELECT MAX(id)
+        FROM {$wpdb->prefix}expertsender_cdp_order_status_mappings;
+    SQL;
+
+    return (int) $wpdb->get_var( $query );
+}
+
 /**
  * @param object $mapping
  *
@@ -112,28 +128,6 @@ function es_get_order_status_mapping_wc_statuses( $mapping ) {
 }
 
 /**
- * @param string $wc_status
- * @param int $id
- *
- * @return array|null
- */
-function es_check_order_status_mapping_exists( $wc_status, $id ) {
-    /** @var \wpdb */
-    global $wpdb;
-
-    $query = <<<SQL
-        SELECT *
-        FROM {$wpdb->prefix}expertsender_cdp_order_status_mappings
-        WHERE id != {$id} AND (FIND_IN_SET('{$wc_status}', wp_order_statuses) OR FIND_IN_SET('wc-${wc_status}', wp_order_statuses))
-        LIMIT 1
-    SQL;
-
-    $result = $wpdb->get_row( $query );
-
-    return $result;
-}
-
-/**
  * @param array $mappings
  *
  * @return array
@@ -142,20 +136,15 @@ function es_validate_order_status_mapping_data( $mappings ) {
     $errors = array();
     $all_duplicated_wc_statuses = array();
     $all_duplicated_ecdp_statuses = array();
-    $empty_wc_status = false;
 
     foreach ( $mappings as &$mapping ) {
         if ( empty( $mapping['wp_order_statuses'] ) && empty( $mapping['wp_custom_order_statuses'] ) ) {
-            $empty_wc_status = true;
+            return array( __('Każde mapowanie musi mieć przynajmniej jeden status WooCommerce i status ECDP.', 'expertsender-cdp' ) );
         }
 
         if ( isset( $mapping['wp_order_statuses'] ) && is_string( $mapping['wp_order_statuses'] ) ) {
             $mapping['wp_order_statuses'] = explode( ',', $mapping['wp_order_statuses'] );
         }
-    }
-
-    if ( true === $empty_wc_status ) {
-        return array( __('Każde mapowanie musi mieć przynajmniej jeden status WooCommerce.', 'expertsender-cdp' ) );
     }
 
     foreach ( $mappings as $index => $mapping ) {
