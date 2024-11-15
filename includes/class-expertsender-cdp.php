@@ -344,10 +344,9 @@ class ExpertSender_CDP
 
     public function expertsender_cdp_cron_job_send_request()
     {
-        $logger = expertsender_cdp_get_logger();
-        $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
-
         global $wpdb;
+
+        $logger = expertsender_cdp_get_logger();
         $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
 
         $expertSenderRequests = $wpdb->get_results(
@@ -369,20 +368,19 @@ class ExpertSender_CDP
                 'body' => $request->json_body,
             ]);
             $responseCode = wp_remote_retrieve_response_code($response);
-            $responseBody = wp_remote_retrieve_body($response);
-            $reponseData = json_decode($responseBody);
+            $response_body = wp_remote_retrieve_body($response);
+            $response_data = json_decode($response_body);
 
             if (
                 is_wp_error( $response ) || $responseCode == 500 || $responseCode == 401 ||
-                ( null !== $reponseData && property_exists( $reponseData, 'errors' ) )
+                ( null !== $response_data && property_exists( $response_data, 'errors' ) )
             ) {
                 $wpdb->update(
                     $table_name,
-                    array('is_sent' => 1, 'response' => implode("\n", $reponseData->errors)),
+                    array('is_sent' => 1, 'response' => implode("\n", $response_data->errors)),
                     array('id' => $request->id),
                 );
             } else {
-                $response_body = wp_remote_retrieve_body($response);
                 $wpdb->update(
                     $table_name,
                     array('is_sent' => 1),

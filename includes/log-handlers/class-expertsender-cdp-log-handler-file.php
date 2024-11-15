@@ -26,7 +26,8 @@ class ExpertSender_CDP_Log_Handler_File extends ExpertSender_CDP_Log_Handler
             return trailingslashit( $log_directory ) . self::get_log_file_name( $handle );
         }
 
-        _doing_it_wrong(__METHOD__, __( 'This method should not be called before plugins_loaded.', 'expertsender_cdp'), '' );
+        _doing_it_wrong( __METHOD__, __( 'Ta metoda nie powinna być wywoływana przed "plugins_loaded".', 'expertsender-cdp'), '' );
+
         return false;
     }
 
@@ -40,7 +41,7 @@ class ExpertSender_CDP_Log_Handler_File extends ExpertSender_CDP_Log_Handler
 			$hash_suffix = wp_hash( $handle );
 			return sanitize_file_name( implode( '-', array( $handle, $date_suffix, $hash_suffix ) ) . '.log' );
 		} else {
-			_doing_it_wrong( __METHOD__, __( 'This method should not be called before plugins_loaded.', 'woocommerce' ), '' );
+			_doing_it_wrong( __METHOD__, __( 'Ta metoda nie powinna być wywoływana przed "plugins_loaded".', 'woocommerce' ), '' );
 			return false;
 		}
     }

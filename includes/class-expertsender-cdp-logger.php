@@ -93,9 +93,8 @@ class ExpertSender_CDP_Logger implements ExpertSender_CDP_Logger_Interface {
                     _doing_it_wrong(
                         __METHOD__,
                         sprintf(
-                            __('Provided handler %1$s does not implement %2$s', 'expertsender_cdp' ),
-                            esc_html( is_object( $handler ) ? get_class( $handler ) : $handler ),
-                            'ExpertSender_CDP_Log_Handler_Interface'
+                            __( 'Handler %1$s nie implementuje ExpertSender_CDP_Log_Handler_Interface', 'expertsender-cdp' ),
+                            esc_html( is_object( $handler ) ? get_class( $handler ) : $handler )
                         ),
                         ''
                     );

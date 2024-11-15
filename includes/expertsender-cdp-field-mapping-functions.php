@@ -90,13 +90,17 @@ function es_validate_field_mapping_data( $mappings ) {
     }
 
     if ( ! empty( $duplicated_wc_fields ) ) {
-        $errors[] = __( 'Zduplikowane pola WooCommerce:', 'expertsender-cdp' )
-            . ' ' . implode( ',', $duplicated_wc_fields );
+        $errors[] = sprintf(
+            __( 'Zduplikowane pola WooCommerce: %1$s', 'expertsender-cdp' ),
+            implode( ',', $duplicated_wc_fields )
+        );
     }
 
     if ( ! empty( $duplicated_ecdp_fields ) ) {
-        $errors[] = __( 'Zduplikowane pola ECDP:', 'expertsender-cdp' )
-            . ' ' . implode( ',', $duplicated_ecdp_fields );
+        $errors[] = sprintf(
+            __( 'Zduplikowane pola ECDP: %1$s', 'expertsender-cdp' ),
+            implode( ',', $duplicated_ecdp_fields )
+        );
     }
 
     return $errors;

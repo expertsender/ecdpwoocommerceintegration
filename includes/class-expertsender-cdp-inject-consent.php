@@ -114,7 +114,7 @@ class ExpertSender_CDP_Inject_Consent
 
             if ( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY === $form_location ) {
                 echo '<p class="woocommerce-form-row woocommerce-form-row--wide form-row form-row-wide expertsender_cdp">';
-                echo '<label class="expertsender_cdp">Zgody marketingowe</label>';
+                echo '<label class="expertsender_cdp">' . esc_html__( 'Zgody marketingowe', 'expertsender-cdp' ) . '</label>';
             }
 
             foreach ( $consents as $consent ) {
@@ -158,13 +158,23 @@ class ExpertSender_CDP_Inject_Consent
 
         $response = wp_remote_get($api_url, $args);
 
-        if (is_wp_error($response)) {
+        if ( is_wp_error( $response ) ) {
             $error_message = $response->get_error_message();
-            echo "Coś poszło nie tak: $error_message";
+
+            echo esc_html( 
+                sprintf( __( 'Coś poszło nie tak: %1$s', 'expertsender-cdp' ), $error_message )
+            );
+
             return null;
         } else {
-            $response_body = wp_remote_retrieve_body($response);
-            return json_decode($response_body)->data;
+            $response_body = wp_remote_retrieve_body( $response );
+            $response_body = json_decode( $response_body );
+
+            if ( $response_body ) {
+                return $response_body->data;
+            }
+
+            return null;
         }
     }
 }

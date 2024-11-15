@@ -189,14 +189,18 @@ function es_validate_order_status_mapping_data( $mappings ) {
 
     if ( ! empty( $all_duplicated_wc_statuses ) ) {
         $all_duplicated_wc_statuses = array_unique( $all_duplicated_wc_statuses );
-        $errors[] = __( 'Zduplikowane statusy WooCommerce:', 'expertsender-cdp' )
-            . ' ' . implode( ',', $all_duplicated_wc_statuses ); 
+        $errors[] = sprintf(
+            __( 'Zduplikowane statusy WooCommerce: %1$s', 'expertsender-cdp' ),
+            implode( ',', $all_duplicated_wc_statuses )
+        );
     }
 
     if ( ! empty( $all_duplicated_ecdp_statuses ) ) {
         $all_duplicated_ecdp_statuses = array_unique( $all_duplicated_ecdp_statuses );
-        $errors[] = __( 'Zduplikowane statusy ECDP:', 'expertsender-cdp' )
-            . ' ' . implode( ',', $all_duplicated_ecdp_statuses );
+        $errors[] = sprintf(
+            __( 'Zduplikowane statusy ECDP: %1$s', 'expertsender-cdp' ),
+            implode( ',', $all_duplicated_ecdp_statuses )
+        );
     }
 
     return $errors;

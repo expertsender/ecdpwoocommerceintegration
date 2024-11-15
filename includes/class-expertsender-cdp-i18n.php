@@ -23,7 +23,7 @@ class ExpertSender_CDP_i18n {
 	 */
 	public function load_plugin_textdomain() {
 		load_plugin_textdomain(
-			'expertsender_cdp',
+			'expertsender-cdp',
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);

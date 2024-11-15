@@ -118,7 +118,7 @@ class ExpertSender_CDP_Admin
         ]);
 
         if ( isset ( $_GET[ self::PARAMETER_MISSING_API_KEY ] ) ) {
-            $this->add_admin_error_notice( 'Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz API.' );
+            $this->add_admin_error_notice( __( 'Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz API.', 'expertsender-cdp' ) );
         }
     }
 
@@ -218,24 +218,24 @@ class ExpertSender_CDP_Admin
     public function add_plugin_admin_mappings()
     {
         add_submenu_page(
-            'expertsender_cdp-settings', // Page title
-            'Mapowania pól',
-            'Mapowania pól', // Menu title
-            'manage_options', // Capability
-            'expertsender_cdp-settings-mappings', // Menu slug
-            [$this, 'render_mappings_page'] // Callback function to render the settings page
+            'expertsender_cdp-settings',
+            __( 'Mapowania pól', 'expertsender-cdp' ),
+            __( 'Mapowania pól', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-mappings',
+            [ $this, 'render_mappings_page' ]
         );
     }
 
     public function add_plugin_admin_consents()
     {
         add_submenu_page(
-            'expertsender_cdp-settings', // parent
-            'Mapowania zgód',
-            'Mapowania zgód', // Menu title
-            'manage_options', // Capability
-            'expertsender_cdp-settings-consents', // Menu slug
-            [$this, 'render_consents_page'] // Callback function to render the settings page
+            'expertsender_cdp-settings',
+            __( 'Mapowania zgód', 'expertsender-cdp' ),
+            __( 'Mapowania zgód', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-consents',
+            array( $this, 'render_consents_page' )
         );
     }
 
@@ -245,36 +245,36 @@ class ExpertSender_CDP_Admin
     public function add_plugin_admin_consent_forms()
     {
         add_submenu_page(
-            'expertsender_cdp-settings', // parent
-            'Ustawienia formularzy ze zgodami',
-            'Ustawienia formularzy ze zgodami', // Menu title
-            'manage_options', // Capability
-            'expertsender_cdp-settings-consent-forms', // Menu slug
-            array( $this, 'render_consent_forms_page' ) // Callback function to render the settings page
+            'expertsender_cdp-settings',
+            __( 'Ustawienia formularzy ze zgodami', 'expertsender-cdp' ),
+            __( 'Ustawienia formularzy ze zgodami', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-consent-forms',
+            array( $this, 'render_consent_forms_page' )
         );
     }
 
     public function add_plugin_admin_order_status_mapping()
     {
         add_submenu_page(
-            'expertsender_cdp-settings', // parent
-            'Mapowania statusów zamówienia',
-            'Mapowania statusów zamówienia', // Menu title
-            'manage_options', // Capability
-            'expertsender_cdp-settings-order-status-mapping', // Menu slug
-            [$this, 'render_order_status_mapping_page'] // Callback function to render the settings page
+            'expertsender_cdp-settings',
+            __( 'Mapowania statusów zamówienia', 'expertsender-cdp' ),
+            __( 'Mapowania statusów zamówienia', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-order-status-mapping',
+            array( $this, 'render_order_status_mapping_page' )
         );
     }
 
     public function add_plugin_admin_synchronize_orders()
     {
         add_submenu_page(
-            'expertsender_cdp-settings', // parent
-            'Synchronizacja zamówień',
-            'Synchronizacja zamówień', // Menu title
-            'manage_options', // Capability
-            'expertsender_cdp-settings-synchronize-orders', // Menu slug
-            [$this, 'render_order_synchronize_page'] // Callback function to render the settings page
+            'expertsender_cdp-settings',
+            __( 'Synchronizacja zamówień', 'expertsender-cdp' ),
+            __( 'Synchronizacja zamówień', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-synchronize-orders',
+            array( $this, 'render_order_synchronize_page' )
         );
     }
 
@@ -298,73 +298,71 @@ class ExpertSender_CDP_Admin
                 <?php do_settings_sections('expertsender_cdp-settings'); ?>
                 <table class="form-table es-table">
                     <tr valign="top">
-                        <th scope="row">Klucz API</th>
+                        <th scope="row"><?= esc_html__( 'Klucz API', 'expertsender-cdp' ); ?></th>
                         <td>
                             <input type="password" name="<?= ExpertSender_CDP_Admin::OPTION_API_KEY; ?>" value="<?php echo esc_attr( get_option( self::OPTION_API_KEY ) ); ?>" />
                         </td>
                         <td>
-                            <p>Skąd pobrać klucz API? </p>
+                            <p><?= esc_html__( 'Skąd pobrać klucz API?', 'expertsender-cdp' ); ?></p>
                             <ol>
-                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-                                <li>Wybierz odpowiednią jednostkę</li>
-                                <li>Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w ustawieniach wtyczki.</li>
+                                <li>
+                                    <a href="https://client.ecdp.app/Account/SignIn"><?= esc_html__( 'Zaloguj się do systemu ECDP', 'expertsender-cdp' ); ?></a>
+                                </li>
+                                <li><?= esc_html__( 'Wybierz odpowiednią jednostkę', 'expertsender-cdp' ); ?></li>
+                                <li><?= esc_html__( 'Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w ustawieniach wtyczki.', 'expertsender-cdp' ); ?></li>
                             </ol>
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">Włącz skrypt śledzący ruch</th>
+                        <th scope="row"><?= esc_html__( 'Włącz skrypt śledzący ruch', 'expertsender-cdp' ); ?></th>
                         <td>
                             <input type="checkbox" class="es-input" id="expertsender_cdp_enable_script" name="expertsender_cdp_enable_script" value="1" <?= $checked ?> />
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">Skrypt śledzący ruch</th>
+                        <th scope="row"><?= esc_html__( 'Skrypt śledzący ruch', 'expertsender-cdp' ); ?></th>
                         <td>
                             <textarea name="expertsender_cdp_script" id="expertsender_cdp_script" rows="8" cols="50"><?php echo esc_textarea( base64_decode( get_option( 'expertsender_cdp_script' ) ) ); ?></textarea>
                         </td>
                         <td>
-                            <p>Skąd pobrać skrypt? </p>
+                            <p><?= esc_html__( 'Skąd pobrać skrypt?', 'expertsender-cdp' ); ?></p>
                             <ol>
-                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-                                <li>Wybierz odpowiednią jednostkę</li>
-                                <li>Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy odpowiedniej stronie internetowej kliknij ikonkę "Tracking code".</li>
-                                <li>Skopiuj i wklej w ustawieniach wtyczki.</li>
+                                <li>
+                                    <a href="https://client.ecdp.app/Account/SignIn"><?= esc_html__( 'Zaloguj się do systemu ECDP', 'expertsender-cdp' ); ?></a>
+                                </li>
+                                <li><?= esc_html__( 'Wybierz odpowiednią jednostkę', 'expertsender-cdp' ); ?></li>
+                                <li><?= esc_html__( 'Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy odpowiedniej stronie internetowej kliknij ikonkę "Tracking code".', 'expertsender-cdp' ); ?></li>
+                                <li><?= esc_html__( 'Skopiuj i wklej w ustawieniach wtyczki.', 'expertsender-cdp' ); ?></li>
                             </ol>
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">ID strony internetowej</th>
+                        <th scope="row"><?= esc_html__( 'ID strony internetowej', 'expertsender-cdp' ); ?></th>
                         <td>
                             <input type="text" name="expertsender_cdp_website_id" value="<?php echo esc_attr( get_option( 'expertsender_cdp_website_id' ) ); ?>" />
                         </td>
                         <td>
-                            <p>Skąd pobrać numer ID strony internetowej? </p>
+                            <p><?= esc_html__( 'Skąd pobrać numer ID strony internetowej?', 'expertsender-cdp' ); ?></p>
                             <ol>
-                                <li><a href="https://client.ecdp.app/Account/SignIn">Zaloguj się do systemu ECDP</a></li>
-                                <li>Wybierz odpowiednią jednostkę</li>
-                                <li>Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź odpowiednią stronę internetową.</li>
-                                <li>Skopiuj ID i wklej w ustawieniach wtyczki.</li>
+                                <li><a href="https://client.ecdp.app/Account/SignIn"><?= esc_html__( 'Zaloguj się do systemu ECDP', 'expertsender-cdp' ); ?></a></li>
+                                <li><?= esc_html__( 'Wybierz odpowiednią jednostkę', 'expertsender-cdp' ); ?></li>
+                                <li><?= esc_html__( 'Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź odpowiednią stronę internetową.', 'expertsender-cdp' ); ?></li>
+                                <li><?= esc_html__( 'Skopiuj ID i wklej w ustawieniach wtyczki.', 'expertsender-cdp' ); ?></li>
                             </ol>
                         </td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">
-                            Wysyłaj numer telefonu użytkowników do ExpertSender CDP
-                        </th>
-                        <td>
-                            <input type="checkbox" class="es-input" id="expertsender_cdp_enable_phone" name="expertsender_cdp_enable_phone" value="1" <?= $phoneChecked ?> />
-                        </td>
+                        <th scope="row"><?= esc_html__( 'Wysyłaj numer telefonu użytkowników do ExpertSender CDP', 'expertsender-cdp' ); ?></th>
+                        <td><input type="checkbox" class="es-input" id="expertsender_cdp_enable_phone" name="expertsender_cdp_enable_phone" value="1" <?= $phoneChecked ?> /></td>
                     </tr>
 
                     <tr valign="top">
-                        <th scope="row">Włącz logi</th>
-                        <td>
-                            <input type="checkbox" class="es-input" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/>
-                        </td>
+                        <th scope="row"><?= esc_html__( 'Włącz logi', 'expertsender-cdp' ); ?></th>
+                        <td><input type="checkbox" class="es-input" id="<?= self::OPTION_ENABLE_LOGS; ?>" name="<?= self::OPTION_ENABLE_LOGS; ?>" value="1" <?= $enableLogs; ?>/></td>
                     </tr>
                 </table>
                 <script type="text/javascript">
@@ -380,7 +378,7 @@ class ExpertSender_CDP_Admin
                         });
                     });
                 </script>
-                <button class="es-button submit" type="submit">Zapisz zmiany</button>
+                <button class="es-button submit" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
             </form>
         </div>
     <?php
@@ -471,13 +469,13 @@ class ExpertSender_CDP_Admin
     ?>
 
         <div class="wrap">
-            <h1 class="es-bold"><?php echo esc_html(get_admin_page_title()); ?></h1>
+            <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="es-field-mappings-form" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-mapping-form">
                 <div id="productMapping" class="mappingSection">
-                    <h2><?= esc_html( 'Mapowania pól produktów', 'expertsender-cdp' ); ?></h2>
+                    <h2><?= esc_html__( 'Mapowania pól produktów', 'expertsender-cdp' ); ?></h2>
 
-                    <button type="button" class="addPairBtn es-button"><?= esc_html( 'Dodaj', 'expertsender-cdp' ); ?></button>
+                    <button type="button" class="addPairBtn es-button"><?= esc_html__( 'Dodaj', 'expertsender-cdp' ); ?></button>
 
                     <div class="es-input-pairs-container" data-slug="product">
                         <?php foreach ( $productMappings as $productMapping ): ?>
@@ -485,7 +483,7 @@ class ExpertSender_CDP_Admin
                                 <input type="hidden" name="product[<?= esc_attr( $productMapping['id'] ); ?>][id]" value="<?= esc_attr( $productMapping['id'] ); ?>"/>
 
                                 <div class="es-input-wrap">
-                                    <label><?= esc_html__('Pole produktu WC'); ?></label>
+                                    <label><?= esc_html__( 'Pole produktu WC', 'expertsender-cdp' ); ?></label>
                                     <select name="product[<?= esc_attr( $productMapping['id'] ); ?>][wp_field]">
                                         <?php foreach ( $productKeys as $value ): ?>
                                             <?php $selected = $productMapping['wp_field'] == $value ? 'selected' : ''; ?>
@@ -495,7 +493,7 @@ class ExpertSender_CDP_Admin
                                 </div>
                                 
                                 <div class="es-input-wrap">
-                                    <label><?= esc_html__('Pole produktu ECDP', 'expertsender-cdp'); ?></label>
+                                    <label><?= esc_html__( 'Pole produktu ECDP', 'expertsender-cdp' ); ?></label>
                                     <select name="product[<?= esc_attr( $productMapping['id'] ); ?>][ecdp_field]">
                                         <?php foreach ( $productOptions as $value ): ?>
                                             <?php
@@ -543,7 +541,7 @@ class ExpertSender_CDP_Admin
                                             $value = $value->name;
                                             $selected = $customerMapping['ecdp_field'] == $value ? 'selected' : '';
                                             ?>
-                                        <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $value ); ?></option>";
+                                        <option value="<?= esc_attr( $value ); ?>" <?= $selected; ?>><?= esc_html( $value ); ?></option>
                                         <?php endforeach; ?>
                                     </select>
                                 </div>
@@ -643,7 +641,7 @@ class ExpertSender_CDP_Admin
 
             <template id="orderkeys">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__('Pole zamówienia WC'); ?></label>
+                    <label><?= esc_html__( 'Pole zamówienia WC', 'expertsender-cdp' ); ?></label>
 
                     <select>
                         <?php foreach ( $orderKeys as $key => $value ): ?>
@@ -655,7 +653,7 @@ class ExpertSender_CDP_Admin
 
             <template id="productkeys">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__('Pole produktu WC'); ?></label>
+                    <label><?= esc_html__( 'Pole produktu WC', 'expertsender-cdp' ); ?></label>
 
                     <select>
                         <?php foreach ( $productKeys as $value ): ?>
@@ -667,7 +665,7 @@ class ExpertSender_CDP_Admin
 
             <template id="customerkeys">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__('Pole użytkownika WC'); ?></label>
+                    <label><?= esc_html__( 'Pole użytkownika WC', 'expertsender-cdp' ); ?></label>
 
                     <select>
                         <?php foreach ( $customerKeys as $key => $value ): ?>
@@ -679,13 +677,10 @@ class ExpertSender_CDP_Admin
         </div>
 
         <script>
-            // Get all remove buttons
             var removeButtons = document.querySelectorAll('.removeButton');
 
-            // Add click event listener to each remove button
             removeButtons.forEach(function(button) {
                 button.addEventListener('click', function() {
-                    // Find the parent element with class 'inputPair' and remove it
                     var inputPair = this.parentElement;
                     inputPair.remove();
                 });
@@ -727,7 +722,7 @@ class ExpertSender_CDP_Admin
                     let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_field]";
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Usuń";
+                    removeBtn.textContent = '<?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?>';
                     removeBtn.type = "button"
                     removeBtn.classList.add('es-button');
                     removeBtn.addEventListener("click", function() {
@@ -834,12 +829,10 @@ class ExpertSender_CDP_Admin
             'headers' => $headers,
         ];
 
-        // Send GET request to the API
         $response = wp_remote_get($api_url, $args);
 
         if (is_wp_error($response)) {
-            $error_message = $response->get_error_message();
-            echo "Coś poszło nie tak: $error_message";
+            $this->print_api_error_message( $response );
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -859,12 +852,10 @@ class ExpertSender_CDP_Admin
             'headers' => $headers,
         ];
 
-        // Send GET request to the API
         $response = wp_remote_get($api_url, $args);
 
         if (is_wp_error($response)) {
-            $error_message = $response->get_error_message();
-            echo "Coś poszło nie tak: $error_message";
+            $this->print_api_error_message( $response );
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -884,12 +875,10 @@ class ExpertSender_CDP_Admin
             'headers' => $headers,
         ];
 
-        // Send GET request to the API
         $response = wp_remote_get($api_url, $args);
 
         if (is_wp_error($response)) {
-            $error_message = $response->get_error_message();
-            echo "Coś poszło nie tak: $error_message";
+            $this->print_api_error_message( $response );
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -986,7 +975,7 @@ class ExpertSender_CDP_Admin
 
             <template id="es-consent-text-template">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__( 'Tekst zgody', 'expertsedner-cdp' ); ?></label>
+                    <label><?= esc_html__( 'Tekst zgody', 'expertsender-cdp' ); ?></label>
 
                     <input type="text" placeholder="<?= esc_attr__( 'Tekst zgody', 'expertsender-cdp' ); ?>" required="true"/>
                 </div>
@@ -994,13 +983,10 @@ class ExpertSender_CDP_Admin
         </div>
 
         <script>
-            // Get all remove buttons
             var removeButtons = document.querySelectorAll('.removeButton');
 
-            // Add click event listener to each remove button
             removeButtons.forEach(function(button) {
                 button.addEventListener('click', function() {
-                    // Find the parent element with class 'inputPair' and remove it
                     var inputPair = this.parentElement;
                     inputPair.remove();
                 });
@@ -1044,7 +1030,7 @@ class ExpertSender_CDP_Admin
                     consentTextInput.name = `consent[${id}][consent_text]`;
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "<?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?>";
+                    removeBtn.textContent = '<?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?>';
                     removeBtn.type = "button"
                     removeBtn.classList.add('es-button')
                     removeBtn.addEventListener("click", function() {
@@ -1078,12 +1064,10 @@ class ExpertSender_CDP_Admin
             'headers' => $headers,
         ];
 
-        // Send GET request to the API
         $response = wp_remote_get($api_url, $args);
 
         if (is_wp_error($response)) {
-            $error_message = $response->get_error_message();
-            echo "Coś poszło nie tak: $error_message";
+            $this->print_api_error_message( $response );
         } else {
             $response_body = wp_remote_retrieve_body($response);
             return json_decode($response_body)->data;
@@ -1095,10 +1079,10 @@ class ExpertSender_CDP_Admin
      */
     public function expertsender_cdp_get_consents_locations() {
         return array(
-            self::FORM_CHECKOUT_KEY => 'Checkout',
-            self::FORM_CUSTOMER_SETTINGS_KEY => 'Edycja profilu',
-            self::FORM_NEWSLETTER_KEY => 'Newsletter',
-            self::FORM_REGISTRATION_KEY => 'Rejestracja'
+            self::FORM_CHECKOUT_KEY => __( 'Checkout', 'expertsender-cdp' ),
+            self::FORM_CUSTOMER_SETTINGS_KEY => __( 'Edycja profilu', 'expertsender-cdp' ),
+            self::FORM_NEWSLETTER_KEY => __( 'Newsletter', 'expertsender-cdp' ),
+            self::FORM_REGISTRATION_KEY => __( 'Rejestracja', 'expertsender-cdp' )
         );
     }
 
@@ -1214,70 +1198,70 @@ class ExpertSender_CDP_Admin
             <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
             <form id="<?= self::FORM_CONSENT_FORMS; ?>" method="post" action="">
                 <input type="hidden" name="<?= self::FORM_CONSENT_FORMS; ?>" />
-                <h3>Rejestracja</h3>
+                <h3><?= esc_html__( 'Rejestracja', 'expertsender-cdp' ); ?></h3>
                 <div class="es-input-wrap">
-                    <label>Tekst wyświetlany przed zgodami</label>
+                    <label><?= esc_html__( 'Tekst wyświetlany przed zgodami', 'expertsender-cdp' ); ?></label>
                     <input type="text" name="<?= self::OPTION_FORM_REGISTRATION_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="es-input-wrap">
-                    <label>Tryb formularza</label>
+                    <label><?= esc_html__( 'Tryb formularza', 'expertsender-cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_REGISTRATION_TYPE ?>" class="es-form-type-select">
-                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
-                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>"><?= esc_html__( 'Single Opt-In', 'expertsender-cdp' ); ?></option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_REGISTRATION_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>"><?= esc_html__( 'Double Opt-In', 'expertsender-cdp' ); ?></option>
                     </select>
                 </div>
                 <div class="es-input-wrap">
-                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <label><?= esc_html__( 'ID wiadomości potwierdzającej w trybie Double Opt-In', 'expertsender-cdp' ); ?></label>
                     <input type="number" name="<?= self::OPTION_FORM_REGISTRATION_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_REGISTRATION_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_REGISTRATION_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
                 <div class="es-divider"></div>
-                <h3><?= __( 'Edycja profilu', 'expertsender_cdp' ); ?></h3>
+                <h3><?= esc_html__( 'Edycja profilu', 'expertsender_cdp' ); ?></h3>
                 <div class="es-input-wrap">
-                    <label>Tekst wyświetlany przed zgodami</label>
+                    <label><?= esc_html__( 'Tekst wyświetlany przed zgodami', 'expertsender-cdp' ); ?></label>
                     <input type="text" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="es-input-wrap">
-                    <label>Tryb formularza</label>
+                    <label><?= esc_html__( 'Tryb formularza', 'expertsender-cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ?>" class="es-form-type-select">
-                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
-                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>"><?= esc_html__( 'Single Opt-In', 'expertsender-cdp' ); ?></option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>"><?= esc_html__( 'Double Opt-In', 'expertsender-cdp' ); ?></option>
                     </select>
                 </div>
                 <div class="es-input-wrap">
-                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <label><?= esc_html__( 'ID wiadomości potwierdzającej w trybie Double Opt-In', 'expertsender-cdp' ); ?></label>
                     <input type="number" name="<?= self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CUSTOMER_SETTINGS_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CUSTOMER_SETTINGS_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?>/>
                 </div>
                 <div class="es-divider"></div>
-                <h3>Checkout</h3>
+                <h3><?= esc_html__( 'Checkout', 'expertsender_cdp' ); ?></h3>
                 <div class="es-input-wrap">
-                    <label>Tekst wyświetlany przed zgodami</label>
+                    <label><?= esc_html__( 'Tekst wyświetlany przed zgodami', 'expertsender-cdp' ); ?></label>
                     <input type="text" name="<?= self::OPTION_FORM_CHECKOUT_TEXT_BEFORE; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_TEXT_BEFORE]; ?>" />
                 </div>
                 <div class="es-input-wrap">
-                    <label>Tryb formularza</label>
+                    <label><?= esc_html__( 'Tryb formularza', 'expertsender-cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_CHECKOUT_TYPE ?>" class="es-form-type-select">
-                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
-                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>"><?= esc_html__( 'Single Opt-In', 'expertsender-cdp' ); ?></option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_CHECKOUT_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>"><?= esc_html__( 'Double Opt-In', 'expertsender-cdp' ); ?></option>
                     </select>
                 </div>
                 <div class="es-input-wrap">
-                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <label><?= esc_html__( 'ID wiadomości potwierdzającej w trybie Double Opt-In', 'expertsender-cdp' ); ?></label>
                     <input type="number" name="<?= self::OPTION_FORM_CHECKOUT_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_CHECKOUT_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_CHECKOUT_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
                 <div class="es-divider"></div>
-                <h3>Newsletter</h3>
+                <h3><?= esc_html__( 'Newsletter', 'expertsender_cdp' ); ?></h3>
                 <div class="es-input-wrap">
-                    <label><?= __( 'Form type', 'expertsender_cdp' ); ?></label>
+                    <label><?= esc_html__( 'Tryb formularza', 'expertsender_cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>" class="es-form-type-select">
-                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>">Single Opt-In</option>
-                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>">Double Opt-In</option>
+                        <option <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_SINGLE_OPT_IN; ?>"><?= esc_html__( 'Single Opt-In', 'expertsender-cdp' ); ?></option>
+                        <option <?php if ( self::OPTION_VALUE_DOUBLE_OPT_IN === $options[self::OPTION_FORM_NEWSLETTER_TYPE] ) echo 'selected'; ?> value="<?= self::OPTION_VALUE_DOUBLE_OPT_IN; ?>"><?= esc_html__( 'Double Opt-In', 'expertsender-cdp' ); ?></option>
                     </select>
                 </div>
                 <div class="es-input-wrap">
-                    <label>ID wiadomości potwierdzającej w trybie Double Opt-In</label>
+                    <label><?= esc_html__( 'ID wiadomości potwierdzającej w trybie Double Opt-In', 'expertsender-cdp' ); ?></label>
                     <input type="number" name="<?= self::OPTION_FORM_NEWSLETTER_MESSAGE_ID; ?>" value="<?= $options[self::OPTION_FORM_NEWSLETTER_MESSAGE_ID]; ?>" <?php if ( self::OPTION_VALUE_SINGLE_OPT_IN === $options[ self::OPTION_FORM_NEWSLETTER_TYPE ] ) { echo 'disabled'; } else { echo 'required="true"'; } ?> />
                 </div>
-                <button class="submit es-button" type="submit">Zapisz zmiany</button>
+                <button class="submit es-button" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
             </form>
         </div>
         <script>
@@ -1349,7 +1333,7 @@ class ExpertSender_CDP_Admin
             <form id="expertSenderOrderStatusMappingsForm" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-order-status-mapping-form">
                 <div id="orderStatusMapping" class="mappingSection">
-                    <button type="button" class="addPairBtn es-button">Dodaj</button>
+                    <button type="button" class="addPairBtn es-button"><?= esc_html__( 'Dodaj', 'expertsender-cdp' ); ?></button>
                     <div class="es-input-pairs-container" data-slug="product">
                         <?php foreach ($orderStatusMappings as $orderMapping): ?>
                             <?php $mapping_wp_statuses = es_get_order_status_mapping_wc_statuses( $orderMapping ); ?>
@@ -1357,7 +1341,7 @@ class ExpertSender_CDP_Admin
                                 <input type="hidden" name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][id]" value="<?= esc_attr( $orderMapping['id'] ); ?>"/>
 
                                 <div class="es-input-wrap">
-                                    <label><?= esc_html__('Statusy WC', 'expertsender-cdp'); ?></label>
+                                    <label><?= esc_html__( 'Statusy WC', 'expertsender-cdp' ); ?></label>
                                     <select name="orderMapping[<?= esc_attr($orderMapping['id']);?>][wp_order_statuses][]" multiple>
                                         <?php foreach ( $wpStatuses as $status ): ?>
                                             <option value="<?= esc_attr( $status ); ?>"<?php if ( in_array( $status, $mapping_wp_statuses ) ) { echo ' selected'; } ?>><?= esc_html( $status ); ?></option>
@@ -1365,11 +1349,11 @@ class ExpertSender_CDP_Admin
                                     </select>
                                 </div>
                                 <div class="es-input-wrap es-custom-order-statuses-wrap">
-                                    <label><?= esc_html__('Niestandardowe statusy WC', 'expertsender-cdp'); ?></label>
+                                    <label><?= esc_html__( 'Niestandardowe statusy WC', 'expertsender-cdp' ); ?></label>
                                     <input type="text" name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][wp_custom_order_statuses]" value="<?= esc_attr( $orderMapping['wp_custom_order_statuses'] ); ?>" placeholder="<?= esc_attr__( 'Statusy rozdzielone przecinkiem', 'expertsender-cdp' ); ?>"/>
                                 </div>
                                 <div class="es-input-wrap">
-                                    <label><?= esc_html__('Status ECDP', 'expertsender-cdp'); ?></label>
+                                    <label><?= esc_html__( 'Status ECDP', 'expertsender-cdp' ); ?></label>
                                     <select name="orderMapping[<?= esc_attr( $orderMapping['id'] ); ?>][ecdp_order_status]">
                                         <?php foreach ($ecdpStatuses as $status): ?>
                                             <option value="<?= esc_attr( $status ); ?>"<?php if ( $status === $orderMapping['ecdp_order_status'] ) { echo ' selected'; } ?>><?= esc_html( $status ); ?></option>
@@ -1382,7 +1366,7 @@ class ExpertSender_CDP_Admin
                     </div>
                 </div>
                 <input type="hidden" name="idCounter" id="idCounter" value="<?= $last_id ?>">
-                <button class="submit es-button" type="submit">Zapisz zmiany</button>
+                <button class="submit es-button" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
             </form>
 
             <template id="order_status_mapping_id">
@@ -1390,7 +1374,7 @@ class ExpertSender_CDP_Admin
             </template>
             <template id="wpstatus">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__('Statusy WC', 'expertsender-cdp'); ?></label>
+                    <label><?= esc_html__( 'Statusy WC', 'expertsender-cdp' ); ?></label>
                     <select multiple>
                         <?php
                         foreach ( $wpStatuses as $status ) {
@@ -1403,14 +1387,14 @@ class ExpertSender_CDP_Admin
 
             <template id="wp_custom_order_statuses">
                 <div class="es-input-wrap es-custom-order-statuses-wrap">
-                    <label><?= esc_html__('Niestandardowe statusy WC', 'expertsender-cdp'); ?></label>
+                    <label><?= esc_html__( 'Niestandardowe statusy WC', 'expertsender-cdp' ); ?></label>
                     <input type="text"/>
                 </div>
             </template>
 
             <template id="ecdpstatus">
                 <div class="es-input-wrap">
-                    <label><?= esc_html__('Status ECDP', 'expertsender-cdp'); ?></label>
+                    <label><?= esc_html__(' Status ECDP', 'expertsender-cdp' ); ?></label>
                     <select>
                         <?php foreach ($ecdpStatuses as $status) {
                             echo "<option value=\"$status\">$status</option>";
@@ -1421,13 +1405,10 @@ class ExpertSender_CDP_Admin
         </div>
 
         <script>
-            // Get all remove buttons
             var removeButtons = document.querySelectorAll('.removeButton');
 
-            // Add click event listener to each remove button
             removeButtons.forEach(function(button) {
                 button.addEventListener('click', function() {
-                    // Find the parent element with class 'inputPair' and remove it
                     var inputPair = this.parentElement;
                     inputPair.remove();
                 });
@@ -1470,7 +1451,7 @@ class ExpertSender_CDP_Admin
                     let td = ecdpSelect.querySelectorAll("select")[0].name = slug + "[" + id + "][ecdp_order_status]";
 
                     const removeBtn = document.createElement("button");
-                    removeBtn.textContent = "Usuń";
+                    removeBtn.textContent = '<?= esc_html__( 'Usuń', 'expertsender-cdp' ); ?>';
                     removeBtn.type = "button"
                     removeBtn.classList.add('es-button');
                     removeBtn.addEventListener("click", function() {
@@ -1620,17 +1601,17 @@ class ExpertSender_CDP_Admin
             <h1 class="es-bold"><?php echo esc_html(get_admin_page_title()); ?></h1>
             <form id="es-synchronize-ordes-form" method="post" action="">
                 <input type="hidden" name="expertsender_cdp-order-synchronize-form">
-                <label for="datefrom">Od:</label>
+                <label for="datefrom"><?= esc_html__( 'Od:', 'expertsender-cdp' ); ?></label>
                 <input type="datetime-local" id="datefrom" name="datefrom"><br><br>
-                <label for="dateto">Do:</label>
+                <label for="dateto"><?= esc_html__( 'Do:', 'expertsender-cdp' ); ?></label>
                 <input type="datetime-local" id="dateto" name="dateto"><br><br>
-                <button class="submit es-button" type="submit">Synchronizuj</button>
+                <button class="submit es-button" type="submit"><?= esc_html__( 'Synchronizuj', 'expertsender-cdp' ); ?></button>
             </form>
-            <h2>Ostatnia synchronizacja</h2>
-            <div>Synchronizacja zamówień: <?= count($expertSenderRequests) ?></div>
-            <div>Zsynchronizowano: <?= count($sent) ?></div>
-            <div>W kolejce: <?= count($toBeSend) ?></div>
-            <div>Błędy: <?= count($failed) ?></div>
+            <h2><?= esc_html__( 'Ostatnia synchronizacja', 'expertsender-cdp' ); ?></h2>
+            <div><?= esc_html( sprintf( __( 'Synchronizacja zamówień: %1$s', 'expertsender-cdp' ), count( $expertSenderRequests ) ) ); ?></div>
+            <div><?= esc_html( sprintf( __( 'Zsynchronizowano: %1$s', 'expertsender-cdp' ), count( $sent ) ) ); ?></div>
+            <div><?= esc_html( sprintf( __( 'W kolejce: %1$s', 'expertsender-cdp' ), count( $toBeSend ) ) ); ?></div>
+            <div><?= esc_html( sprintf( __( 'Błędy: %1$s', 'expertsender-cdp' ), count( $failed ) ) ); ?></div>
             <div class="es-divider"></div>
             <div class="log-container" id="logContainer">
                 <?php foreach ($failed as $fail) {
@@ -1748,8 +1729,10 @@ class ExpertSender_CDP_Admin
     private function add_admin_success_notice( $message = null ) {
         add_action( 'admin_notices', function () use ( $message ) {
             if ( null === $message ) {
-                $message = __('Zmiany zostały zapisane.', 'exper');
+                $message = __( 'Zmiany zostały zapisane.', 'expertsender-cdp' );
             }
+
+            $message = esc_html( $message );
 
             $notice = <<<HTML
                 <div class="notice is-dismissible notice-success">
@@ -1769,8 +1752,10 @@ class ExpertSender_CDP_Admin
     private function add_admin_error_notice( $message = null ) {
         add_action( 'admin_notices', function () use ( $message ) {
             if ( null === $message ) {
-                $message = 'Serwer napotkał błąd. Spróbuj ponownie później.';
+                $message = __( 'Serwer napotkał błąd. Spróbuj ponownie później.', 'expertsender-cdp' );
             }
+
+            $message = esc_html( $message );
 
             $notice = <<<HTML
                 <div class="notice is-dismissible notice-error">
@@ -1788,9 +1773,7 @@ class ExpertSender_CDP_Admin
     private function check_permissions() {
         if ( ! current_user_can( 'manage_options' ) ) {
             wp_die(
-                __(
-                    'Nie masz wystarczających uprawnień do tej strony.'
-                )
+                __( 'Nie masz wystarczających uprawnień do tej strony.', 'expertsender-cdp' )
             );
         }
     }
@@ -1805,5 +1788,18 @@ class ExpertSender_CDP_Admin
                 . '=true'
             );
         }
+    }
+
+    /**
+     * @param \WP_Error $wp_error
+     *
+     * @return void
+     */
+    private function print_api_error_message( $wp_error ) {
+        $error_message = $wp_error->get_error_message();
+
+        echo esc_html( 
+            sprintf( __( 'Coś poszło nie tak: %1$s', 'expertsender-cdp' ), $error_message )
+        );
     }
 }
