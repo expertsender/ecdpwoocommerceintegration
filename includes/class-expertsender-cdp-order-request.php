@@ -90,11 +90,11 @@ class ExpertSender_CDP_Order_Request
         $order_data[ 'returnsValue' ] = $order->get_total_refunded();
         $customer_data[ 'email' ] = $customer->get_email();
 
-        if ( get_option('expertsender_cdp_enable_script') ) {
+        if ( get_option('expertsender_cdp_enable_phone') ) {
             $customer_data[ 'phone' ] = $customer->get_billing_phone();
         }
 
-        $customer_data[ 'crmId' ] = $customer->get_billing_phone();
+        $customer_data[ 'crmId' ] = (string) $customer->get_id();
         $order_data[ 'customer' ] = $customer_data;
         $consents_data = ExpertSender_CDP_Client_Request::get_consents_from_request(
             ExpertSender_CDP_Admin::FORM_CHECKOUT_KEY
