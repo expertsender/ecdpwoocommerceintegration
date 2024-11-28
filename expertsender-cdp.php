@@ -55,8 +55,18 @@ function deactivate_expertsender_cdp() {
 	ExpertSender_CDP_Deactivator::deactivate();
 }
 
+/**
+ * The code that runs during plugin uninstall.
+ * This action is documented in includes/class-expertsender-cdp-uninstaller.php
+ */
+function uninstall_expertsender_cdp() {
+	require_once plugin_dir_path( __FILE__ ) . 'includes/class-expertsender-cdp-uninstaller.php';
+	ExpertSender_CDP_Uninstaller::uninstall();
+}
+
 register_activation_hook( __FILE__, 'activate_expertsender_cdp' );
 register_deactivation_hook( __FILE__, 'deactivate_expertsender_cdp' );
+register_uninstall_hook( __FILE__, 'uninstall_expertsender_cdp' );
 
 /**
  * The core plugin class that is used to define internationalization,
