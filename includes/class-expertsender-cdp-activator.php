@@ -74,6 +74,11 @@ class ExpertSender_CDP_Activator {
 		dbDelta($sql);
 
 		$table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
+        $order_status_mappings_table_exist = false;
+
+        if ( $wpdb->get_var( "SHOW TABLES LIKE '{$table_name}'" ) === $table_name ) {
+            $order_status_mappings_table_exist = true;
+        }
 
 		$sql = "CREATE TABLE $table_name (
 			id mediumint(9) NOT NULL AUTO_INCREMENT,
@@ -85,10 +90,12 @@ class ExpertSender_CDP_Activator {
 
 		dbDelta($sql);
 
+        if ( false === $order_status_mappings_table_exist ) {
+            es_insert_default_order_status_mappings();
+        }
+
 		if ( ! wp_next_scheduled( 'expertsender_cdp_cron_job' ) ) {
 			wp_schedule_event( time(), 'every_minute', 'expertsender_cdp_cron_job' );
 		}
-
-        es_insert_default_order_status_mappings();
 	}
 }
