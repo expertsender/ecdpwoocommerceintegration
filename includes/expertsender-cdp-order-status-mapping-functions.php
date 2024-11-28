@@ -55,7 +55,7 @@ function es_insert_order_status_mappings( $mappings ) {
         array_push(
             $values,
             $wp_order_statuses,
-            $mapping[ 'wp_custom_order_statuses' ],
+            $mapping[ 'wp_custom_order_statuses' ] ?? '',
             $mapping[ 'ecdp_order_status' ] 
         );
     }
