@@ -63,7 +63,7 @@ class ExpertSender_CDP_Activator {
 			url_address varchar(255) NOT NULL,
 			json_body TEXT NOT NULL,
 			resource_type varchar(20) NOT NULL,
-			resource_id int NOT NULL,
+			resource_id int,
 			synchronization_id int,
 			response TEXT,
 			PRIMARY KEY (id),
@@ -89,5 +89,7 @@ class ExpertSender_CDP_Activator {
 		if ( ! wp_next_scheduled( 'expertsender_cdp_cron_job' ) ) {
 			wp_schedule_event( time(), 'every_minute', 'expertsender_cdp_cron_job' );
 		}
+
+        es_insert_default_order_status_mappings();
 	}
 }

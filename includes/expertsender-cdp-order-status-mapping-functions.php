@@ -25,7 +25,7 @@ function es_get_mapped_order_status( $status ) {
 
     $result = $wpdb->get_results( $query, ARRAY_A );
 
-    return count( $result ) ? $result[ 0 ][ 'ecdp_order_status' ] : null;
+    return count( $result ) ? $result[ 0 ][ 'ecdp_order_status' ] : 'Paid';
 }
 
 /**
@@ -204,4 +204,30 @@ function es_validate_order_status_mapping_data( $mappings ) {
     }
 
     return $errors;
+}
+
+/**
+ * @return void
+ */
+function es_insert_default_order_status_mappings() {
+    $mappings = array(
+        array(
+            'wp_order_statuses' => 'placed,pending,on-hold',
+            'ecdp_order_status' => 'Placed'
+        ),
+        array(
+            'wp_order_statuses' => 'processing',
+            'ecdp_order_status' => 'Paid'
+        ),
+        array(
+            'wp_order_statuses' => 'completed',
+            'ecdp_order_status' => 'Completed'
+        ),
+        array(
+            'wp_order_statuses' => 'cancelled,refunded,failed',
+            'ecdp_order_status' => 'Cancelled'
+        )
+    );
+
+    es_insert_order_status_mappings( $mappings );
 }

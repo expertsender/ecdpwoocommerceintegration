@@ -24,20 +24,6 @@ class ExpertSender_CDP_Deactivator {
 	 * @since    1.0.0
 	 */
 	public static function deactivate() {
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
-        $wpdb->query("DROP TABLE IF EXISTS $table_name");
-
-		$table_name = $wpdb->prefix . 'expertsender_cdp_consents';
-        $wpdb->query("DROP TABLE IF EXISTS $table_name");
-
-		$table_name = $wpdb->prefix . 'expertsender_cdp_requests';
-        $wpdb->query("DROP TABLE IF EXISTS $table_name");
-
-		$table_name = $wpdb->prefix . 'expertsender_cdp_order_status_mappings';
-        $wpdb->query("DROP TABLE IF EXISTS $table_name");
-
 		wp_clear_scheduled_hook( 'expertsender_cdp_cron_job' );
 	}
 }

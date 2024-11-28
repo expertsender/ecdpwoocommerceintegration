@@ -459,9 +459,9 @@ class ExpertSender_CDP_Admin
             $orderMappings = es_get_field_mappings_by_resource_type( self::RESOURCE_ORDER );
         }
 
-        $orderKeys = $this->get_order_keys();
-        $productKeys = $this->get_product_keys();
-        $customerKeys = $this->get_customer_keys();
+        $orderKeys = es_get_order_mapping_field_keys();
+        $productKeys = es_get_product_mapping_field_keys();
+        $customerKeys = es_get_customer_mapping_field_keys();
         $customerOptions = $this->expertsender_cdp_get_customer_attributes_from_api();
         $productOptions = $this->expertsender_cdp_get_product_attributes_from_api();
         $orderOptions = $this->expertsender_cdp_get_order_attributes_from_api();
@@ -525,7 +525,7 @@ class ExpertSender_CDP_Admin
                                     <label><?= esc_html__( 'Pole użytkownika WC', 'expertsender-cdp' ); ?></label>
 
                                     <select name="customer[<?= esc_attr( $customerMapping['id'] ); ?>][wp_field]">
-                                        <?php foreach ( $customerKeys as $customerKey => $value ): ?>
+                                        <?php foreach ( $customerKeys as $customerKey ): ?>
                                             <?php $selected = $customerMapping['wp_field'] == $customerKey ? 'selected' : ''; ?>
                                             <option value="<?= esc_attr( $customerKey ); ?>" <?= $selected; ?>><?= esc_html( $customerKey ); ?></option>
                                         <?php endforeach; ?>
@@ -565,7 +565,7 @@ class ExpertSender_CDP_Admin
                                 <div class="es-input-wrap">
                                     <label><?= esc_html__( 'Pole zamówienia WC', 'expertsender-cdp' ); ?></label>
                                     <select name="order[<?= esc_attr( $orderMapping['id'] ); ?>][wp_field]">
-                                        <?php foreach ($orderKeys as $orderKey => $orderValue): ?>
+                                        <?php foreach ($orderKeys as $orderKey): ?>
                                             <?php $selected = $orderMapping['wp_field'] == $orderKey ? 'selected' : ''; ?>
                                             <option value="<?= esc_attr( $orderKey ); ?>" <?= $selected; ?>><?= esc_html( $orderKey ); ?></option>
                                         <?php endforeach; ?>
@@ -644,7 +644,7 @@ class ExpertSender_CDP_Admin
                     <label><?= esc_html__( 'Pole zamówienia WC', 'expertsender-cdp' ); ?></label>
 
                     <select>
-                        <?php foreach ( $orderKeys as $key => $value ): ?>
+                        <?php foreach ( $orderKeys as $key ): ?>
                             <option value="<?= esc_attr( $key ); ?>"><?= esc_html( $key ); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -668,7 +668,7 @@ class ExpertSender_CDP_Admin
                     <label><?= esc_html__( 'Pole użytkownika WC', 'expertsender-cdp' ); ?></label>
 
                     <select>
-                        <?php foreach ( $customerKeys as $key => $value ): ?>
+                        <?php foreach ( $customerKeys as $key ): ?>
                             <option value="<?= esc_attr( $key ); ?>"><?= esc_html( $key ); ?></option>
                         <?php endforeach; ?>
                     </select>
@@ -1130,49 +1130,6 @@ class ExpertSender_CDP_Admin
         }
     }
 
-    public function flatten($array, $prefix = '')
-    {
-        $result = [];
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $result =
-                    $result + $this->flatten($value, $prefix . $key . '.');
-            } else {
-                $result[$prefix . $key] = $value;
-            }
-        }
-        return $result;
-    }
-
-    public function get_order_keys()
-    {
-        if (class_exists('WooCommerce')) {
-            $order = new WC_Order();
-            return $this->flatten($order->get_data());
-        }
-    }
-
-    public function get_customer_keys()
-    {
-        if (class_exists('WooCommerce')) {
-            $order = new WC_Customer();
-            return $this->flatten($order->get_data());
-        }
-    }
-
-    public function get_product_keys()
-    {
-        $product_attribute_taxonomies = wc_get_attribute_taxonomies();
-        if ($product_attribute_taxonomies) {
-            $attribute_names = array_map(function ($taxonomy) {
-                return $taxonomy->attribute_label;
-            }, $product_attribute_taxonomies);
-
-            return $attribute_names;
-        }
-        return [];
-    }
-
     /**
      * @return void
      */
@@ -1250,6 +1207,14 @@ class ExpertSender_CDP_Admin
                 </div>
                 <div class="es-divider"></div>
                 <h3><?= esc_html__( 'Newsletter', 'expertsender_cdp' ); ?></h3>
+
+                <span><?= esc_html__('Aby zgody z formularzy newsletter były zbierane, należy:', 'expertsender-cdp'); ?></span>
+                <br/>
+                <span><?= esc_html__('- dodać atrybut', 'expertsender-cdp'); ?> <i>data-ecdp-field="email"</i> <?= esc_html__(' do pola email', 'expertsender-cdp'); ?></span>
+                <br/>
+                <span><?= esc_html__('- dodać atrybut', 'expertsender-cdp'); ?> <i>data-ecdp-field="newsletter-submit"</i> <?= esc_html__(' do przycisku submit', 'expertsender-cdp'); ?></span>
+                <br/><br/>
+
                 <div class="es-input-wrap">
                     <label><?= esc_html__( 'Tryb formularza', 'expertsender_cdp' ); ?></label>
                     <select name="<?= self::OPTION_FORM_NEWSLETTER_TYPE ?>" class="es-form-type-select">
@@ -1616,7 +1581,7 @@ class ExpertSender_CDP_Admin
             <div class="log-container" id="logContainer">
                 <?php foreach ($failed as $fail) {
                     echo '<div class=log-message>' .
-                        $fail->resource_id .
+                        $fail->id .
                         ':' .
                         $fail->response .
                         '</div>';
@@ -1646,10 +1611,7 @@ class ExpertSender_CDP_Admin
         if ( isset( $_POST[ 'expertsender_cdp-order-synchronize-form' ] ) ) {
             $start_date = $_POST[ 'datefrom' ];
             $end_date = $_POST[ 'dateto' ];
-            $orders = $this->expertsender_cdp_get_orders_by_dates(
-                $start_date,
-                $end_date
-            );
+            $orders = es_get_orders_by_dates( $start_date, $end_date );
 
             global $wpdb;
             $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
@@ -1687,25 +1649,6 @@ class ExpertSender_CDP_Admin
                 }
             }
         }
-    }
-
-    function expertsender_cdp_get_orders_by_dates($startDate, $endDate)
-    {
-        global $wpdb;
-
-        $query = $wpdb->prepare(
-            "
-                    SELECT * 
-                    FROM {$wpdb->prefix}wc_orders 
-                    WHERE date_updated_gmt >= %s 
-                    AND date_updated_gmt <= %s
-                    ORDER BY id DESC
-                ",
-            $startDate,
-            $endDate
-        );
-
-        return $wpdb->get_results($query);
     }
 
     /**

@@ -149,9 +149,11 @@ class ExpertSender_CDP
         $this->require( 'includes/log-handlers/class-expertsender-cdp-log-handler-file.php' );
         $this->require( 'includes/utilities/class-expertsender-cdp-logging-util.php' );
 
+        $this->require( 'includes/expertsender-cdp-api-functions.php' );
         $this->require( 'includes/expertsender-cdp-consent-functions.php' );
         $this->require( 'includes/expertsender-cdp-core-functions.php' );
         $this->require( 'includes/expertsender-cdp-field-mapping-functions.php' );
+        $this->require( 'includes/expertsender-cdp-order-functions.php' );
         $this->require( 'includes/expertsender-cdp-order-status-mapping-functions.php' );
 
         $this->loader = new ExpertSender_CDP_Loader();
@@ -256,7 +258,7 @@ class ExpertSender_CDP
             $plugin_public_customer,
             'expertsender_cdp_create_customer',
             10,
-            3
+            2
         );
 
         $this->loader->add_action(

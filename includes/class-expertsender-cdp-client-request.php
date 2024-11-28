@@ -104,60 +104,6 @@ class ExpertSender_CDP_Client_Request
     }
 
     /**
-     * @param array $customerData
-     * @param bool $sync
-     * @return void
-     */
-    public static function expertsender_cdp_add_or_update_customer( $customerData, $sync = false )
-    {
-        $url = ES_API_URL . 'customers';
-        $logger = expertsender_cdp_get_logger();
-
-        $body = json_encode([
-            'mode' => 'AddOrUpdate',
-            'matchBy' => 'Email',
-            'data' => [$customerData],
-        ]);
-
-        global $wpdb;
-
-        $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
-        if ( !$sync ) {
-            $wpdb->replace($table_name, [
-                'created_at' => current_time('mysql'),
-                'is_sent' => false,
-                'url_address' => $url,
-                'json_body' => $body,
-                'resource_type' => 'customer',
-                'resource_id' => 1,
-            ]);
-        } else {
-            $headers = [
-                'Accept' => 'application/json',
-                'x-api-key' => get_option( ExpertSender_CDP_Admin::OPTION_API_KEY ),
-                'Content-Type' => 'application/json',
-            ];
-
-            $response = wp_remote_post($url, [
-                'headers' => $headers,
-                'body' => $body,
-            ]);
-
-            $logger->debug( 'Custom method executed', array( 'source' => 'cron' ) );
-            $response = wp_remote_retrieve_body($response);
-            $wpdb->replace($table_name, [
-                'created_at' => current_time('mysql'),
-                'is_sent' => true,
-                'url_address' => $url,
-                'json_body' => $body,
-                'resource_type' => 'customer',
-                'resource_id' => 1,
-                'response' => $response
-            ]);
-        }
-    }
-
-    /**
      * Register the stylesheets for the public-facing side of the site.
      *
      * @since    1.0.0
@@ -214,165 +160,79 @@ class ExpertSender_CDP_Client_Request
     }
 
     public function expertsender_cdp_create_customer(
-        $customerId,
-        $customerData,
-        $password
+        $customer_id,
+        $customer_data
     ) {
-        $customerApiData = [];
-        $customerApiData['email'] = $customerData['user_email'];
-        $customerApiData['crmId'] = strval($customerId);
+        $customer_api_data = array();
+        $customer_api_data['email'] = $customer_data['user_email'];
+        $customer_api_data['crmId'] = strval( $customer_id );
         $consents_data = self::get_consents_from_request( ExpertSender_CDP_Admin::FORM_REGISTRATION_KEY );
-        $customerApiData['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
-        self::expertsender_cdp_add_or_update_customer($customerApiData, true);
+        $customer_api_data['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
+        es_cdp_add_or_update_customer( $customer_api_data );
     }
 
-    public function expertsender_cdp_edit_customer($user_id)
-    {
-        $customer = new WC_Customer(get_current_user_id());
-
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'expertsender_cdp_consents';
-
-        $consents = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE consent_location = %s",
-                'customer_settings'
-            )
-        );
-
-        $consentValues = [];
-
-        foreach ($consents as $consent) {
-            $consentValues[$consent->api_consent_id] =
-                isset($_POST['consent']) &&
-                isset($_POST['consent'][$consent->api_consent_id])
-                    ? 1
-                    : 0;
-        }
-
-        $customer = new WC_Customer($user_id);
-
-        $customerApiData['email'] = $customer->get_email();
-        $customerApiData['crmId'] = strval($customer->get_id());
-        $customerApiData['firstName'] = $customer->get_first_name();
-        $customerApiData['lastName'] = $customer->get_last_name();
+    /**
+     * @param int $user_id
+     *
+     * @return void
+     */
+    public function expertsender_cdp_edit_customer( $user_id ) {
+        $customer_api_data = $this->get_customer_data( $user_id );
         $consents_data = self::get_consents_from_request( ExpertSender_CDP_Admin::FORM_CUSTOMER_SETTINGS_KEY );
-        $customerApiData['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
-
-        $customAttributes = [];
-
-        global $wpdb;
-        $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
-        $query = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE resource_type = %s",
-                $this::RESOURCE_CUSTOMER
-            )
-        );
-        $flattenData = $this->flatten($customer->get_data());
-        foreach ($query as $row) {
-            if (isset($flattenData[$row->wp_field])) {
-                $customAttributes[] = [
-                    'name' => $row->ecdp_field,
-                    'value' => $flattenData[$row->wp_field],
-                ];
-            }
-        }
-
-        $customerApiData['customAttributes'] = $customAttributes;
-
-        self::expertsender_cdp_add_or_update_customer($customerApiData, false);
+        $customer_api_data['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
+        es_cdp_add_or_update_customer( $customer_api_data, false );
     }
 
-    function expertsender_cdp_edit_billing_address($user_id, $load_address)
-    {
-        if ($load_address == 'billing') {
-            $customer = new WC_Customer($user_id);
-
-            $customerApiData['email'] = $customer->get_email();
-            $customerApiData['crmId'] = strval($customer->get_id());
-            $customerApiData['firstName'] = $customer->get_first_name();
-            $customerApiData['lastName'] = $customer->get_last_name();
-            if (get_option('expertsender_cdp_enable_phone')) {
-                $customerApiData['phone'] = $customer->get_billing_phone();
-            }
-
-            $customAttributes = [];
-
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
-            $query = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT * FROM $table_name WHERE resource_type = %s",
-                    $this::RESOURCE_CUSTOMER
-                )
-            );
-            $flattenData = $this->flatten($customer->get_data());
-
-            foreach ($query as $row) {
-                if (isset($flattenData[$row->wp_field])) {
-                    $customAttributes[] = [
-                        'name' => $row->ecdp_field,
-                        'value' => $flattenData[$row->wp_field],
-                    ];
-                }
-            }
-
-            $customerApiData['customAttributes'] = $customAttributes;
-            self::expertsender_cdp_add_or_update_customer($customerApiData);
+    /**
+     * @param int $user_id
+     * @param string $load_address
+     *
+     * @return void
+     */
+    public function expertsender_cdp_edit_billing_address( $user_id, $load_address ) {
+        if ( $load_address == 'billing' ) {
+            $customer_api_data = $this->get_customer_data( $user_id );
+            es_cdp_add_or_update_customer( $customer_api_data );
         }
     }
 
-    function expertsender_cdp_edit_shipping_address($user_id, $load_address)
-    {
-        if ($load_address == 'shipping') {
-            $customer = new WC_Customer($user_id);
-
-            $customerApiData['email'] = $customer->get_email();
-            $customerApiData['crmId'] = strval($customer->get_id());
-            $customerApiData['firstName'] = $customer->get_first_name();
-            $customerApiData['lastName'] = $customer->get_last_name();
-            if (get_option('expertsender_cdp_enable_phone')) {
-                $customerApiData['phone'] = $customer->get_billing_phone();
-            }
-
-            $customAttributes = [];
-
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'expertsender_cdp_mappings';
-            $query = $wpdb->get_results(
-                $wpdb->prepare(
-                    "SELECT * FROM $table_name WHERE resource_type = %s",
-                    $this::RESOURCE_CUSTOMER
-                )
-            );
-            $flattenData = $this->flatten($customer->get_data());
-
-            foreach ($query as $row) {
-                if (isset($flattenData[$row->wp_field])) {
-                    $customAttributes[] = [
-                        'name' => $row->ecdp_field,
-                        'value' => $flattenData[$row->wp_field],
-                    ];
-                }
-            }
-
-            $customerApiData['customAttributes'] = $customAttributes;
-            self::expertsender_cdp_add_or_update_customer($customerApiData);
+    /**
+     * @param int $user_id
+     * @param string $load_address
+     *
+     * @return void
+     */
+    public function expertsender_cdp_edit_shipping_address( $user_id, $load_address ) {
+        if ( $load_address == 'shipping' ) {
+            $customer_api_data = $this->get_customer_data( $user_id );
+            es_cdp_add_or_update_customer( $customer_api_data );
         }
     }
 
-    public function flatten($array, $prefix = '')
-    {
-        $result = [];
-        foreach ($array as $key => $value) {
-            if (is_array($value)) {
-                $result =
-                    $result + $this->flatten($value, $prefix . $key . '.');
-            } else {
-                $result[$prefix . $key] = $value;
-            }
+    /**
+     * @param int $user_id
+     *
+     * @return array
+     */
+    private function get_customer_data( $user_id ) {
+        $customer_api_data = array();
+        $customer = new WC_Customer( $user_id );
+
+        $customer_api_data['email'] = $customer->get_email();
+        $customer_api_data['crmId'] = strval( $customer->get_id() );
+        $customer_api_data['firstName'] = $customer->get_first_name();
+        $customer_api_data['lastName'] = $customer->get_last_name();
+        
+        if ( get_option('expertsender_cdp_enable_phone') ) {
+            $customer_api_data['phone'] = $customer->get_billing_phone();
         }
-        return $result;
+
+        $custom_attributes = es_get_mapped_attributes( $customer, self::RESOURCE_CUSTOMER );
+
+        if ( ! empty( $custom_attributes ) ) {
+            $customer_api_data['customAttributes'] = $custom_attributes;
+        }
+
+        return $customer_api_data;
     }
 }

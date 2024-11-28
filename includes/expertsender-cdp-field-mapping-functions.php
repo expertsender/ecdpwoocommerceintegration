@@ -146,3 +146,104 @@ function es_truncate_field_mappings() {
 
     return $wpdb->query( $query );
 }
+
+/**
+ * @param \WC_Data $object
+ * @param string $resource_type
+ *
+ * @return array
+ */
+function es_get_mapped_attributes( $object, $resource_type ) {
+    $attributes = array();
+    $variant_attributes = array();
+    $mappings = es_get_field_mappings_by_resource_type( $resource_type );
+    $data = $object->get_data();
+
+    if ( $object instanceof \WC_Order_Item_Product ) {
+        /** @var \WC_Meta_Data */
+        foreach ( $object->get_meta_data() as $meta_data ) {
+            $key = $meta_data->__get('key');
+            $value = $meta_data->__get('value');
+
+            if ( $key ) {
+                $variant_attributes[ $key ] = $value;
+            }
+        }
+
+        $product = wc_get_product( $object->get_product_id() );
+
+        if ( $product ) {
+            $data = $product->get_data();
+        }
+    }
+
+    $flat_data = es_flatten_data_with_mappings( $data );
+    $flat_data = array_merge( $flat_data, $variant_attributes );
+
+    foreach ( $mappings as $mapping ) {
+        if ( isset( $flat_data[ $mapping['wp_field'] ] ) ) {
+            $attributes[] = array(
+                'name' => $mapping['ecdp_field'],
+                'value' => strval( $flat_data[ $mapping['wp_field'] ] )
+            );
+        }
+    }
+
+    return $attributes;
+}
+
+/**
+ * @param array $data
+ * @param string $prefix
+ *
+ * @return array
+ */
+function es_flatten_data_with_mappings( $data, $prefix = '' ) {
+    $result = array();
+
+    foreach ( $data as $key => $value ) {
+        if ( is_array( $value ) ) {
+            $result = array_merge( $result, es_flatten_data_with_mappings( $value, $prefix . $key . '.' ) );
+        } else if ( ! is_object( $value ) ) {
+            $result[ $prefix . $key ] = $value;
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * @return array
+ */
+function es_get_customer_mapping_field_keys() {
+    $customer = new WC_Customer();
+
+    return array_keys( es_flatten_data_with_mappings( $customer->get_data() ) );
+}
+
+/**
+ * @return array
+ */
+function es_get_order_mapping_field_keys() {
+    $order = new WC_Order();
+
+    return array_keys( es_flatten_data_with_mappings( $order->get_data() ) );
+}
+
+/**
+ * @return array
+ */
+function es_get_product_mapping_field_keys() {
+    $product = new WC_Product();
+    $attributes = array_keys( es_flatten_data_with_mappings( $product->get_data() ) );
+    $product_attribute_taxonomies = wc_get_attribute_taxonomies();
+    $variant_attributes = array();
+
+    if ( $product_attribute_taxonomies ) {
+        foreach ( $product_attribute_taxonomies as $taxonomy ) {
+            $variant_attributes[] = 'pa_' . $taxonomy->attribute_name;
+        }
+    }
+
+    return array_merge( $attributes, $variant_attributes );
+}
