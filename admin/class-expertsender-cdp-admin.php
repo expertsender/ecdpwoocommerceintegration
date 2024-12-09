@@ -1606,46 +1606,47 @@ class ExpertSender_CDP_Admin
 <?php
     }
 
+    /**
+     * @return void
+     */
     public function expertsender_cdp_order_synchronize_submission()
     {
         if ( isset( $_POST[ 'expertsender_cdp-order-synchronize-form' ] ) ) {
             $start_date = $_POST[ 'datefrom' ];
             $end_date = $_POST[ 'dateto' ];
-            $orders = es_get_orders_by_dates( $start_date, $end_date );
+            $page = 0;
+            $sync_id = scortea_get_next_synchronization_id();
 
-            global $wpdb;
-            $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
-            $order_request = new ExpertSender_CDP_Order_Request();
+            while ( ++$page ) {
+                $orders_result = es_get_orders_by_dates( $start_date, $end_date, $page );
+                $orders = $orders_result->orders;
+                $order_request = new ExpertSender_CDP_Order_Request();
+                $order_ids = array();
 
-            $query = "SELECT MAX(synchronization_id) AS last_sync FROM $table_name";
-            $result = $wpdb->get_row( $query );
-            $sync_id = 1;
+                if ( ! empty( $orders ) ) {
+                    /** @var \WC_Order $order */
+                    foreach ( $orders as $order ) {
+                        if ( $order instanceof WC_Order ) {
+                            $order_id = $order->get_id();
+                        } else {
+                            $order_id = $order->get_parent_id();
+                            $order = wc_get_order( $order_id );
+                        }
 
-            if ( $result->last_sync > 0 ) {
-                $sync_id = $result->last_sync + 1;
-            }
+                        if ( ! in_array( $order_id, $order_ids ) ) {
+                            $order_request->expertsender_cdp_order_save_request(
+                                $order_id,
+                                $order,
+                                $sync_id
+                            );
 
-            $order_ids = array();
-
-            foreach ( $orders as $order ) {
-                $s_order = wc_get_order( $order->id );
-                $processed_id = 0;
-
-                if ( $s_order instanceof WC_Order ) {
-                    $processed_id = $s_order->get_id();
-                } else {
-                    $order_id = $s_order->get_parent_id();
-                    $s_order = wc_get_order( $order_id );
-                    $processed_id = wc_get_order( $order_id )->get_id();
+                            $order_ids[] = $order_id;
+                        }
+                    }
                 }
 
-                if (!in_array($processed_id, $order_ids)) {
-                    $order_request->expertsender_cdp_order_save_request(
-                        $order->id,
-                        $s_order,
-                        $sync_id
-                    );
-                    $order_ids[] = $processed_id;
+                if ( $page >= $orders_result->max_num_pages ) {
+                    break;
                 }
             }
         }

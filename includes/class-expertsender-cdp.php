@@ -155,6 +155,7 @@ class ExpertSender_CDP
         $this->require( 'includes/expertsender-cdp-field-mapping-functions.php' );
         $this->require( 'includes/expertsender-cdp-order-functions.php' );
         $this->require( 'includes/expertsender-cdp-order-status-mapping-functions.php' );
+        $this->require( 'includes/expertsender-cdp-synchronization-functions.php' );
 
         $this->loader = new ExpertSender_CDP_Loader();
     }
@@ -344,54 +345,57 @@ class ExpertSender_CDP
         return $this->version;
     }
 
-    public function expertsender_cdp_cron_job_send_request()
-    {
-        global $wpdb;
-
-        $logger = expertsender_cdp_get_logger();
-        $table_name = $wpdb->prefix . 'expertsender_cdp_requests';
-
-        $expertSenderRequests = $wpdb->get_results(
-            $wpdb->prepare(
-                "SELECT * FROM $table_name WHERE is_sent = %s",
-                false
-            )
+    /**
+     * @return void
+     */
+    public function expertsender_cdp_cron_job_send_request() {
+        $headers = array(
+            'Accept' => 'application/json',
+            'x-api-key' => get_option( ExpertSender_CDP_Admin::OPTION_API_KEY ),
+            'Content-Type' => 'application/json',
         );
+        $logger = expertsender_cdp_get_logger();
+        $page = 0;
 
-        foreach ($expertSenderRequests as $request) {
-            $headers = [
-                'Accept' => 'application/json',
-                'x-api-key' => get_option( ExpertSender_CDP_Admin::OPTION_API_KEY ),
-                'Content-Type' => 'application/json',
-            ];
+        while ( ++$page ) {
+            $synchronization_requests_result = scortea_get_synchronization_requests();
+            $requests = $synchronization_requests_result['items'];
 
-            $response = wp_remote_post($request->url_address, [
-                'headers' => $headers,
-                'body' => $request->json_body,
-            ]);
-            $responseCode = wp_remote_retrieve_response_code($response);
-            $response_body = wp_remote_retrieve_body($response);
-            $response_data = json_decode($response_body);
+            foreach ( $requests as $request ) {
+                $response = wp_remote_post(
+                    $request->url_address,
+                    array(
+                        'headers' => $headers,
+                        'body' => $request->json_body,
+                    )
+                );
+                $responseCode = wp_remote_retrieve_response_code( $response );
+                $response_body = wp_remote_retrieve_body( $response );
+                $response_data = json_decode( $response_body );
 
-            if (
-                is_wp_error( $response ) || $responseCode == 500 || $responseCode == 401 ||
-                ( null !== $response_data && property_exists( $response_data, 'errors' ) )
-            ) {
-                $wpdb->update(
-                    $table_name,
-                    array('is_sent' => 1, 'response' => implode("\n", $response_data->errors)),
-                    array('id' => $request->id),
-                );
-            } else {
-                $wpdb->update(
-                    $table_name,
-                    array('is_sent' => 1),
-                    array('id' => $request->id),
-                );
-                $logger->debug(
-                    "Succeded to send request with id {$request->id} \n{$response_body}\n",
-                    array( 'source' => 'cron' )
-                );
+                if (
+                    is_wp_error( $response ) || $responseCode == 500 || $responseCode == 401 ||
+                    ( null !== $response_data && property_exists( $response_data, 'errors' ) )
+                ) {
+                    scortea_update_synchronization(
+                        array( 'is_sent' => 1, 'response' => implode( "\n", $response_data->errors ) ),
+                        array( 'id' => $request->id )
+                    );
+                } else {
+                    scortea_update_synchronization(
+                        array( 'is_sent' => 1 ),
+                        array( 'id' => $request->id )
+                    );
+
+                    $logger->debug(
+                        "Succeded to send request with id {$request->id} \n{$response_body}\n",
+                        array( 'source' => 'cron' )
+                    );
+                }
+            }
+
+            if ( $page >= $synchronization_requests_result['total_pages'] ) {
+                break;
             }
         }
     }

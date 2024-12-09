@@ -6,33 +6,29 @@ defined ( 'ABSPATH' ) || exit;
  * @param string $start_date
  * @param string $end_date
  *
- * @return array
+ * @return stdClass
  */
-function es_get_orders_by_dates( $start_date, $end_date ) {
-    /** @var \wpdb $wpdb */
-    global $wpdb;
+function es_get_orders_by_dates( $start_date, $end_date, $page = 1, $page_size = 10 ) {
+    $statuses = wc_get_order_statuses();
 
-    $filters = array();
-
-    $query = <<<SQL
-        SELECT * 
-        FROM {$wpdb->prefix}wc_orders 
-    SQL;
-
-    if ( ! empty( $start_date ) ) {
-        $filters[] = "date_updated_gmt >= '{$start_date}'";
+    if ( isset( $statuses['wc-checkout-draft'] ) ) {
+        unset( $statuses['wc-checkout-draft'] );
     }
 
-    if ( ! empty( $end_date ) ) {
-        $filters[] = "date_updated_gmt <= '{$end_date}'";
+    $args = array(
+        'paginate' => true,
+        'limit' => $page_size,
+        'paged' => $page,
+        'status' => array_keys( $statuses )
+    );
+
+    if ( ! empty( $start_date ) && ! empty( $end_date ) ) {
+        $args['date_modified'] = "{$start_date}...{$end_date}";
+    } else if ( ! empty( $start_date ) ) {
+        $args['date_modified'] = ">={$start_date}";
+    } else if ( ! empty( $end_date ) ) {
+        $args['date_modified'] = "<={$end_date}";
     }
 
-    if ( ! empty( $filters ) ) {
-        $where_query = implode( ' AND ', $filters );
-        $query .= " WHERE " . $where_query;
-    }
-
-    $query .= ' ORDER BY id DESC';
-
-    return $wpdb->get_results( $query ) ?? array();
+    return wc_get_orders( $args );
 }
