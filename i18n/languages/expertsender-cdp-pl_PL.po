@@ -3,15 +3,17 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: ExpertSender CDP 1.0.0\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/expertsender-cdp\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: LANGUAGE <LL@li.org>\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/expertsender-"
+"cdp\n"
+"POT-Creation-Date: 2024-12-16T08:37:09+00:00\n"
+"PO-Revision-Date: 2024-12-16 09:52+0100\n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"Language: pl\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2024-12-20T07:52:17+00:00\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"X-Generator: WP-CLI 2.11.0\n"
+"X-Generator: Poedit 3.5\n"
 "X-Domain: expertsender-cdp\n"
 
 #. Plugin Name of the plugin
@@ -40,11 +42,9 @@ msgid "https://endora.software/"
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:121
-msgid "Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz API."
-msgstr ""
-
-#: admin/class-expertsender-cdp-admin.php:210
-msgid "Ustawienia ogólne"
+msgid ""
+"Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz "
+"API."
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:222
@@ -93,7 +93,9 @@ msgid "Wybierz odpowiednią jednostkę"
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:312
-msgid "Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w ustawieniach wtyczki."
+msgid ""
+"Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w "
+"ustawieniach wtyczki."
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:318
@@ -109,7 +111,9 @@ msgid "Skąd pobrać skrypt?"
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:336
-msgid "Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy odpowiedniej stronie internetowej kliknij ikonkę \"Tracking code\"."
+msgid ""
+"Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy "
+"odpowiedniej stronie internetowej kliknij ikonkę \"Tracking code\"."
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:337
@@ -125,7 +129,9 @@ msgid "Skąd pobrać numer ID strony internetowej?"
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:352
-msgid "Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź odpowiednią stronę internetową."
+msgid ""
+"Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź "
+"odpowiednią stronę internetową."
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:353
@@ -163,7 +169,7 @@ msgstr ""
 #: admin/class-expertsender-cdp-admin.php:486
 #: admin/class-expertsender-cdp-admin.php:656
 msgid "Pole produktu WC"
-msgstr ""
+msgstr "Przetłumaczone pole produktu WC"
 
 #: admin/class-expertsender-cdp-admin.php:496
 msgid "Pole produktu ECDP"
@@ -398,7 +404,9 @@ msgid "Zduplikowane pola ECDP: %1$s"
 msgstr ""
 
 #: includes/expertsender-cdp-order-status-mapping-functions.php:142
-msgid "Każde mapowanie musi mieć przynajmniej jeden status WooCommerce i status ECDP."
+msgid ""
+"Każde mapowanie musi mieć przynajmniej jeden status WooCommerce i status "
+"ECDP."
 msgstr ""
 
 #: includes/expertsender-cdp-order-status-mapping-functions.php:193

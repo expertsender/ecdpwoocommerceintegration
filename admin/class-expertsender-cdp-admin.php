@@ -207,7 +207,7 @@ class ExpertSender_CDP_Admin
     public function add_plugin_admin_menu()
     {
         add_menu_page(
-            'Ustawienia ogólne', // Page title
+            __('Ustawienia ogólne', 'expertsender-cdp'), // Page title
             'ExpertSender CDP', // Menu title
             'manage_options', // Capability
             'expertsender_cdp-settings', // Menu slug
