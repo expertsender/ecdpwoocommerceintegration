@@ -1,60 +1,62 @@
-#, fuzzy
 msgid ""
 msgstr ""
 "Project-Id-Version: ExpertSender CDP\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2024-12-20 07:41+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
-"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
-"Language-Team: \n"
-"Language: \n"
-"Plural-Forms: nplurals=INTEGER; plural=EXPRESSION;\n"
+"POT-Creation-Date: 2024-12-20 07:29+0000\n"
+"PO-Revision-Date: 2024-12-20 07:44+0000\n"
+"Last-Translator: Test Admin\n"
+"Language-Team: English (UK)\n"
+"Language: en_GB\n"
+"Plural-Forms: nplurals=2; plural=n != 1;\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "X-Generator: Loco https://localise.biz/\n"
 "X-Loco-Version: 2.6.14; wp-6.7.1\n"
-"X-Domain: expertsender-cdp"
+"X-Domain: expertsender-cdp\n"
+"X-Loco-Fallback: en_US\n"
+"X-Loco-Template: languages/expertsender-cdp-en_US.po\n"
+"X-Loco-Template-Mode: PO,JSON"
 
 #: admin/class-expertsender-cdp-admin.php:1213
 msgid " do pola email"
-msgstr ""
+msgstr "to email field"
 
 #: admin/class-expertsender-cdp-admin.php:1215
 msgid " do przycisku submit"
-msgstr ""
+msgstr "to submit button"
 
 #: admin/class-expertsender-cdp-admin.php:1362
 msgid " Status ECDP"
-msgstr ""
+msgstr "ECDP Status"
 
 #: admin/class-expertsender-cdp-admin.php:1213
 #: admin/class-expertsender-cdp-admin.php:1215
 msgid "- dodać atrybut"
-msgstr ""
+msgstr "- add an attribute"
 
 #: admin/class-expertsender-cdp-admin.php:1211
 msgid "Aby zgody z formularzy newsletter były zbierane, należy:"
-msgstr ""
+msgstr "In order for consents from newsletter forms to be collected, you must:"
 
 #: admin/class-expertsender-cdp-admin.php:1579
 #, php-format
 msgid "Błędy: %1$s"
-msgstr ""
+msgstr "Errors: %1$s"
 
 #: admin/class-expertsender-cdp-admin.php:1082
 msgid "Checkout"
-msgstr ""
+msgstr "Koszyk"
 
 #: includes/class-expertsender-cdp-inject-consent.php:165
 #: admin/class-expertsender-cdp-admin.php:1746
 #, php-format
 msgid "Coś poszło nie tak: %1$s"
-msgstr ""
+msgstr "Something went wrong: %1$s"
 
 #: admin/class-expertsender-cdp-admin.php:1571
 msgid "Do:"
-msgstr ""
+msgstr "To: "
 
 #: admin/class-expertsender-cdp-admin.php:478
 #: admin/class-expertsender-cdp-admin.php:517
@@ -62,273 +64,281 @@ msgstr ""
 #: admin/class-expertsender-cdp-admin.php:903
 #: admin/class-expertsender-cdp-admin.php:1301
 msgid "Dodaj"
-msgstr ""
+msgstr "Add"
 
 #: admin/class-expertsender-cdp-admin.php:1167
 #: admin/class-expertsender-cdp-admin.php:1184
 #: admin/class-expertsender-cdp-admin.php:1201
 #: admin/class-expertsender-cdp-admin.php:1222
 msgid "Double Opt-In"
-msgstr ""
+msgstr "Double Opt-In"
 
 #: admin/class-expertsender-cdp-admin.php:1083
 msgid "Edycja profilu"
-msgstr ""
+msgstr "Profile edit"
 
 #. Author of the plugin
 msgid "Endora"
-msgstr ""
+msgstr "Endora"
 
 #. Name of the plugin
 msgid "ExpertSender CDP"
-msgstr ""
+msgstr "ExpertSender CDP"
 
 #. Description of the plugin
 msgid "ExpertSender CDP Integration"
-msgstr ""
+msgstr "ExpertSender CDP Integration"
 
 #: includes/class-expertsender-cdp-logger.php:96
 #, php-format
 msgid "Handler %1$s nie implementuje ExpertSender_CDP_Log_Handler_Interface"
-msgstr ""
+msgstr "Handler %1$s doesn't implement ExpertSender_CDP_Log_Handler_Interface"
 
 #. Author URI of the plugin
 msgid "https://endora.software/"
-msgstr ""
+msgstr "https://endora.software/"
 
 #. URI of the plugin
 msgid "https://expertsender.com/"
-msgstr ""
+msgstr "https://expertsender.com/"
 
 #: admin/class-expertsender-cdp-admin.php:343
 msgid "ID strony internetowej"
-msgstr ""
+msgstr "Website ID"
 
 #: admin/class-expertsender-cdp-admin.php:1171
 #: admin/class-expertsender-cdp-admin.php:1188
 #: admin/class-expertsender-cdp-admin.php:1205
 #: admin/class-expertsender-cdp-admin.php:1226
 msgid "ID wiadomości potwierdzającej w trybie Double Opt-In"
-msgstr ""
+msgstr "Confirmation message ID in Double Opt-In mode"
 
 #: includes/expertsender-cdp-consent-functions.php:109
 msgid "Każda zgoda ECDP może zostać zmapowana tylko raz do danej lokalizacji"
-msgstr ""
+msgstr "Each ECDP consent can be mapped only once to a given location"
 
 #: includes/expertsender-cdp-order-status-mapping-functions.php:142
 msgid ""
 "Każde mapowanie musi mieć przynajmniej jeden status WooCommerce i status "
 "ECDP."
 msgstr ""
+"Each mapping must have at least one WooCommerce status and ECDP status."
 
 #: includes/expertsender-cdp-field-mapping-functions.php:70
 msgid "Każde mapowanie musi mieć wybrane pole WooCommerce i ECDP."
-msgstr ""
+msgstr "Each mapping must have a WooCommerce and ECDP field selected."
 
 #: admin/class-expertsender-cdp-admin.php:301
 msgid "Klucz API"
-msgstr ""
+msgstr "API Key"
 
 #: admin/class-expertsender-cdp-admin.php:922
 #: admin/class-expertsender-cdp-admin.php:966
 msgid "Lokalizacja"
-msgstr ""
+msgstr "Location"
 
 #: admin/class-expertsender-cdp-admin.php:222
 #: admin/class-expertsender-cdp-admin.php:223
 msgid "Mapowania pól"
-msgstr ""
+msgstr "Field mappings"
 
 #: admin/class-expertsender-cdp-admin.php:476
 msgid "Mapowania pól produktów"
-msgstr ""
+msgstr "Product field mappings"
 
 #: admin/class-expertsender-cdp-admin.php:515
 msgid "Mapowania pól użytkowników"
-msgstr ""
+msgstr "User field mappings"
 
 #: admin/class-expertsender-cdp-admin.php:556
 msgid "Mapowania pól zamówień"
-msgstr ""
+msgstr "Order field mappings"
 
 #: admin/class-expertsender-cdp-admin.php:261
 #: admin/class-expertsender-cdp-admin.php:262
 msgid "Mapowania statusów zamówienia"
-msgstr ""
+msgstr "Order status mappings"
 
 #: admin/class-expertsender-cdp-admin.php:234
 #: admin/class-expertsender-cdp-admin.php:235
 msgid "Mapowania zgód"
-msgstr ""
+msgstr "Consent mapping"
 
 #: admin/class-expertsender-cdp-admin.php:1084
 msgid "Newsletter"
-msgstr ""
+msgstr "Newsletter"
 
 #: admin/class-expertsender-cdp-admin.php:1720
 msgid "Nie masz wystarczających uprawnień do tej strony."
-msgstr ""
+msgstr "You do not have sufficient permissions for this page."
 
 #: admin/class-expertsender-cdp-admin.php:1317
 #: admin/class-expertsender-cdp-admin.php:1355
 msgid "Niestandardowe statusy WC"
-msgstr ""
+msgstr "Custom WC statuses"
 
 #: admin/class-expertsender-cdp-admin.php:1569
 msgid "Od:"
-msgstr ""
+msgstr "From:"
 
 #: admin/class-expertsender-cdp-admin.php:1575
 msgid "Ostatnia synchronizacja"
-msgstr ""
+msgstr "Last synchronization"
 
 #: admin/class-expertsender-cdp-admin.php:496
 msgid "Pole produktu ECDP"
-msgstr ""
+msgstr "ECDP product field"
 
 #: admin/class-expertsender-cdp-admin.php:486
 #: admin/class-expertsender-cdp-admin.php:656
 msgid "Pole produktu WC"
-msgstr ""
+msgstr "WC Product field"
 
 #: admin/class-expertsender-cdp-admin.php:536
 #: admin/class-expertsender-cdp-admin.php:631
 msgid "Pole użytkownika ECDP"
-msgstr ""
+msgstr "ECDP user field"
 
 #: admin/class-expertsender-cdp-admin.php:525
 #: admin/class-expertsender-cdp-admin.php:668
 msgid "Pole użytkownika WC"
-msgstr ""
+msgstr "WC user field"
 
 #: admin/class-expertsender-cdp-admin.php:576
 #: admin/class-expertsender-cdp-admin.php:618
 msgid "Pole zamówienia ECDP"
-msgstr ""
+msgstr "ECDP order field"
 
 #: admin/class-expertsender-cdp-admin.php:566
 #: admin/class-expertsender-cdp-admin.php:644
 msgid "Pole zamówienia WC"
-msgstr ""
+msgstr "WC order field"
 
 #: admin/class-expertsender-cdp-admin.php:121
 msgid ""
 "Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz "
 "API."
 msgstr ""
+"Before setting up mappings and synchronizing orders, the API key must be "
+"filled in."
 
 #: admin/class-expertsender-cdp-admin.php:312
 msgid ""
 "Przejdź do zakładki Settings -&gt; API, a następnie skopiuj klucz i wklej w "
 "ustawieniach wtyczki."
 msgstr ""
+"Go to Settings -&gt; API tab, then copy the key and paste it in the plugin "
+"settings."
 
 #: admin/class-expertsender-cdp-admin.php:336
 msgid ""
 "Przejdź do zakładki Settings -&gt; Web Tracking, a następnie przy "
 "odpowiedniej stronie internetowej kliknij ikonkę \"Tracking code\"."
 msgstr ""
+"Go to the Settings tab -&gt; Web Tracking, and then next to the "
+"corresponding website click the “Tracking code” icon."
 
 #: admin/class-expertsender-cdp-admin.php:352
 msgid ""
 "Przejdź do zakładki Settings -&gt; Webtracking, a następnie znajdź "
 "odpowiednią stronę internetową."
 msgstr ""
+"Go to Settings -&gt; Webtracking tab, then find the appropriate website."
 
 #: admin/class-expertsender-cdp-admin.php:1085
 #: admin/class-expertsender-cdp-admin.php:1158
 msgid "Rejestracja"
-msgstr ""
+msgstr "Registration"
 
 #: admin/class-expertsender-cdp-admin.php:1699
 msgid "Serwer napotkał błąd. Spróbuj ponownie później."
-msgstr ""
+msgstr "The server encountered an error. Try again later."
 
 #: admin/class-expertsender-cdp-admin.php:1166
 #: admin/class-expertsender-cdp-admin.php:1183
 #: admin/class-expertsender-cdp-admin.php:1200
 #: admin/class-expertsender-cdp-admin.php:1221
 msgid "Single Opt-In"
-msgstr ""
+msgstr "Single Opt-In"
 
 #: admin/class-expertsender-cdp-admin.php:337
 msgid "Skopiuj i wklej w ustawieniach wtyczki."
-msgstr ""
+msgstr "Copy and paste in the plug-in settings."
 
 #: admin/class-expertsender-cdp-admin.php:353
 msgid "Skopiuj ID i wklej w ustawieniach wtyczki."
-msgstr ""
+msgstr "Copy the ID and paste in the plug-in settings."
 
 #: admin/class-expertsender-cdp-admin.php:325
 msgid "Skrypt śledzący ruch"
-msgstr ""
+msgstr "Web tracking script"
 
 #: admin/class-expertsender-cdp-admin.php:306
 msgid "Skąd pobrać klucz API?"
-msgstr ""
+msgstr "Where to get the API key from?"
 
 #: admin/class-expertsender-cdp-admin.php:348
 msgid "Skąd pobrać numer ID strony internetowej?"
-msgstr ""
+msgstr "Where to get the website ID number from?"
 
 #: admin/class-expertsender-cdp-admin.php:330
 msgid "Skąd pobrać skrypt?"
-msgstr ""
+msgstr "Where to get the script from?"
 
 #: admin/class-expertsender-cdp-admin.php:1321
 msgid "Status ECDP"
-msgstr ""
+msgstr "ECDP status"
 
 #: admin/class-expertsender-cdp-admin.php:1318
 msgid "Statusy rozdzielone przecinkiem"
-msgstr ""
+msgstr "Comma-separated statuses"
 
 #: admin/class-expertsender-cdp-admin.php:1309
 #: admin/class-expertsender-cdp-admin.php:1342
 msgid "Statusy WC"
-msgstr ""
+msgstr "WC Status"
 
 #: admin/class-expertsender-cdp-admin.php:273
 #: admin/class-expertsender-cdp-admin.php:274
 msgid "Synchronizacja zamówień"
-msgstr ""
+msgstr "Order synchronization"
 
 #: admin/class-expertsender-cdp-admin.php:1576
 #, php-format
 msgid "Synchronizacja zamówień: %1$s"
-msgstr ""
+msgstr "Order Synchronization: %1$s"
 
 #: admin/class-expertsender-cdp-admin.php:1573
 msgid "Synchronizuj"
-msgstr ""
+msgstr "Synchronize"
 
 #: includes/log-handlers/class-expertsender-cdp-log-handler-file.php:29
 msgid "Ta metoda nie powinna być wywoływana przed \"plugins_loaded\"."
-msgstr ""
+msgstr "This method should not be called before “plugins_loaded”."
 
 #: admin/class-expertsender-cdp-admin.php:1160
 #: admin/class-expertsender-cdp-admin.php:1177
 #: admin/class-expertsender-cdp-admin.php:1194
 msgid "Tekst wyświetlany przed zgodami"
-msgstr ""
+msgstr "Text displayed before consents"
 
 #: admin/class-expertsender-cdp-admin.php:933
 #: admin/class-expertsender-cdp-admin.php:935
 #: admin/class-expertsender-cdp-admin.php:978
 #: admin/class-expertsender-cdp-admin.php:980
 msgid "Tekst zgody"
-msgstr ""
+msgstr "Consent text"
 
 #: admin/class-expertsender-cdp-admin.php:1164
 #: admin/class-expertsender-cdp-admin.php:1181
 #: admin/class-expertsender-cdp-admin.php:1198
 msgid "Tryb formularza"
-msgstr ""
+msgstr "Form mode"
 
 #: admin/class-expertsender-cdp-admin.php:249
 #: admin/class-expertsender-cdp-admin.php:250
 msgid "Ustawienia formularzy ze zgodami"
-msgstr ""
+msgstr "Form settings with consents"
 
 #: admin/class-expertsender-cdp-admin.php:508
 #: admin/class-expertsender-cdp-admin.php:549
@@ -339,46 +349,46 @@ msgstr ""
 #: admin/class-expertsender-cdp-admin.php:1328
 #: admin/class-expertsender-cdp-admin.php:1419
 msgid "Usuń"
-msgstr ""
+msgstr "Remove"
 
 #: admin/class-expertsender-cdp-admin.php:1578
 #, php-format
 msgid "W kolejce: %1$s"
-msgstr ""
+msgstr "Queued: %1$s"
 
 #: includes/expertsender-cdp-consent-functions.php:96
 msgid "Wszystkie pola mapowania muszą być uzupełnione."
-msgstr ""
+msgstr "All mapping fields must be completed."
 
 #: admin/class-expertsender-cdp-admin.php:311
 #: admin/class-expertsender-cdp-admin.php:335
 #: admin/class-expertsender-cdp-admin.php:351
 msgid "Wybierz odpowiednią jednostkę"
-msgstr ""
+msgstr "Choose the right unit"
 
 #: admin/class-expertsender-cdp-admin.php:779
 #: admin/class-expertsender-cdp-admin.php:1122
 #: admin/class-expertsender-cdp-admin.php:1492
 msgid "Wystąpił błąd w trakcie zapisywania mapowań."
-msgstr ""
+msgstr "An error occurred while saving mappings."
 
 #: admin/class-expertsender-cdp-admin.php:359
 msgid "Wysyłaj numer telefonu użytkowników do ExpertSender CDP"
-msgstr ""
+msgstr "Send users' phone number to ExpertSender CDP"
 
 #: admin/class-expertsender-cdp-admin.php:364
 msgid "Włącz logi"
-msgstr ""
+msgstr "Enable logs"
 
 #: admin/class-expertsender-cdp-admin.php:318
 msgid "Włącz skrypt śledzący ruch"
-msgstr ""
+msgstr "Enable Web tracking script"
 
 #: admin/class-expertsender-cdp-admin.php:309
 #: admin/class-expertsender-cdp-admin.php:333
 #: admin/class-expertsender-cdp-admin.php:350
 msgid "Zaloguj się do systemu ECDP"
-msgstr ""
+msgstr "Log in to the ECDP system"
 
 #: admin/class-expertsender-cdp-admin.php:381
 #: admin/class-expertsender-cdp-admin.php:596
@@ -386,42 +396,42 @@ msgstr ""
 #: admin/class-expertsender-cdp-admin.php:1229
 #: admin/class-expertsender-cdp-admin.php:1334
 msgid "Zapisz zmiany"
-msgstr ""
+msgstr "Save changes"
 
 #: includes/expertsender-cdp-field-mapping-functions.php:101
 #, php-format
 msgid "Zduplikowane pola ECDP: %1$s"
-msgstr ""
+msgstr "Duplicate ECDP fields: %1$s"
 
 #: includes/expertsender-cdp-field-mapping-functions.php:94
 #, php-format
 msgid "Zduplikowane pola WooCommerce: %1$s"
-msgstr ""
+msgstr "Duplicate WooCommerce fields: %1$s."
 
 #: includes/expertsender-cdp-order-status-mapping-functions.php:201
 #, php-format
 msgid "Zduplikowane statusy ECDP: %1$s"
-msgstr ""
+msgstr "Duplicate ECDP statuses: %1$s"
 
 #: includes/expertsender-cdp-order-status-mapping-functions.php:193
 #, php-format
 msgid "Zduplikowane statusy WooCommerce: %1$s"
-msgstr ""
+msgstr "Duplicate WooCommerce statuses: %1$s."
 
 #: admin/class-expertsender-cdp-admin.php:911
 #: admin/class-expertsender-cdp-admin.php:954
 msgid "Zgoda ECDP"
-msgstr ""
+msgstr "ECDP Consent"
 
 #: includes/class-expertsender-cdp-inject-consent.php:117
 msgid "Zgody marketingowe"
-msgstr ""
+msgstr "Marketing consents"
 
 #: admin/class-expertsender-cdp-admin.php:1676
 msgid "Zmiany zostały zapisane."
-msgstr ""
+msgstr "The changes have been saved."
 
 #: admin/class-expertsender-cdp-admin.php:1577
 #, php-format
 msgid "Zsynchronizowano: %1$s"
-msgstr ""
+msgstr "Synchronized: %1$s"
