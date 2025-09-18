@@ -120,9 +120,16 @@ class ExpertSender_CDP_Order_Request
         $items = $order->get_items();
         $products = [];
 
+        /** @var \WC_Order_Item_Product $item */
         foreach ( $items as $item ) {
             $product_id = $item->get_product_id();
             $product_item = wc_get_product( $product_id );
+
+            if ( $item->get_variation_id() > 0 ) {
+                $product_item = wc_get_product( $item->get_variation_id() );
+                $product_id = $product_item->get_id();
+            }
+
             $product['id'] = (string) $product_item->get_id();
             $product['name'] = $product_item->get_name();
             $product['price'] = $product_item->get_price();

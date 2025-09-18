@@ -166,6 +166,15 @@ class ExpertSender_CDP_Client_Request
         $customer_api_data = array();
         $customer_api_data['email'] = $customer_data['user_email'];
         $customer_api_data['crmId'] = strval( $customer_id );
+
+        if ( ! empty( $customer_data['first_name'] ) ) {
+            $customer_api_data['firstName'] = $customer_data['first_name'];
+        }
+
+        if ( ! empty( $customer_data['last_name'] ) ) {
+            $customer_api_data['lastName'] = $customer_data['last_name'];
+        }
+
         $consents_data = self::get_consents_from_request( ExpertSender_CDP_Admin::FORM_REGISTRATION_KEY );
         $customer_api_data['consentsData'] = ! empty ( $consents_data ) ? $consents_data : null;
         es_cdp_add_or_update_customer( $customer_api_data );
