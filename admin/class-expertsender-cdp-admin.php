@@ -40,6 +40,9 @@ class ExpertSender_CDP_Admin
 
     const OPTION_ENABLE_LOGS = 'expertsender_cdp_enable_logs';
     const OPTION_API_KEY = 'expertsender_cdp_api_key';
+    const OPTION_DATALAYER_ENABLED = 'expertsender_cdp_datalayer_enabled';
+    const OPTION_DATALAYER_EVENT_PREFIX = 'expertsender_cdp_datalayer_event_prefix';
+    const OPTION_DATALAYER_DEBUG_JS = 'expertsender_cdp_datalayer_debug_js';
 
     const PARAMETER_MISSING_API_KEY = 'missing_api_key';
 
@@ -87,6 +90,11 @@ class ExpertSender_CDP_Admin
             'add_plugin_admin_synchronize_orders',
         ]);
 
+        add_action( 'admin_menu', array( $this, 'add_plugin_admin_datalayer' ) );
+
+        $plugin_basename = plugin_basename( plugin_dir_path( dirname( __FILE__ ) ) . 'expertsender-cdp.php' );
+        add_filter( 'plugin_action_links_' . $plugin_basename, array( $this, 'add_action_links' ) );
+
         add_action('admin_init', [
             $this,
             'expertsender_cdp_handle_form_submission',
@@ -116,6 +124,8 @@ class ExpertSender_CDP_Admin
             $this,
             'expertsender_cdp_order_synchronize_submission',
         ]);
+
+        add_action( 'admin_init', array( $this, 'handle_datalayer_form_submission' ) );
 
         if ( isset ( $_GET[ self::PARAMETER_MISSING_API_KEY ] ) ) {
             $this->add_admin_error_notice( __( 'Przed ustawieniami mapowań i synchronizacją zamówień należy uzupełnić klucz API.', 'expertsender-cdp' ) );
@@ -440,6 +450,99 @@ class ExpertSender_CDP_Admin
             );
             $this->add_admin_success_notice();
         }
+    }
+
+    public function add_action_links( $links ) {
+        $settings_link = '<a href="' . admin_url( 'admin.php?page=expertsender_cdp-settings' ) . '">'
+            . esc_html__( 'Settings', 'expertsender-cdp' ) . '</a>';
+        array_unshift( $links, $settings_link );
+        return $links;
+    }
+
+    public function add_plugin_admin_datalayer() {
+        add_submenu_page(
+            'expertsender_cdp-settings',
+            __( 'DataLayer', 'expertsender-cdp' ),
+            __( 'DataLayer', 'expertsender-cdp' ),
+            'manage_options',
+            'expertsender_cdp-settings-datalayer',
+            array( $this, 'render_datalayer_page' )
+        );
+    }
+
+    public function render_datalayer_page() {
+        $this->check_permissions();
+        $dlEnabled  = get_option( self::OPTION_DATALAYER_ENABLED, '1' ) ? 'checked' : '';
+        $dlPrefix   = get_option( self::OPTION_DATALAYER_EVENT_PREFIX, '1' ) ? 'checked' : '';
+        $dlDebugJs  = get_option( self::OPTION_DATALAYER_DEBUG_JS ) ? 'checked' : '';
+?>
+        <div class="wrap">
+            <h1 class="es-bold"><?php echo esc_html( get_admin_page_title() ); ?></h1>
+            <form method="post" action="/wp-admin/admin.php?page=expertsender_cdp-settings-datalayer">
+                <input type="hidden" name="expertsender_cdp-datalayer-form">
+
+                <?php settings_fields( 'expertsender_cdp_datalayer_settings_group' ); ?>
+                <table class="form-table es-table">
+                    <tr valign="top">
+                        <th scope="row"><?= esc_html__( 'Włącz śledzenie dataLayer', 'expertsender-cdp' ); ?></th>
+                        <td>
+                            <input type="checkbox"
+                                   class="es-input"
+                                   id="<?= self::OPTION_DATALAYER_ENABLED; ?>"
+                                   name="<?= self::OPTION_DATALAYER_ENABLED; ?>"
+                                   value="1"
+                                   <?= $dlEnabled; ?> />
+                        </td>
+                        <td>
+                            <p><?= esc_html__( 'Włącza wypychanie eventów e-commerce i danych użytkownika do window.dataLayer oraz window._ecdp. Wyłącz jeśli chcesz tymczasowo zatrzymać śledzenie bez deaktywacji wtyczki.', 'expertsender-cdp' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row"><?= esc_html__( 'Prefix eventów dataLayer (_ecdp_)', 'expertsender-cdp' ); ?></th>
+                        <td>
+                            <input type="checkbox"
+                                   class="es-input"
+                                   id="<?= self::OPTION_DATALAYER_EVENT_PREFIX; ?>"
+                                   name="<?= self::OPTION_DATALAYER_EVENT_PREFIX; ?>"
+                                   value="1"
+                                   <?= $dlPrefix; ?> />
+                        </td>
+                        <td>
+                            <p><?= esc_html__( 'Jeśli włączone, nazwy eventów będą poprzedzone prefiksem _ecdp_ (np. _ecdp_view_item, _ecdp_user_data). Włącz jeśli chcesz oddzielić eventy ECDP od istniejącej konfiguracji GA4.', 'expertsender-cdp' ); ?></p>
+                        </td>
+                    </tr>
+                    <tr valign="top">
+                        <th scope="row"><?= esc_html__( 'Logi frontend (console.log)', 'expertsender-cdp' ); ?></th>
+                        <td>
+                            <input type="checkbox"
+                                   class="es-input"
+                                   id="<?= self::OPTION_DATALAYER_DEBUG_JS; ?>"
+                                   name="<?= self::OPTION_DATALAYER_DEBUG_JS; ?>"
+                                   value="1"
+                                   <?= $dlDebugJs; ?> />
+                        </td>
+                        <td>
+                            <p><?= esc_html__( 'Włącza logowanie eventów i danych dataLayer do konsoli przeglądarki (window.console). Używaj tylko podczas debugowania.', 'expertsender-cdp' ); ?></p>
+                        </td>
+                    </tr>
+                </table>
+                <button class="es-button submit" type="submit"><?= esc_html__( 'Zapisz zmiany', 'expertsender-cdp' ); ?></button>
+            </form>
+        </div>
+<?php
+    }
+
+    public function handle_datalayer_form_submission() {
+        if ( ! isset( $_POST['expertsender_cdp-datalayer-form'] ) ) {
+            return;
+        }
+        register_setting( 'expertsender_cdp_datalayer_settings_group', self::OPTION_DATALAYER_ENABLED );
+        register_setting( 'expertsender_cdp_datalayer_settings_group', self::OPTION_DATALAYER_EVENT_PREFIX );
+        register_setting( 'expertsender_cdp_datalayer_settings_group', self::OPTION_DATALAYER_DEBUG_JS );
+        update_option( self::OPTION_DATALAYER_ENABLED, isset( $_POST[ self::OPTION_DATALAYER_ENABLED ] ) ? '1' : '0' );
+        update_option( self::OPTION_DATALAYER_EVENT_PREFIX, isset( $_POST[ self::OPTION_DATALAYER_EVENT_PREFIX ] ) ? '1' : '0' );
+        update_option( self::OPTION_DATALAYER_DEBUG_JS, isset( $_POST[ self::OPTION_DATALAYER_DEBUG_JS ] ) ? '1' : '0' );
+        $this->add_admin_success_notice();
     }
 
     public function render_mappings_page()

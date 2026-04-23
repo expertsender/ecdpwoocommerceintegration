@@ -59,7 +59,7 @@ class ExpertSender_CDP_Public {
 		 * class.
 		 */
 
-		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/expertsender_cdp-public.css', array(), $this->version, 'all' );
+		wp_enqueue_style( $this->plugin_name, plugin_dir_url( __FILE__ ) . 'css/expertsender-cdp-public.css', array(), $this->version, 'all' );
 	}
 
 	/**
@@ -86,6 +86,16 @@ class ExpertSender_CDP_Public {
             'settings',
             array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) )
         );
+
+        if ( get_option( 'expertsender_cdp_datalayer_enabled', '1' ) ) {
+            wp_enqueue_script(
+                'expertsender-cdp-datalayer',
+                plugin_dir_url( __FILE__ ) . 'js/expertsender-cdp-datalayer.js',
+                array( 'jquery', $this->plugin_name ),
+                $this->version,
+                true
+            );
+        }
 	}
 
 	public function add_expertsender_cdp_script() {

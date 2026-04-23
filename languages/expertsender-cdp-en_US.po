@@ -432,3 +432,30 @@ msgstr "The changes have been saved."
 #, php-format
 msgid "Zsynchronizowano: %1$s"
 msgstr "Synchronized: %1$s"
+
+#: admin/class-expertsender-cdp-admin.php:461
+#: admin/class-expertsender-cdp-admin.php:462
+msgid "DataLayer"
+msgstr "DataLayer"
+
+#: admin/class-expertsender-cdp-admin.php:485
+msgid "Włącz śledzenie dataLayer"
+msgstr "Enable dataLayer tracking"
+
+#: admin/class-expertsender-cdp-admin.php:495
+msgid "Włącza wypychanie eventów e-commerce i danych użytkownika do window.dataLayer oraz window._ecdp. Wyłącz jeśli chcesz tymczasowo zatrzymać śledzenie bez deaktywacji wtyczki."
+msgstr "Enables pushing e-commerce events and user data to window.dataLayer and window._ecdp. Disable if you want to temporarily stop tracking without deactivating the plugin."
+
+#: admin/class-expertsender-cdp-admin.php:499
+msgid "Prefix eventów dataLayer (_ecdp_)"
+msgstr "dataLayer event prefix (_ecdp_)"
+
+#: admin/class-expertsender-cdp-admin.php:509
+msgid "Jeśli włączone, nazwy eventów będą poprzedzone prefiksem _ecdp_ (np. _ecdp_view_item, _ecdp_user_data). Włącz jeśli chcesz oddzielić eventy ECDP od istniejącej konfiguracji GA4."
+msgstr "If enabled, event names will be prefixed with _ecdp_ (e.g. _ecdp_view_item, _ecdp_user_data). Enable if you want to keep ECDP events separate from an existing GA4 setup."
+
+msgid "Logi frontend (console.log)"
+msgstr "Frontend logs (console.log)"
+
+msgid "Włącza logowanie eventów i danych dataLayer do konsoli przeglądarki (window.console). Używaj tylko podczas debugowania."
+msgstr "Enables logging of dataLayer events and data to the browser console (window.console). Use only when debugging."
