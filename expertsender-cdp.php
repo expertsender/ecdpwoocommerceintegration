@@ -9,14 +9,14 @@
  * that starts the plugin.
  *
  * @link              https://expertsender.com/
- * @since             1.0.1
+ * @since             1.0.2
  * @package           ExpertSender_CDP
  *
  * @wordpress-plugin
  * Plugin Name:       ExpertSender CDP
  * Plugin URI:        https://expertsender.com/
  * Description:       ExpertSender CDP Integration
- * Version:           1.0.0
+ * Version:           1.0.2
  * Author:            Endora
  * Author URI:        https://endora.software/
  * License:           GPL-2.0+
@@ -35,7 +35,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'EXPERTSENDER_CDP_VERSION', '1.0.0' );
+define( 'EXPERTSENDER_CDP_VERSION', '1.0.2' );
 
 /**
  * The code that runs during plugin activation.

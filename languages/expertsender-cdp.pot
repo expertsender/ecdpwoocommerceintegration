@@ -425,3 +425,24 @@ msgstr ""
 #, php-format
 msgid "Zsynchronizowano: %1$s"
 msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:461
+#: admin/class-expertsender-cdp-admin.php:462
+msgid "DataLayer"
+msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:485
+msgid "Włącz śledzenie dataLayer"
+msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:495
+msgid "Włącza wypychanie eventów e-commerce i danych użytkownika do window.dataLayer oraz window._ecdp. Wyłącz jeśli chcesz tymczasowo zatrzymać śledzenie bez deaktywacji wtyczki."
+msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:499
+msgid "Prefix eventów dataLayer (_ecdp_)"
+msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:509
+msgid "Jeśli włączone, nazwy eventów będą poprzedzone prefiksem _ecdp_ (np. _ecdp_view_item, _ecdp_user_data). Włącz jeśli chcesz oddzielić eventy ECDP od istniejącej konfiguracji GA4."
+msgstr ""

@@ -128,6 +128,9 @@ class ExpertSender_CDP
         require_once plugin_dir_path(dirname(__FILE__)) .
             'includes/class-expertsender-cdp-order-request.php';
 
+        require_once plugin_dir_path( dirname( __FILE__ ) ) .
+            'includes/class-expertsender-cdp-datalayer.php';
+
         /**
          * Interfaces
          */
@@ -231,6 +234,7 @@ class ExpertSender_CDP
         );
 
         new ExpertSender_CDP_Order_Request();
+        new ExpertSender_CDP_DataLayer();
         $plugin_api = new ExpertSender_CDP_Api();
         new ExpertSender_CDP_Ajax();
 
