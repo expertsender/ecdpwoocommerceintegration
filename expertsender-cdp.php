@@ -16,7 +16,7 @@
  * Plugin Name:       ExpertSender CDP
  * Plugin URI:        https://expertsender.com/
  * Description:       ExpertSender CDP Integration
- * Version:           1.0.2
+ * Version:           1.0.3
  * Author:            Endora
  * Author URI:        https://endora.software/
  * License:           GPL-2.0+
@@ -30,12 +30,22 @@ if ( ! defined( 'WPINC' ) ) {
 	die;
 }
 
+require_once plugin_dir_path( __FILE__ ) . 'includes/lib/plugin-update-checker/plugin-update-checker.php';
+use YahnisElsts\PluginUpdateChecker\v5\PucFactory;
+
+$ecdp_update_checker = PucFactory::buildUpdateChecker(
+	'https://github.com/expertsender/ecdpwoocommerceintegration',
+	__FILE__,
+	'expertsender-cdp'
+);
+$ecdp_update_checker->getVcsApi()->enableReleaseAssets();
+
 /**
  * Currently plugin version.
  * Start at version 1.0.0 and use SemVer - https://semver.org
  * Rename this for your plugin and update it as you release new versions.
  */
-define( 'EXPERTSENDER_CDP_VERSION', '1.0.2' );
+define( 'EXPERTSENDER_CDP_VERSION', '1.0.3' );
 
 /**
  * The code that runs during plugin activation.
