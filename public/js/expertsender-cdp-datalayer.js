@@ -156,7 +156,7 @@
     // =========================================================
     // VIEW_ITEM — product page on load
     // =========================================================
-    if ( cfg.viewItem ) {
+    if ( cfg.viewItem && ! cfg.viewItem.isVariable ) {
         ecdpLog( 'view_item (pageload)', cfg.viewItem );
         ecdpPush( 'view_item', {
             currency: currency,
@@ -177,11 +177,13 @@
             if ( ! variation ) return;
 
             currentViewItem = Object.assign( {}, cfg.viewItem, {
+                item_id:        String( variation.variation_id ),
                 item_variant:   String( variation.variation_id ),
                 price:          parseFloat( variation.display_price || cfg.viewItem.price ),
                 original_price: parseFloat( variation.display_regular_price || cfg.viewItem.original_price ),
                 availability:   variation.is_in_stock
             });
+            delete currentViewItem.isVariable;
 
             ecdpLog( 'found_variation, updated currentViewItem', currentViewItem );
 

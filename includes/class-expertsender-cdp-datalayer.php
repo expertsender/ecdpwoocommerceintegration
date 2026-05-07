@@ -54,6 +54,9 @@ class ExpertSender_CDP_DataLayer {
             $product = wc_get_product( get_the_ID() );
             if ( $product ) {
                 $view_item_data = $this->build_product_data( $product );
+                if ( $product->is_type( 'variable' ) ) {
+                    $view_item_data['isVariable'] = true;
+                }
             }
         }
 
@@ -306,7 +309,7 @@ class ExpertSender_CDP_DataLayer {
             : wc_placeholder_img_src();
 
         $data = array(
-            'item_id'        => (string) $ref_id,
+            'item_id'        => (string) $product_id,
             'item_group_id'  => (string) $ref_id,
             'item_name'      => $product->get_name(),
             'price'          => round( $price, 2 ),
