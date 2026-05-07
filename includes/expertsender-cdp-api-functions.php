@@ -29,7 +29,7 @@ function es_cdp_add_or_update_customer( $customer_data, $resource_id = null ) {
         'url_address' => $url,
         'json_body' => $body,
         'resource_type' => ExpertSender_CDP_Admin::RESOURCE_CUSTOMER,
-        'resource_id' => $customer_data['id'],
+        'resource_id' => isset( $customer_data['id'] ) ? (int) $customer_data['id'] : 0,
         'is_sent' => false
     );
 
@@ -50,11 +50,12 @@ function es_get_request_by_resource( $resource_id, $resource_type ) {
     /** @var \wpdb */
     global $wpdb;
 
-    $query = <<<SQL
-        SELECT *
-        FROM {$wpdb->prefix}expertsender_cdp_requests
-        WHERE resource_id = $resource_id AND resource_type = '{$resource_type}';
-    SQL;
-
-    return $wpdb->get_row( $query, ARRAY_A );
+    return $wpdb->get_row(
+        $wpdb->prepare(
+            "SELECT * FROM {$wpdb->prefix}expertsender_cdp_requests WHERE resource_id = %d AND resource_type = %s",
+            (int) $resource_id,
+            $resource_type
+        ),
+        ARRAY_A
+    );
 }
