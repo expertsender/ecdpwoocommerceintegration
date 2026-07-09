@@ -84,7 +84,10 @@ class ExpertSender_CDP_Public {
         wp_localize_script(
             $this->plugin_name,
             'settings',
-            array( 'ajaxurl' => admin_url( 'admin-ajax.php' ) )
+            array(
+                'ajaxurl' => admin_url( 'admin-ajax.php' ),
+                'version' => $this->version,
+            )
         );
 
         if ( get_option( 'expertsender_cdp_datalayer_enabled', '1' ) ) {

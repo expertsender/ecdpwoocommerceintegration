@@ -5,6 +5,9 @@
 	const NEWSLETTER_FORM_SUBMIT_KEY = 'newsletter-submit';
 	const EMAIL_INPUT_KEY = 'email';
 
+	window._ecdp = window._ecdp || {};
+	window._ecdp.pluginVersion = ( typeof settings !== 'undefined' && settings.version ) ? settings.version : null;
+
 	$(function() {
 		prepareNewsletterConsentForm();
 	});
