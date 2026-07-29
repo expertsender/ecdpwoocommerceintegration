@@ -11,7 +11,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 == Changelog ==
 
 = 1.0.5 =
-* Naprawiono błąd powodujący fatal error na stronie ustawień zgód (formularze).
-* Zamówienia wysyłane do ECDP zawierają teraz prawidłową strefę czasową sklepu zamiast sztywnego UTC.
-* Strona synchronizacji zamówień pokazuje datę ostatniej synchronizacji.
-* Naprawiono podwójne wysyłanie zdarzenia view_item dla produktów wariantowych z domyślnie wybranym wariantem.
+* Fixed a fatal error on the consent forms settings page.
+* Orders sent to ECDP now include the store's correct timezone instead of a hardcoded UTC value.
+* The order synchronization page now shows the date of the last sync run.
+* Fixed a duplicate view_item event firing for variable products with a default variation preselected.
