@@ -1239,7 +1239,7 @@ class ExpertSender_CDP_Admin
     public function render_consent_forms_page() {
         $this->check_permissions();
         $this->check_api_key();
-        $options = get_options( array(
+        $option_names = array(
             self::OPTION_FORM_CHECKOUT_TEXT_BEFORE,
             self::OPTION_FORM_CHECKOUT_TYPE,
             self::OPTION_FORM_CHECKOUT_MESSAGE_ID,
@@ -1252,7 +1252,8 @@ class ExpertSender_CDP_Admin
             self::OPTION_FORM_REGISTRATION_TEXT_BEFORE,
             self::OPTION_FORM_REGISTRATION_TYPE,
             self::OPTION_FORM_REGISTRATION_MESSAGE_ID
-        ) );
+        );
+        $options = array_combine( $option_names, array_map( 'get_option', $option_names ) );
     ?>
         <div class="wrap">
             <h1 class="es-bold"><?= esc_html( get_admin_page_title() ); ?></h1>
