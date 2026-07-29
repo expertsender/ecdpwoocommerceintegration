@@ -52,6 +52,11 @@ msgstr ""
 msgid "Coś poszło nie tak: %1$s"
 msgstr ""
 
+#: admin/class-expertsender-cdp-admin.php:1689
+#, php-format
+msgid "Data: %1$s"
+msgstr ""
+
 #: admin/class-expertsender-cdp-admin.php:1571
 msgid "Do:"
 msgstr ""
@@ -286,6 +291,10 @@ msgstr ""
 #: admin/class-expertsender-cdp-admin.php:1309
 #: admin/class-expertsender-cdp-admin.php:1342
 msgid "Statusy WC"
+msgstr ""
+
+#: admin/class-expertsender-cdp-admin.php:1693
+msgid "Synchronizacja nie została jeszcze uruchomiona."
 msgstr ""
 
 #: admin/class-expertsender-cdp-admin.php:273

@@ -1648,6 +1648,13 @@ class ExpertSender_CDP_Admin
                 $sync_id
             )
         );
+
+        $last_sync_date = null;
+
+        if ( ! empty( $expertSenderRequests ) ) {
+            $timestamps = wp_list_pluck( $expertSenderRequests, 'created_at' );
+            $last_sync_date = min( $timestamps );
+        }
     ?>
 
         <script>
@@ -1676,6 +1683,16 @@ class ExpertSender_CDP_Admin
                 <button class="submit es-button" type="submit"><?= esc_html__( 'Synchronizuj', 'expertsender-cdp' ); ?></button>
             </form>
             <h2><?= esc_html__( 'Ostatnia synchronizacja', 'expertsender-cdp' ); ?></h2>
+            <div>
+                <?php if ( null !== $last_sync_date ): ?>
+                    <?= esc_html( sprintf(
+                        __( 'Data: %1$s', 'expertsender-cdp' ),
+                        mysql2date( get_option( 'date_format' ) . ' ' . get_option( 'time_format' ), $last_sync_date )
+                    ) ); ?>
+                <?php else: ?>
+                    <?= esc_html__( 'Synchronizacja nie została jeszcze uruchomiona.', 'expertsender-cdp' ); ?>
+                <?php endif; ?>
+            </div>
             <div><?= esc_html( sprintf( __( 'Synchronizacja zamówień: %1$s', 'expertsender-cdp' ), count( $expertSenderRequests ) ) ); ?></div>
             <div><?= esc_html( sprintf( __( 'Zsynchronizowano: %1$s', 'expertsender-cdp' ), count( $sent ) ) ); ?></div>
             <div><?= esc_html( sprintf( __( 'W kolejce: %1$s', 'expertsender-cdp' ), count( $toBeSend ) ) ); ?></div>

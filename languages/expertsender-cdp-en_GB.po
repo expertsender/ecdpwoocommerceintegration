@@ -54,6 +54,11 @@ msgstr "Koszyk"
 msgid "Coś poszło nie tak: %1$s"
 msgstr "Something went wrong: %1$s"
 
+#: admin/class-expertsender-cdp-admin.php:1689
+#, php-format
+msgid "Data: %1$s"
+msgstr "Date: %1$s"
+
 #: admin/class-expertsender-cdp-admin.php:1571
 msgid "Do:"
 msgstr "To: "
@@ -297,6 +302,10 @@ msgstr "Comma-separated statuses"
 #: admin/class-expertsender-cdp-admin.php:1342
 msgid "Statusy WC"
 msgstr "WC Status"
+
+#: admin/class-expertsender-cdp-admin.php:1693
+msgid "Synchronizacja nie została jeszcze uruchomiona."
+msgstr "Synchronization has not been run yet."
 
 #: admin/class-expertsender-cdp-admin.php:273
 #: admin/class-expertsender-cdp-admin.php:274

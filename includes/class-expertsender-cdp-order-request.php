@@ -76,7 +76,7 @@ class ExpertSender_CDP_Order_Request
         $customer = new WC_Customer( $order->get_user_id( 'edit' ) );
         $order_data['id'] = (string) $order->get_id();
         $order_data['date'] = $order->get_data()['date_modified']->date( 'Y-m-d\TH:i:s.u\Z' );
-        $order_data['timeZone'] = 'UTC';
+        $order_data['timeZone'] = es_get_mapped_timezone();
         $website_id = get_option( 'expertsender_cdp_website_id', null );
 
         if ( empty( $website_id ) ) {

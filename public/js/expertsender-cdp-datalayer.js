@@ -155,13 +155,30 @@
 
     // =========================================================
     // VIEW_ITEM — product page on load
+    // For variable products, the parent-level view_item should fire only
+    // when no variation is pre-selected. If a default variation IS
+    // pre-selected, WooCommerce renders the matching <option selected>
+    // server-side, so the native select already has a value before any
+    // JS runs — in that case we skip the parent event and let the
+    // 'found_variation' handler below fire the variant-level view_item
+    // instead (otherwise both a parent and a variant event would fire).
     // =========================================================
-    if ( cfg.viewItem && ! cfg.viewItem.isVariable ) {
-        ecdpLog( 'view_item (pageload)', cfg.viewItem );
+    var variantPreselectedOnLoad = false;
+    if ( cfg.viewItem && cfg.viewItem.isVariable && typeof jQuery !== 'undefined' ) {
+        var $variationSelects = jQuery( 'form.variations_form select[name^="attribute_"]' );
+        variantPreselectedOnLoad = $variationSelects.length > 0 &&
+            $variationSelects.toArray().every( function( el ) { return !! el.value; } );
+        ecdpLog( 'variantPreselectedOnLoad:', variantPreselectedOnLoad, 'selects found:', $variationSelects.length );
+    }
+
+    if ( cfg.viewItem && ! variantPreselectedOnLoad ) {
+        var parentViewItem = Object.assign( {}, cfg.viewItem );
+        delete parentViewItem.isVariable;
+        ecdpLog( 'view_item (pageload)', parentViewItem );
         ecdpPush( 'view_item', {
             currency: currency,
-            value: cfg.viewItem.price,
-            items: [ cfg.viewItem ]
+            value: parentViewItem.price,
+            items: [ parentViewItem ]
         });
     }
 
@@ -169,21 +186,33 @@
     // VIEW_ITEM — variant change (requires jQuery / WooCommerce)
     // currentViewItem keeps the latest variant data so other handlers
     // (added_to_cart) can use it even when there is no hidden input.
+    // lastPushedVariationId dedupes 'found_variation' firing more than
+    // once for the same variation (observed on load when a default
+    // variation is pre-selected).
     // =========================================================
     var currentViewItem = cfg.viewItem ? Object.assign( {}, cfg.viewItem ) : null;
+    var lastPushedVariationId = null;
 
     if ( cfg.viewItem && typeof jQuery !== 'undefined' ) {
         jQuery( document ).on( 'found_variation', function( event, variation ) {
             if ( ! variation ) return;
 
+            var variationId = String( variation.variation_id );
+
             currentViewItem = Object.assign( {}, cfg.viewItem, {
-                item_id:        String( variation.variation_id ),
-                item_variant:   String( variation.variation_id ),
+                item_id:        variationId,
+                item_variant:   variationId,
                 price:          parseFloat( variation.display_price || cfg.viewItem.price ),
                 original_price: parseFloat( variation.display_regular_price || cfg.viewItem.original_price ),
                 availability:   variation.is_in_stock
             });
             delete currentViewItem.isVariable;
+
+            if ( variationId === lastPushedVariationId ) {
+                ecdpLog( 'found_variation: duplicate variation_id, skipping view_item push', variationId );
+                return;
+            }
+            lastPushedVariationId = variationId;
 
             ecdpLog( 'found_variation, updated currentViewItem', currentViewItem );
 
