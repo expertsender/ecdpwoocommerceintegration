@@ -15,3 +15,4 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.txt
 * Orders sent to ECDP now include the store's correct timezone instead of a hardcoded UTC value.
 * The order synchronization page now shows the date of the last sync run.
 * Fixed a duplicate view_item event firing for variable products with a default variation preselected.
+* Fixed a fatal error that prevented newsletter consent submissions from being saved.

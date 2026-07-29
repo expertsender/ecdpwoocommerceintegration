@@ -27,7 +27,7 @@ class ExpertSender_CDP_Ajax {
         );
         
         if ( ( $email = $_POST['email'] ?? false ) && ! empty( $consents_data ) ) {
-            ExpertSender_CDP_Client_Request::expertsender_cdp_add_or_update_customer(
+            es_cdp_add_or_update_customer(
                 array(
                     'email' => $email,
                     'consentsData' => $consents_data
