@@ -288,13 +288,14 @@ class ExpertSender_CDP
             2
         );
 
-        $this->loader->add_action(
-            'woocommerce_register_form',
-            $plugin_public_consent,
-            'expertsender_cdp_add_consents_in_register_form',
-            10,
-            1
-        );
+        add_action( 'init', function () use ( $plugin_public_consent ) {
+            add_action(
+                apply_filters( 'expertsender_cdp_register_consent_hook', 'woocommerce_register_form' ),
+                array( $plugin_public_consent, 'expertsender_cdp_add_consents_in_register_form' ),
+                apply_filters( 'expertsender_cdp_register_consent_hook_priority', 10 ),
+                1
+            );
+        } );
 
         $this->loader->add_action(
             'http_api_debug',

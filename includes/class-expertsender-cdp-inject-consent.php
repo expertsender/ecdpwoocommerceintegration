@@ -40,12 +40,24 @@ class ExpertSender_CDP_Inject_Consent
             1
         );
 
-        add_action(
-            'woocommerce_review_order_before_submit',
-            array( $this, 'expertsender_cdp_add_consents_in_checkout_form' ),
-            20
-        );
+        add_action( 'init', array( $this, 'expertsender_cdp_register_checkout_consent_hook' ) );
+    }
 
+    /**
+     * Registers the checkout consent checkbox on the WooCommerce hook configured via
+     * the 'expertsender_cdp_checkout_consent_hook' filter (defaults to the historical
+     * 'woocommerce_review_order_before_submit'). Deferred to 'init' so themes/plugins
+     * that add the filter in functions.php (loaded after this plugin's own file) still
+     * get a chance to register it before we read the value.
+     *
+     * @return void
+     */
+    public function expertsender_cdp_register_checkout_consent_hook() {
+        add_action(
+            apply_filters( 'expertsender_cdp_checkout_consent_hook', 'woocommerce_review_order_before_submit' ),
+            array( $this, 'expertsender_cdp_add_consents_in_checkout_form' ),
+            apply_filters( 'expertsender_cdp_checkout_consent_hook_priority', 20 )
+        );
     }
 
     /**
